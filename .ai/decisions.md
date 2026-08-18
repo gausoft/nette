@@ -41,3 +41,30 @@ once in the README; the product identity is the mission, not the language.
 
 A tool that fights AI slop in code cannot ship AI slop in prose. Writing
 rules live in writing.md and apply to every sentence in the repository.
+
+## 007: stdlib ast as the parser
+
+Measured on 3,131 files (~4.2M nodes): CPython `ast` parses at 89 files/s
+vs 48 for tree-sitter-python (which also failed one file) and 13 for
+LibCST. mypy's own parser research reached the same conclusion: tree-sitter
+is too slow to justify. `ast` is hand-optimized C, always current with the
+Python grammar, and honors the zero-dependency promise. tree-sitter only
+pays off for intra-file incremental parsing (LSP case, not v1).
+
+## 008: single-pass engine with cache and multiprocessing
+
+ruff's speed comes from architecture, not just Rust: read each file once,
+parse once, run every rule over the same tree in one traversal. flake8 is
+slow because each plugin re-parses. Pipeline: git diff selects files, a
+per-file cache (content hash + config version) skips unchanged ones,
+remaining files are analyzed in multiprocessing workers (threads lose to
+the GIL on CPU-bound work; a documented case got 17x by switching to fork
+processes and deleting redundant parses). Diff mode plus cache makes the
+nominal agent case (2-3 edited files) far below the 1-second budget.
+
+## 009: mypyc is a future option, never a foundation
+
+mypyc breaks Python stack traces and complicates packaging. Documented
+pure-Python wins (pylint fast-path checks, custom ast.walk) show 2-200x
+gains are available first. Compilation may come later as an optional
+accelerated wheel, and must never shape the architecture.
