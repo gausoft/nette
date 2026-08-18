@@ -35,12 +35,9 @@ at machine speed.
 nette lives in the agent loop: the agent writes code, runs nette, gets a
 compact actionable verdict, fixes, re-checks. Like tests, but for readability.
 
-```console
-$ nette check
-✗ services/accounts.py:42  function does 3 things: extract validate_payload and persist_record
-✗ routers/search.py:118   narrative comment restates the code below it
-✓ 14 files clean · 2 findings · 0.4s
-```
+<div align="center">
+  <img src="assets/terminal.svg" alt="nette check output: two findings with file paths and actionable messages, then a clean summary" width="820">
+</div>
 
 ## Promises
 

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="240" viewBox="0 0 820 240" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="13.5">
+  <defs>
+    <clipPath id="r"><rect width="820" height="240" rx="14"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="820" height="240" fill="#0c0c0f"/>
+    <rect width="820" height="240" rx="14" fill="none" stroke="#26262a" stroke-width="2"/>
+
+    <!-- title bar -->
+    <rect width="820" height="44" fill="#131316"/>
+    <line x1="0" y1="44" x2="820" y2="44" stroke="#26262a"/>
+    <circle cx="24" cy="22" r="6" fill="#ff5f57"/>
+    <circle cx="44" cy="22" r="6" fill="#febc2e"/>
+    <circle cx="64" cy="22" r="6" fill="#28c840"/>
+    <text x="88" y="27" fill="#71717a" font-size="12">zsh — myproject/api</text>
+
+    <!-- $ nette check -->
+    <text x="28" y="86" fill="#71717a">$</text>
+    <text x="46" y="86" fill="#fafafa" font-weight="600">nette check</text>
+
+    <!-- finding 1 -->
+    <text x="28" y="122" fill="#f97316" font-weight="700">✗</text>
+    <text x="50" y="122" fill="#fff7ed" font-weight="600">services/accounts.py:42</text>
+    <text x="248" y="122" fill="#a1a1aa">function does 3 things: extract validate_payload and persist_record</text>
+
+    <!-- finding 2 -->
+    <text x="28" y="152" fill="#f97316" font-weight="700">✗</text>
+    <text x="50" y="152" fill="#fff7ed" font-weight="600">routers/search.py:118</text>
+    <text x="248" y="152" fill="#a1a1aa">narrative comment restates the code below it</text>
+
+    <!-- summary -->
+    <text x="28" y="196" fill="#4ade80" font-weight="700">✓</text>
+    <text x="50" y="196" fill="#fafafa" font-weight="600">14 files clean</text>
+    <text x="182" y="196" fill="#71717a">· 2 findings · 0.4s</text>
+  </g>
+</svg>
