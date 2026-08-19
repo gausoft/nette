@@ -88,4 +88,14 @@ def _is_annotated(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
 
 
 def _contains_try(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
-    return any(isinstance(node, ast.Try) for node in ast.walk(function))
+    stack: list[ast.AST] = list(ast.iter_child_nodes(function))
+
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
+            continue
+        if isinstance(node, ast.Try):
+            return True
+        stack.extend(ast.iter_child_nodes(node))
+
+    return False

@@ -105,10 +105,15 @@ class ReturnCount(Rule):
             )
 
 
+SCOPE_BOUNDARIES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
+
+
 def _max_depth(function: FunctionNode) -> int:
     def walk(node: ast.AST, depth: int) -> int:
         deepest = depth
         for child in ast.iter_child_nodes(node):
+            if isinstance(child, SCOPE_BOUNDARIES):
+                continue
             child_depth = depth + isinstance(child, NESTING_NODES)
             deepest = max(deepest, walk(child, child_depth))
         return deepest
@@ -148,7 +153,7 @@ def _own_return_count(function: FunctionNode) -> int:
 
     while stack:
         node = stack.pop()
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+        if isinstance(node, SCOPE_BOUNDARIES):
             continue
         if isinstance(node, ast.Return):
             count += 1

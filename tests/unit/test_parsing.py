@@ -30,3 +30,23 @@ def test_parse_records_path(write_file):
     file = write_file("x = 1\n")
 
     assert parse_source(file).path == file
+
+
+def test_latin1_declared_encoding_is_honored(tmp_path):
+    file = tmp_path / "legacy.py"
+    file.write_bytes("# -*- coding: latin-1 -*-\nnom = 'caf\xe9'\n".encode("latin-1"))
+
+    source = parse_source(file)
+
+    assert source.tree is not None
+    assert source.errors == ()
+
+
+def test_undecodable_file_yields_finding_not_crash(tmp_path):
+    file = tmp_path / "junk.py"
+    file.write_bytes(b"\xff\xfe invalid \xff")
+
+    source = parse_source(file)
+
+    assert source.tree is None
+    assert [f.code for f in source.errors] == ["NET000"]
