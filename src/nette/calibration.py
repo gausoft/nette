@@ -13,6 +13,7 @@ from nette.parsing import SourceFile, parse_source
 
 PROFILE_VERSION: Final = 1
 CAMEL_CASE: Final = re.compile(r"^[a-z]+[A-Z]")
+HIGHER_IS_STRICTER: Final = frozenset({"annotated_function_rate"})
 
 
 @dataclass(frozen=True)
@@ -81,6 +82,16 @@ def _percentile_90(values: list[int]) -> float:
         return float(values[0])
 
     return statistics.quantiles(values, n=10)[-1]
+
+
+def ratchet(previous: Profile, current: Profile) -> Profile:
+    metrics = dict(current.metrics)
+
+    for name, was in previous.metrics.items():
+        keep = max if name in HIGHER_IS_STRICTER else min
+        metrics[name] = keep(metrics.get(name, was), was)
+
+    return Profile(files_measured=current.files_measured, metrics=metrics)
 
 
 def save_profile(profile: Profile, destination: Path) -> None:

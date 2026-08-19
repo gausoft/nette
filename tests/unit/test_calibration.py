@@ -1,6 +1,6 @@
 import json
 
-from nette.calibration import Profile, build_profile, load_profile, save_profile
+from nette.calibration import Profile, build_profile, load_profile, ratchet, save_profile
 
 
 DEFENSIVE_HEAVY = (
@@ -71,3 +71,35 @@ def test_empty_repo_yields_empty_profile(tmp_path):
 
     assert profile.files_measured == 0
     assert profile.metrics == {}
+
+
+def test_ratchet_keeps_the_stricter_side_of_each_metric():
+    previous = Profile(
+        files_measured=10,
+        metrics={"guarded_function_rate": 0.02, "annotated_function_rate": 1.0},
+    )
+    degraded = Profile(
+        files_measured=12,
+        metrics={"guarded_function_rate": 0.40, "annotated_function_rate": 0.30},
+    )
+
+    kept = ratchet(previous, degraded)
+
+    assert kept.metrics == {"guarded_function_rate": 0.02, "annotated_function_rate": 1.0}
+    assert kept.files_measured == 12
+
+
+def test_ratchet_adopts_an_improved_metric():
+    previous = Profile(files_measured=1, metrics={"file_size_p90": 300.0})
+    improved = Profile(files_measured=1, metrics={"file_size_p90": 120.0})
+
+    assert ratchet(previous, improved).metrics == {"file_size_p90": 120.0}
+
+
+def test_ratchet_keeps_a_metric_the_new_measure_could_not_see():
+    previous = Profile(files_measured=1, metrics={"try_per_kloc": 1.0})
+    current = Profile(files_measured=1, metrics={"file_size_p90": 50.0})
+
+    kept = ratchet(previous, current).metrics
+
+    assert kept == {"try_per_kloc": 1.0, "file_size_p90": 50.0}
