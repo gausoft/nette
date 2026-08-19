@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e . pytest
+      - run: pytest -q
+
+  perf-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -e .
+      - name: nette checks its own tree under budget
+        run: |
+          python - <<'EOF'
+          import subprocess, sys, time
+
+          def run_ms(args):
+              start = time.perf_counter()
+              subprocess.run(args, check=False, capture_output=True)
+              return (time.perf_counter() - start) * 1000
+
+          cold = run_ms(["nette", "check", "src", "tests", "--no-cache"])
+          warm = run_ms(["nette", "check", "src", "tests"])
+          print(f"cold: {cold:.0f} ms (budget 500), warm: {warm:.0f} ms (budget 100)")
+          sys.exit(0 if cold < 500 and warm < 100 else 1)
+          EOF
+
+  dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -e .
+      - name: nette is clean under its own rules
+        run: nette check src tests --format concise
