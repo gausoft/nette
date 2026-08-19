@@ -14,6 +14,7 @@ SIZE_DEVIATION_FACTOR: Final = 3.0
 class FileNaming(Rule):
     code = "file-naming"
     family = "structure"
+    scope = "file"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
         name = ctx.source.path.name
@@ -31,12 +32,11 @@ class FileNaming(Rule):
 class FileSize(Rule):
     code = "file-size"
     family = "structure"
+    scope = "file"
+    baseline = "file_size_p90"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
-        if ctx.profile is None:
-            return
-
-        baseline = ctx.profile.metrics.get("file_size_p90")
+        baseline = ctx.baseline()
         if baseline is None:
             return
 

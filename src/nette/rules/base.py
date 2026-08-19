@@ -19,6 +19,8 @@ DEFAULT_THRESHOLDS: dict[str, int] = {
 class Rule:
     code: str = ""
     family: str = ""
+    scope: str = "function"
+    baseline: str = ""
     severity: Severity = Severity.WARNING
 
 
@@ -40,6 +42,12 @@ class Context:
 
     def threshold(self, name: str) -> int:
         return self._thresholds[name]
+
+    def baseline(self) -> float | None:
+        if self.profile is None:
+            return None
+
+        return self.profile.metrics.get(self._rule.baseline)
 
     def signature_exempt(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
         return (

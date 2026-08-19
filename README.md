@@ -102,7 +102,7 @@ Rule names say what they detect. No lookup tables.
 | defensiveness | `over-guarded` | a file guards far more than the rest of the repo |
 | structure | `file-naming` | a file name breaks snake_case |
 | structure | `file-size` | a file dwarfs the repo's norm |
-| engine | `parse-error`, `bare-allow` | a file cannot be judged; a suppression has no reason |
+| engine | `parse-error`, `bare-allow`, `unused-allow` | a file cannot be judged; a suppression has no reason or silences nothing |
 
 Two threshold kinds, and the distinction is measured, not aesthetic. We
 profiled five exemplary codebases (httpx, pydantic, fastapi, attrs, curated

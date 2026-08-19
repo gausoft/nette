@@ -13,12 +13,11 @@ FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 class Defensiveness(Rule):
     code = "over-guarded"
     family = "defensiveness"
+    scope = "file"
+    baseline = "guarded_function_rate"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
-        if ctx.profile is None:
-            return
-
-        baseline = ctx.profile.metrics.get("guarded_function_rate")
+        baseline = ctx.baseline()
         if baseline is None:
             return
 

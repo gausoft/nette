@@ -67,4 +67,16 @@ def _check_one(
 
     findings = [finding for _, ctx in contexts for finding in ctx.findings]
 
-    return apply_allows(findings, source)
+    return apply_allows(
+        findings,
+        source,
+        file_scoped=frozenset(r.code for r in rules if r.scope == "file"),
+        active=frozenset(r.code for r in rules if _can_fire(r, profile)),
+    )
+
+
+def _can_fire(rule: Rule, profile: Profile | None) -> bool:
+    if not rule.baseline:
+        return True
+
+    return profile is not None and rule.baseline in profile.metrics

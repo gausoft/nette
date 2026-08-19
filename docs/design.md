@@ -98,7 +98,7 @@ unit of selection in config:
 
 | Family | Rules |
 |---|---|
-| `engine` | `parse-error`, `bare-allow` |
+| `engine` | `parse-error`, `bare-allow`, `unused-allow` |
 | `shape` | `function-length`, `nesting-depth`, `argument-count`, `return-count` |
 | `naming` | `short-name-long-scope`, `naming-drift` |
 | `defensiveness` | `over-guarded` |
@@ -156,8 +156,13 @@ the network or a subprocess get neither.
 ### Suppressions
 
 `# nette: allow(function-length) reason` on the offending line or the line above
-suppresses a finding. The reason is mandatory; a bare `allow` is itself a
-finding (`bare-allow`). `nette allows` lists every suppression in the tree for
+suppresses a finding. For rules whose scope is the whole file (`file-size`,
+`file-naming`, `over-guarded`, `naming-drift`) the marker is accepted anywhere
+in the file, since those findings are anchored on whichever construct happens
+to come first and that anchor moves when the file is edited. The reason is
+mandatory; a bare `allow` is itself a finding (`bare-allow`). A marker that
+suppresses nothing is reported as `unused-allow`, so a suppression cannot go
+stale in silence. `nette allows` lists every suppression in the tree for
 audit. Honest exemption is a first-class move; silent gaming is not.
 
 ## Calibration
@@ -177,7 +182,10 @@ are API surface, not clutter. v0.1 ships the FastAPI overlay only.
 
 `nette check --diff [REF]` restricts findings to files touched by the
 diff, and within them to findings whose span intersects changed lines.
-Default `REF` is the merge-base with the target branch. One exception: a
+The file set is computed against `git merge-base REF HEAD`, so a branch is
+judged on its own commits plus the working tree, never on what moved on the
+base branch since the branch point. Default `REF` is `HEAD`, which resolves to
+uncommitted work. One exception: a
 calibrated rule may cite whole-file context in `grounds` while anchoring
 the finding to a changed line. Whole-repo mode stays available
 (`nette check .`) for audit and calibration.
@@ -297,7 +305,8 @@ nette allows [PATHS...]
 
 Lists each `# nette: allow(...)` with its file, line, rule slug, and
 reason. A suppression without a reason shows up here and as a `bare-allow`
-finding in `check`.
+finding in `check`. A suppression that no longer silences anything shows up
+in `check` as an `unused-allow` finding.
 
 ### `nette explain`
 

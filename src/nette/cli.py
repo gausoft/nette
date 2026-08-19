@@ -21,6 +21,7 @@ CACHE_PATH = Path(".nette/cache")
 RULE_DOCS = {
     "parse-error": "engine.md",
     "bare-allow": "engine.md",
+    "unused-allow": "engine.md",
     "function-length": "shape.md",
     "nesting-depth": "shape.md",
     "argument-count": "shape.md",

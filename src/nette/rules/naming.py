@@ -43,12 +43,11 @@ class ShortNameLongScope(Rule):
 class NamingDrift(Rule):
     code = "naming-drift"
     family = "naming"
+    scope = "file"
+    baseline = "camel_case_function_rate"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
-        if ctx.profile is None:
-            return
-
-        baseline = ctx.profile.metrics.get("camel_case_function_rate")
+        baseline = ctx.baseline()
         if baseline is None:
             return
 
