@@ -13,7 +13,7 @@ from nette.engine import check_files
 from nette.findings import Severity
 from nette.gitdiff import changed_files
 from nette.output import render
-from nette.rules import ALL_RULES
+from nette.rules import ALL_RULES, ENGINE_CODES
 from nette.suppressions import list_allows
 
 PROFILE_PATH = Path(".nette/profile.json")
@@ -82,7 +82,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     allows.add_argument("paths", nargs="*", default=[Path(".")], type=Path)
 
     explain = commands.add_parser("explain", help="print the long-form doc of a rule")
-    explain.add_argument("code", metavar="RULE", help="rule name or code")
+    explain.add_argument("code", metavar="RULE", help="rule name, as printed in findings")
 
     return parser.parse_args(argv)
 
@@ -102,6 +102,9 @@ def _run_check(args: argparse.Namespace) -> int:
         files = discover(args.paths or [Path(".")])
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
+    silenced = frozenset(
+        code for code in ENGINE_CODES if not config.rule_enabled(code, "engine")
+    )
     profile = load_profile(root / PROFILE_PATH)
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
 
@@ -112,6 +115,7 @@ def _run_check(args: argparse.Namespace) -> int:
         profile=profile,
         cache=cache,
         framework=config.framework,
+        silenced=silenced,
     )
 
     if args.timings:
