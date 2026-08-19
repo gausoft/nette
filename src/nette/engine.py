@@ -4,6 +4,7 @@ import ast
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from nette.calibration import Profile
 from nette.findings import Finding
 from nette.parsing import parse_source
 from nette.rules.base import Context, Rule
@@ -14,11 +15,12 @@ def check_files(
     *,
     rules: Sequence[Rule],
     thresholds: dict[str, int] | None = None,
+    profile: Profile | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
 
     for file in files:
-        findings.extend(_check_one(file, rules, thresholds))
+        findings.extend(_check_one(file, rules, thresholds, profile))
 
     return sorted(findings)
 
@@ -27,12 +29,13 @@ def _check_one(
     file: Path,
     rules: Sequence[Rule],
     thresholds: dict[str, int] | None,
+    profile: Profile | None,
 ) -> list[Finding]:
     source = parse_source(file)
     if source.tree is None:
         return list(source.errors)
 
-    contexts = [(rule, Context(source, rule, thresholds)) for rule in rules]
+    contexts = [(rule, Context(source, rule, thresholds, profile)) for rule in rules]
 
     for node in ast.walk(source.tree):
         handler_name = f"visit_{type(node).__name__.lower()}"
