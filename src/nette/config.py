@@ -7,9 +7,10 @@ from typing import Final
 
 from nette.rules.base import DEFAULT_THRESHOLDS
 
-KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output"})
+KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output", "profile"})
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
 KNOWN_FORMATS: Final = frozenset({"concise", "full", "agent", "json"})
+KNOWN_PROFILES: Final = frozenset({"fastapi"})
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,7 @@ class Config:
     ignore: tuple[str, ...] = ()
     thresholds: dict[str, int] = field(default_factory=dict)
     output_format: str = "full"
+    framework: str | None = None
 
     def rule_enabled(self, code: str) -> bool:
         selected = any(code.startswith(prefix) for prefix in self.select)
@@ -47,11 +49,19 @@ def load_config(root: Path) -> Config:
             f"expected one of: {', '.join(sorted(KNOWN_FORMATS))}"
         )
 
+    framework = section.get("profile")
+    if framework is not None and framework not in KNOWN_PROFILES:
+        raise ValueError(
+            f"unknown framework profile {framework!r}; "
+            f"expected one of: {', '.join(sorted(KNOWN_PROFILES))}"
+        )
+
     return Config(
         select=_string_tuple(section.get("select", ("NET",)), "select"),
         ignore=_string_tuple(section.get("ignore", ()), "ignore"),
         thresholds=thresholds,
         output_format=output_format,
+        framework=framework,
     )
 
 

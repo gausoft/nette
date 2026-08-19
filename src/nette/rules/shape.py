@@ -71,6 +71,9 @@ class ArgumentCount(Rule):
         self._measure(node, ctx)
 
     def _measure(self, node: FunctionNode, ctx: Context) -> None:
+        if ctx.signature_exempt(node):
+            return
+
         limit = ctx.threshold("argument_count")
         count = _required_argument_count(node)
 
