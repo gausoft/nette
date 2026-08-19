@@ -73,3 +73,37 @@ def test_no_cache_still_works(write_file):
     findings = check_files([file], rules=[FunctionLength()])
 
     assert [f.code for f in findings] == ["NET101"]
+
+
+def test_changing_profile_invalidates(write_file, tmp_path):
+    from nette.calibration import Profile
+    from nette.rules.defensiveness import Defensiveness
+
+    guarded = "\n".join(
+        f"def f{i}(d):\n    try:\n        return d['x']\n    except KeyError:\n        return None\n"
+        for i in range(3)
+    )
+    file = write_file(guarded)
+    cache = Cache(tmp_path / ".nette_cache")
+    calm = Profile(files_measured=9, metrics={"guarded_function_rate": 0.05})
+    lenient = Profile(files_measured=9, metrics={"guarded_function_rate": 0.9})
+
+    first = check_files([file], rules=[Defensiveness()], profile=calm, cache=cache)
+    second = check_files([file], rules=[Defensiveness()], profile=lenient, cache=cache)
+
+    assert [f.code for f in first] == ["NET301"]
+    assert second == []
+
+
+def test_corrupted_cache_entry_is_treated_as_miss(write_file, tmp_path):
+    file = write_file(LONG_FUNCTION)
+    location = tmp_path / ".nette_cache"
+    cache = Cache(location)
+    check(file, cache)
+
+    for entry in location.glob("*.json"):
+        entry.write_text("{not valid json")
+
+    warm = check(file, Cache(location))
+
+    assert [f.code for f in warm] == ["NET101"]

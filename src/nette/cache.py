@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from nette import __version__
+from nette.calibration import Profile
 from nette.findings import Finding, Severity
 
 
@@ -17,16 +18,21 @@ class Cache:
         if not entry.exists():
             return None
 
-        payload = json.loads(entry.read_text())
-
-        return [_finding_from_dict(item) for item in payload]
+        try:
+            payload = json.loads(entry.read_text())
+            return [_finding_from_dict(item) for item in payload]
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+            entry.unlink(missing_ok=True)
+            return None
 
     def put(self, file: Path, config_key: str, findings: list[Finding]) -> None:
         entry = self._entry_path(file, config_key)
         entry.parent.mkdir(parents=True, exist_ok=True)
 
         payload = [_finding_to_dict(f) for f in findings]
-        entry.write_text(json.dumps(payload))
+        scratch = entry.with_suffix(".tmp")
+        scratch.write_text(json.dumps(payload))
+        scratch.replace(entry)
 
     def _entry_path(self, file: Path, config_key: str) -> Path:
         content_hash = hashlib.sha256(file.read_bytes()).hexdigest()
@@ -37,9 +43,17 @@ class Cache:
         return self._location / f"{key}.json"
 
 
-def config_key(thresholds: dict[str, int] | None, rule_codes: list[str]) -> str:
+def config_key(
+    thresholds: dict[str, int] | None,
+    rule_codes: list[str],
+    profile: Profile | None = None,
+) -> str:
     material = json.dumps(
-        {"thresholds": thresholds or {}, "rules": sorted(rule_codes)},
+        {
+            "thresholds": thresholds or {},
+            "rules": sorted(rule_codes),
+            "profile": profile.metrics if profile else None,
+        },
         sort_keys=True,
     )
 

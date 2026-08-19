@@ -4,8 +4,8 @@ import ast
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from nette.cache import Cache, config_key
 from nette.calibration import Profile
+from nette.cache import Cache, config_key
 from nette.findings import Finding
 from nette.parsing import parse_source
 from nette.rules.base import Context, Rule
@@ -19,7 +19,11 @@ def check_files(
     profile: Profile | None = None,
     cache: Cache | None = None,
 ) -> list[Finding]:
-    key = config_key(thresholds, [rule.code for rule in rules]) if cache else ""
+    key = (
+        config_key(thresholds, [rule.code for rule in rules], profile)
+        if cache
+        else ""
+    )
     findings: list[Finding] = []
 
     for file in files:

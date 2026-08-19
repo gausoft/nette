@@ -1,7 +1,3 @@
-"""Command line interface: nette check, nette calibrate."""
-
-from __future__ import annotations
-
 import argparse
 import sys
 from pathlib import Path
@@ -12,6 +8,7 @@ from nette.config import load_config
 from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Severity
+from nette.gitdiff import changed_files
 from nette.output import render
 from nette.rules.defensiveness import Defensiveness
 from nette.rules.shape import SHAPE_RULES
@@ -34,7 +31,15 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     commands = parser.add_subparsers(dest="command", required=True)
 
     check = commands.add_parser("check", help="check files for readability findings")
-    check.add_argument("paths", nargs="+", type=Path)
+    check.add_argument("paths", nargs="*", type=Path)
+    check.add_argument(
+        "--diff",
+        nargs="?",
+        const="HEAD",
+        default=None,
+        metavar="REF",
+        help="check only files changed since REF (default: HEAD)",
+    )
     check.add_argument("--format", dest="format", default=None)
     check.add_argument("--no-cache", action="store_true")
     check.add_argument(
@@ -54,12 +59,20 @@ def _run_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
     config = load_config(root)
 
+    if args.diff is not None:
+        files = changed_files(root, ref=args.diff)
+    elif args.paths:
+        files = discover(args.paths)
+    else:
+        print("error: give paths to check, or --diff", file=sys.stderr)
+        return 2
+
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code)]
     profile = load_profile(root / PROFILE_PATH)
     cache = None if args.no_cache else Cache(root / CACHE_PATH)
 
     findings = check_files(
-        discover(args.paths),
+        files,
         rules=rules,
         thresholds=config.thresholds,
         profile=profile,

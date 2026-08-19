@@ -9,6 +9,7 @@ from nette.rules.base import DEFAULT_THRESHOLDS
 
 KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output"})
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
+KNOWN_FORMATS: Final = frozenset({"concise", "full", "agent", "json"})
 
 
 @dataclass(frozen=True)
@@ -34,15 +35,23 @@ def load_config(root: Path) -> Config:
 
     thresholds = dict(section.get("thresholds", {}))
     _reject_unknown(thresholds.keys(), DEFAULT_THRESHOLDS.keys(), "tool.nette.thresholds")
+    _reject_bad_types(thresholds)
 
     output = section.get("output", {})
     _reject_unknown(output.keys(), KNOWN_OUTPUT_KEYS, "tool.nette.output")
 
+    output_format = output.get("format", "full")
+    if output_format not in KNOWN_FORMATS:
+        raise ValueError(
+            f"unknown output format {output_format!r}; "
+            f"expected one of: {', '.join(sorted(KNOWN_FORMATS))}"
+        )
+
     return Config(
-        select=tuple(section.get("select", ("NET",))),
-        ignore=tuple(section.get("ignore", ())),
+        select=_string_tuple(section.get("select", ("NET",)), "select"),
+        ignore=_string_tuple(section.get("ignore", ()), "ignore"),
         thresholds=thresholds,
-        output_format=output.get("format", "full"),
+        output_format=output_format,
     )
 
 
@@ -64,3 +73,18 @@ def _reject_unknown(present, known, where: str) -> None:
     if unknown:
         names = ", ".join(sorted(unknown))
         raise ValueError(f"unknown key in [{where}]: {names}")
+
+
+def _string_tuple(value, key: str) -> tuple[str, ...]:
+    if not isinstance(value, (list, tuple)) or not all(
+        isinstance(item, str) for item in value
+    ):
+        raise ValueError(f"{key} must be a list of strings, got {value!r}")
+
+    return tuple(value)
+
+
+def _reject_bad_types(thresholds: dict) -> None:
+    for name, value in thresholds.items():
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError(f"threshold {name} must be an integer, got {value!r}")

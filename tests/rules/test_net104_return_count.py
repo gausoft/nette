@@ -65,3 +65,26 @@ def test_threshold_override(write_file):
     )
 
     assert check(file, threshold=1) != []
+
+
+def test_nested_helper_complexity_not_charged_to_parent(write_file):
+    file = write_file(
+        "def outer(x):\n"
+        "    def helper(y):\n"
+        "        if y == 1:\n"
+        "            return 1\n"
+        "        if y == 2:\n"
+        "            return 2\n"
+        "        if y == 3:\n"
+        "            return 3\n"
+        "        if y == 4:\n"
+        "            return 4\n"
+        "        if y == 5:\n"
+        "            return 5\n"
+        "        return 0\n"
+        "    return helper(x)\n"
+    )
+
+    findings = check(file)
+
+    assert all("outer" not in f.message for f in findings)
