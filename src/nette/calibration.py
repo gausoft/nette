@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import ast
 import json
-from dataclasses import dataclass
+import re
+import statistics
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
 from nette.discovery import discover
-from nette.parsing import parse_source
+from nette.parsing import SourceFile, parse_source
 
 PROFILE_VERSION: Final = 1
+CAMEL_CASE: Final = re.compile(r"^[a-z]+[A-Z]")
 
 
 @dataclass(frozen=True)
@@ -18,45 +21,66 @@ class Profile:
     metrics: dict[str, float]
 
 
+@dataclass
+class _Tally:
+    files: int = 0
+    lines: int = 0
+    tries: int = 0
+    functions: int = 0
+    annotated: int = 0
+    guarded: int = 0
+    camel: int = 0
+    file_sizes: list[int] = field(default_factory=list)
+
+
 def build_profile(root: Path) -> Profile:
-    total_lines = 0
-    total_try = 0
-    total_functions = 0
-    annotated_functions = 0
-    guarded_functions = 0
-    files_measured = 0
+    tally = _Tally()
 
     for file in discover([root]):
         source = parse_source(file)
-        if source.tree is None:
-            continue
+        if source.tree is not None:
+            _accumulate(source, tally)
 
-        files_measured += 1
-        total_lines += len(source.lines)
+    return _finalize(tally)
 
-        for node in ast.walk(source.tree):
-            if isinstance(node, ast.Try):
-                total_try += 1
-            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                total_functions += 1
-                annotated_functions += _is_annotated(node)
-                guarded_functions += _contains_try(node)
 
-    if files_measured == 0:
+def _accumulate(source: SourceFile, tally: _Tally) -> None:
+    tally.files += 1
+    tally.lines += len(source.lines)
+    tally.file_sizes.append(len(source.lines))
+
+    for node in ast.walk(source.tree):
+        if isinstance(node, ast.Try):
+            tally.tries += 1
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            tally.functions += 1
+            tally.annotated += _is_annotated(node)
+            tally.guarded += _contains_try(node)
+            tally.camel += bool(CAMEL_CASE.match(node.name))
+
+
+def _finalize(tally: _Tally) -> Profile:
+    if tally.files == 0:
         return Profile(files_measured=0, metrics={})
 
     metrics: dict[str, float] = {}
-    if total_lines:
-        metrics["try_per_kloc"] = round(1000 * total_try / total_lines, 2)
-    if total_functions:
-        metrics["annotated_function_rate"] = round(
-            annotated_functions / total_functions, 2
-        )
-        metrics["guarded_function_rate"] = round(
-            guarded_functions / total_functions, 2
-        )
+    if tally.lines:
+        metrics["try_per_kloc"] = round(1000 * tally.tries / tally.lines, 2)
+    if tally.file_sizes:
+        metrics["file_size_p90"] = float(_percentile_90(tally.file_sizes))
+    if tally.functions:
+        metrics["annotated_function_rate"] = round(tally.annotated / tally.functions, 2)
+        metrics["guarded_function_rate"] = round(tally.guarded / tally.functions, 2)
+        metrics["camel_case_function_rate"] = round(tally.camel / tally.functions, 2)
 
-    return Profile(files_measured=files_measured, metrics=metrics)
+    return Profile(files_measured=tally.files, metrics=metrics)
+
+
+def _percentile_90(values: list[int]) -> float:
+    if len(values) < 2:
+        return float(values[0])
+
+    return statistics.quantiles(values, n=10)[-1]
 
 
 def save_profile(profile: Profile, destination: Path) -> None:

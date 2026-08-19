@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import ast
+import re
 from typing import Final
 
 from nette.rules.base import Context, Rule
 
 FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 EXEMPT_NAMES: Final = frozenset({"_", "self", "cls"})
+CAMEL_CASE: Final = re.compile(r"^[a-z]+[A-Z]")
+DRIFT_DEVIATION_FACTOR: Final = 10.0
+MINIMUM_DRIFTING: Final = 2
 
 
 class ShortNameLongScope(Rule):
@@ -33,6 +37,43 @@ class ShortNameLongScope(Rule):
                     ),
                     help="name the thing after what it holds (response, rate, row)",
                 )
+
+
+class NamingDrift(Rule):
+    code = "NET202"
+
+    def visit_module(self, node: ast.Module, ctx: Context) -> None:
+        if ctx.profile is None:
+            return
+
+        baseline = ctx.profile.metrics.get("camel_case_function_rate")
+        if baseline is None:
+            return
+
+        functions = [
+            n
+            for n in ast.walk(node)
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        ]
+        drifting = [f for f in functions if CAMEL_CASE.match(f.name)]
+
+        if len(drifting) < MINIMUM_DRIFTING or not functions:
+            return
+
+        rate = len(drifting) / len(functions)
+        if rate <= max(baseline * DRIFT_DEVIATION_FACTOR, 0.05):
+            return
+
+        names = ", ".join(f.name for f in drifting[:3])
+        ctx.report(
+            drifting[0],
+            message=f"function names break the repo convention: {names}",
+            grounds=(
+                f"{len(drifting)} of {len(functions)} functions here are camelCase; "
+                f"in this repo only {baseline:.0%} of functions are"
+            ),
+            help="rename to snake_case to match the rest of the codebase",
+        )
 
 
 def _short_name_spans(function: FunctionNode):

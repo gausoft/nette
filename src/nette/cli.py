@@ -13,12 +13,21 @@ from nette.findings import Severity
 from nette.gitdiff import changed_files
 from nette.output import render
 from nette.rules.defensiveness import Defensiveness
+from nette.rules.naming import NamingDrift, ShortNameLongScope
 from nette.rules.shape import SHAPE_RULES
+from nette.rules.structure import FileNaming, FileSize
 from nette.suppressions import list_allows
 
 PROFILE_PATH = Path(".nette/profile.json")
 CACHE_PATH = Path(".nette/cache")
-ALL_RULES = (*SHAPE_RULES, Defensiveness)
+ALL_RULES = (
+    *SHAPE_RULES,
+    Defensiveness,
+    ShortNameLongScope,
+    NamingDrift,
+    FileNaming,
+    FileSize,
+)
 RULE_DOCS = {
     "NET000": ("engine.md", "parse-error"),
     "NET001": ("engine.md", "bare-allow"),
@@ -26,7 +35,11 @@ RULE_DOCS = {
     "NET102": ("shape.md", "nesting-depth"),
     "NET103": ("shape.md", "argument-count"),
     "NET104": ("shape.md", "return-count"),
+    "NET201": ("naming.md", "short-name-long-scope"),
+    "NET202": ("naming.md", "naming-drift"),
     "NET301": ("defensiveness.md", "over-guarded"),
+    "NET401": ("structure.md", "file-naming"),
+    "NET402": ("structure.md", "file-size"),
 }
 
 
