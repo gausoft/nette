@@ -61,7 +61,9 @@ radon, lizard) identified four open gaps:
   detections over absolute scores.
 - **Phase 2**: "Beautiful code" benchmarking: extract measurable patterns
   from exemplary Python codebases (CPython stdlib, FastAPI, pydantic, httpx,
-  attrs). Scientific basis for the rules. Done: universal thresholds
+  attrs). Scientific basis for the rules. Done: two threshold families
+  (universal shape metrics with benchmark-derived defaults; repo-calibrated
+  style metrics), scope-aware naming rule, FastAPI-aware profile from v1. Done: universal thresholds
   (function length, nesting, args, returns) vs repo-calibrated dimensions
   (annotations, docstrings, comments, defensiveness); framework awareness
   proven necessary by FastAPI's endpoint signatures.
