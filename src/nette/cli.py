@@ -13,22 +13,11 @@ from nette.engine import check_files
 from nette.findings import Severity
 from nette.gitdiff import changed_files
 from nette.output import render
-from nette.rules.defensiveness import Defensiveness
-from nette.rules.naming import NamingDrift, ShortNameLongScope
-from nette.rules.shape import SHAPE_RULES
-from nette.rules.structure import FileNaming, FileSize
+from nette.rules import ALL_RULES
 from nette.suppressions import list_allows
 
 PROFILE_PATH = Path(".nette/profile.json")
 CACHE_PATH = Path(".nette/cache")
-ALL_RULES = (
-    *SHAPE_RULES,
-    Defensiveness,
-    ShortNameLongScope,
-    NamingDrift,
-    FileNaming,
-    FileSize,
-)
 RULE_DOCS = {
     "parse-error": "engine.md",
     "bare-allow": "engine.md",
@@ -100,7 +89,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 def _run_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
-    config = load_config(root)
+
+    try:
+        config = load_config(root)
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
 
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)

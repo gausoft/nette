@@ -5,3 +5,6 @@ dist/
 .pytest_cache/
 .pi/
 .nette/cache/
+
+# research notes and competitive analysis, deliberately not published
+docs/private/

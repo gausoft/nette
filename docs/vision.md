@@ -100,11 +100,12 @@ single shared AST) and fast (diff-aware, file-level cache, single pass).
   syntax and encoding errors become findings instead of crashes.
 - **Phase 6**: First rule set: the universal-threshold rules from Phase 2
   (function length, nesting depth, argument count, returns per function).
-  Done: NET101-104, defaults validated against the exemplary corpus
-  (docstrings excluded from length, only required arguments counted).
+  Done: the four shape rules, defaults validated against the exemplary
+  corpus (docstrings excluded from length, only required arguments counted).
 - **Phase 7**: Calibration: `nette calibrate` produces the repo profile;
   calibrated rules judge deviation from it. Done: versioned
-  `.nette/profile.json` and NET301 (over-defensiveness vs repo baseline).
+  `.nette/profile.json` and `over-guarded` (over-defensiveness vs repo
+  baseline).
   Percentile profiles (p50/p90/p99) deferred until more calibrated rules
   need them.
 - **Phase 8**: Diff-aware mode and file-level result cache: judge only
