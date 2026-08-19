@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nette — AI writes code. nette keeps it clean.</title>
+<meta name="description" content="A code readability checker for the AI-agent era. Deterministic, diff-aware, calibrated on your repo. Verdict in under a second.">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family:'Monaspace Neon';
+    src:url('https://cdn.jsdelivr.net/gh/githubnext/monaspace@v1.101/fonts/webfonts/MonaspaceNeon-Regular.woff2') format('woff2');
+    font-weight:400;
+  }
+  @font-face {
+    font-family:'Monaspace Neon';
+    src:url('https://cdn.jsdelivr.net/gh/githubnext/monaspace@v1.101/fonts/webfonts/MonaspaceNeon-Medium.woff2') format('woff2');
+    font-weight:500;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#09090b; --surface:#111114; --border:#26262a;
+    --text:#e4e4e7; --muted:#a1a1aa; --faint:#71717a;
+    --orange:#f97316; --orange-hi:#fb923c; --orange-lo:#ea580c;
+    --cream:#fff7ed; --green:#4ade80;
+  }
+  body { font-family:'Satoshi',sans-serif; background:var(--bg); color:var(--text); }
+  .mono { font-family:'Monaspace Neon',monospace; }
+  a { color:inherit; }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height:88vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:96px 24px 64px;
+  }
+  .pill {
+    font-family:'Monaspace Neon',monospace; font-size:12.5px; color:var(--orange-hi);
+    border:1px solid rgba(249,115,22,.35); background:rgba(249,115,22,.08);
+    padding:7px 16px; border-radius:99px; letter-spacing:.03em;
+  }
+  .hero h1 {
+    margin-top:30px; font-size:clamp(40px, 7vw, 74px); font-weight:900;
+    letter-spacing:-.035em; line-height:1.04; color:#fafafa;
+  }
+  .hero h1 em {
+    font-style:normal;
+    background:linear-gradient(120deg, var(--orange-hi), var(--orange-lo));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero .sub {
+    margin-top:22px; font-size:18px; color:var(--muted); max-width:560px; line-height:1.65;
+  }
+  .cta-row { display:flex; gap:14px; margin-top:38px; flex-wrap:wrap; justify-content:center; }
+  .btn-primary {
+    font-size:15px; font-weight:700; color:#0c0500; text-decoration:none;
+    background:linear-gradient(120deg, var(--orange-hi), var(--orange-lo));
+    padding:14px 26px; border-radius:10px;
+  }
+  .btn-ghost {
+    font-family:'Monaspace Neon',monospace; font-size:13.5px; color:var(--muted);
+    border:1px solid var(--border); background:var(--surface);
+    padding:14px 22px; border-radius:10px; text-decoration:none;
+  }
+  .btn-ghost b { color:var(--orange-hi); font-weight:500; }
+
+  /* terminal window */
+  .term {
+    width:min(820px, 92vw); margin:72px auto 0; border-radius:14px; overflow:hidden;
+    border:1px solid var(--border); background:#0c0c0f;
+    box-shadow:0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02) inset;
+    text-align:left;
+  }
+  .term-bar { display:flex; align-items:center; gap:8px; padding:13px 18px; background:#131316; border-bottom:1px solid var(--border); }
+  .term-bar .d { width:11px; height:11px; border-radius:50%; }
+  .term-bar .d:nth-child(1){background:#ff5f57}.term-bar .d:nth-child(2){background:#febc2e}.term-bar .d:nth-child(3){background:#28c840}
+  .term-bar span { font-family:'Monaspace Neon',monospace; font-size:12px; color:var(--faint); margin-left:10px; }
+  .term-body { padding:26px 28px; font-family:'Monaspace Neon',monospace; font-size:13.5px; line-height:2.05; overflow-x:auto; }
+  .p{color:var(--faint)} .c{color:#fafafa} .x{color:var(--orange)} .ok{color:var(--green)}
+  .dim{color:var(--muted)} .loc{color:#7dd3fc}
+
+  /* ============ SECTIONS ============ */
+  section.docs { max-width:1080px; margin:0 auto; padding:110px 24px; }
+  .kicker { font-family:'Monaspace Neon',monospace; font-size:12.5px; color:var(--orange-hi); letter-spacing:.08em; text-transform:uppercase; }
+  section.docs h2 { font-size:40px; font-weight:700; letter-spacing:-.025em; color:#fafafa; margin-top:14px; }
+  section.docs p.lead { color:var(--muted); font-size:17px; margin-top:14px; max-width:620px; line-height:1.65; }
+
+  .feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:52px; }
+  @media (max-width:820px){ .feat-grid { grid-template-columns:1fr; } }
+  .feat {
+    border:1px solid var(--border); border-radius:14px; padding:28px; background:var(--surface);
+    transition:border-color .2s;
+  }
+  .feat:hover { border-color:rgba(249,115,22,.4); }
+  .feat .ic { width:38px; height:38px; border-radius:9px; background:rgba(249,115,22,.12);
+    display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+  .feat h3 { font-size:17px; font-weight:700; color:#fafafa; letter-spacing:-.01em; }
+  .feat p { font-size:14.5px; color:var(--muted); margin-top:8px; line-height:1.6; }
+  .feat code { font-family:'Monaspace Neon',monospace; font-size:12.5px; color:var(--orange-hi); }
+
+  /* rules table */
+  .rules { border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-top:52px; }
+  .rule-row { display:grid; grid-template-columns:230px 1fr; border-bottom:1px solid var(--border); }
+  .rule-row:last-child { border-bottom:none; }
+  .rule-slug { padding:20px 26px; font-family:'Monaspace Neon',monospace; font-size:13px; color:var(--orange-hi); background:var(--surface); border-right:1px solid var(--border); }
+  .rule-desc { padding:20px 26px; font-size:14.5px; color:var(--muted); line-height:1.5; display:flex; align-items:center; }
+  @media (max-width:640px){ .rule-row { grid-template-columns:1fr; } .rule-slug { border-right:none; padding-bottom:6px; } .rule-desc { padding-top:6px; } }
+
+  /* steps */
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:52px; counter-reset:step; }
+  @media (max-width:820px){ .steps { grid-template-columns:1fr; } }
+  .step { border:1px solid var(--border); border-radius:14px; padding:28px; background:var(--surface); }
+  .step::before {
+    counter-increment:step; content:counter(step, decimal-leading-zero);
+    font-family:'Monaspace Neon',monospace; font-size:12px; color:var(--orange-hi);
+  }
+  .step h3 { font-size:16px; font-weight:700; color:#fafafa; margin-top:10px; }
+  .step pre { margin-top:14px; font-family:'Monaspace Neon',monospace; font-size:12.5px; color:var(--text); background:#0c0c0f; border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow-x:auto; }
+  .step p { font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.55; }
+
+  footer {
+    border-top:1px solid var(--border); padding:44px 24px; text-align:center;
+    font-size:13.5px; color:var(--faint);
+  }
+  footer a { color:var(--muted); text-decoration:none; margin:0 12px; }
+  footer a:hover { color:var(--orange-hi); }
+</style>
+</head>
+<body>
+
+<!-- ======== HERO ======== -->
+<div class="hero">
+  <div class="pill">deterministic · diff-aware · zero deps</div>
+  <h1>AI writes code.<br><em>nette</em> keeps it clean.</h1>
+  <p class="sub">A readability check for the AI-agent era. Calibrated on your repo,
+  fast enough to live inside the agent's write-check-fix loop. Like tests, but for readability.</p>
+  <div class="cta-row">
+    <a class="btn-primary" href="https://github.com/gausoft/nette">Get started</a>
+    <a class="btn-ghost" href="https://github.com/gausoft/nette#quickstart"><b>$</b> nette check --diff</a>
+  </div>
+
+  <div class="term">
+    <div class="term-bar"><div class="d"></div><div class="d"></div><div class="d"></div><span>zsh — acme/api</span></div>
+    <div class="term-body">
+      <span class="p">$</span> <span class="c">nette check src/api.py</span><br>
+      <br>
+      <span class="x">warning[argument-count]</span> <span class="loc">src/api.py 1:1</span><br>
+      &nbsp;&nbsp;<span class="c">function `sync_users` takes too many arguments to call safely</span><br>
+      &nbsp;&nbsp;<span class="dim">why: it takes 7 required arguments; the configured limit is 6</span><br>
+      &nbsp;&nbsp;<span class="dim">fix: group related arguments into a dataclass, or split the function</span><br>
+      <br>
+      <span class="ok">✓</span> <span class="c">13 files clean</span> <span class="p">· 1 finding · 81ms</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======== WHY ======== -->
+<section class="docs">
+  <div class="kicker">Why nette</div>
+  <h2>Readability as a check,<br>not an opinion.</h2>
+  <p class="lead">Linters check syntax. Tests check behavior. Nothing checks whether
+  the code your agent just wrote can be read by the next human. nette closes that gap.</p>
+
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="ic"><svg width="20" height="20" viewBox="0 0 88 88"><rect x="14" y="18" width="44" height="8" rx="4" fill="#fb923c"/><rect x="24" y="36" width="50" height="8" rx="4" fill="#fb923c"/><rect x="24" y="54" width="30" height="8" rx="4" fill="#fb923c"/></svg></div>
+      <h3>Diff-aware by default</h3>
+      <p>Only the lines you just wrote count. A 10-year-old repo is never <code>all red</code>.</p>
+    </div>
+    <div class="feat">
+      <div class="ic"><svg width="20" height="20" viewBox="0 0 88 88"><path d="M20 68 l16 -40 l16 40 M44 24 l16 40" fill="none" stroke="#fb923c" stroke-width="9" stroke-linecap="round"/></svg></div>
+      <h3>Calibrated on your repo</h3>
+      <p>Five exemplary codebases diverge 12x on style while all being exemplary. So nette learns <em>your</em> baseline and flags deviation from it, never from an absolute.</p>
+    </div>
+    <div class="feat">
+      <div class="ic"><svg width="20" height="20" viewBox="0 0 88 88"><path d="M44 12 l8 24 h24 l-19 15 l7 25 l-20 -15 l-20 15 l7 -25 l-19 -15 h24 z" fill="#fb923c"/></svg></div>
+      <h3>Deterministic. No LLM.</h3>
+      <p>Same code, same verdict, <code>&lt; 100ms</code> warm. Fast enough for the agent's write-check-fix loop, cacheable byte-for-byte.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======== RULES ======== -->
+<section class="docs" style="padding-top:0">
+  <div class="kicker">Rules</div>
+  <h2>Names that say what they detect.</h2>
+  <p class="lead">No lookup tables, no numeric codes. An agent reading a finding
+  knows what to do without a round-trip to the docs.</p>
+
+  <div class="rules">
+    <div class="rule-row"><div class="rule-slug">function-length</div><div class="rule-desc">a function is too long to take in at one glance</div></div>
+    <div class="rule-row"><div class="rule-slug">nesting-depth</div><div class="rule-desc">code nests too deeply to follow</div></div>
+    <div class="rule-row"><div class="rule-slug">argument-count</div><div class="rule-desc">a function takes too many required arguments</div></div>
+    <div class="rule-row"><div class="rule-slug">short-name-long-scope</div><div class="rule-desc">a one-letter name lives too long</div></div>
+    <div class="rule-row"><div class="rule-slug">naming-drift</div><div class="rule-desc">an identifier breaks the repo's own convention</div></div>
+    <div class="rule-row"><div class="rule-slug">over-guarded</div><div class="rule-desc">a file guards far more than the rest of the repo</div></div>
+    <div class="rule-row"><div class="rule-slug">file-size</div><div class="rule-desc">a file dwarfs the repo's norm</div></div>
+  </div>
+</section>
+
+<!-- ======== HOW ======== -->
+<section class="docs" style="padding-top:0">
+  <div class="kicker">How it works</div>
+  <h2>Three commands.</h2>
+
+  <div class="steps">
+    <div class="step">
+      <h3>Calibrate once</h3>
+      <pre>$ nette calibrate</pre>
+      <p>nette measures your repo's style (guard density, file sizes, naming) and writes a committed profile. CI, humans, and agents share the same baseline.</p>
+    </div>
+    <div class="step">
+      <h3>Check the diff</h3>
+      <pre>$ nette check --diff</pre>
+      <p>Only what changed is judged. Every finding names the problem, the reason, and the fix direction.</p>
+    </div>
+    <div class="step">
+      <h3>Wire the agent</h3>
+      <pre>$ nette check --diff --format agent</pre>
+      <p>Deterministic JSON with a ready-to-act instruction per finding. Identical input, identical bytes: agent runs cache and diff cleanly.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <nav>
+    <a href="https://github.com/gausoft/nette">GitHub</a>
+    <a href="https://github.com/gausoft/nette/blob/main/docs/design.md">Design</a>
+    <a href="https://github.com/gausoft/nette/blob/main/docs/rules/README.md">Rules</a>
+    <a href="https://github.com/gausoft/nette/blob/main/LICENSE">MIT License</a>
+  </nav>
+  <p style="margin-top:18px">nette · pure Python · zero dependencies</p>
+</footer>
+
+</body>
+</html>
