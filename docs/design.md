@@ -67,6 +67,7 @@ without its context.
 Rule codes are stable and never renumbered. Ranges: `NET0xx` engine and
 parse, `NET1xx` shape (length, nesting, args, returns), `NET2xx` naming,
 `NET3xx` defensiveness and error handling, `NET4xx` comments and docs,
+`NET5xx` project structure (file naming, file size vs repo profile),
 `ORGxxx` reserved for user plugins.
 
 ## Rules
@@ -78,8 +79,16 @@ Two threshold families (phase 2 result):
   (p90 across httpx, pydantic, fastapi, attrs, curated stdlib).
   Overridable in TOML.
 - **Calibrated**: annotation rate, docstring rate, comment density,
-  defensiveness (try/getattr/isinstance density), naming style. These have
+  defensiveness (try/getattr/isinstance density), naming style, file size
+  (a new or grown file measured against the repo's file-size profile).
+  These have
   no absolute threshold; the rule fires on deviation from the repo profile.
+
+Project structure rules (phase 2b) span both families: file naming is
+universal (snake_case was invariant across every exemplary corpus), file
+size is calibrated. Both operate on the file list and the profile; neither
+needs an import graph, which keeps them in the single-pass pipeline.
+Deeper structure signals (folder depth, grab-bag growth) wait for v0.2.
 
 A rule is a class implementing the public API (tier 3). Built-in rules use
 the same API (dogfooding):
@@ -189,12 +198,14 @@ release.
 ## v0.1 scope cut
 
 In: engine, cache, diff mode, universal rules (shape family), calibration
-plus two calibrated rules (defensiveness, naming), TOML tier, four output
+plus two calibrated rules (defensiveness, naming), two structure rules
+(file naming NET501, file size vs profile NET502), TOML tier, four output
 formats, suppressions, FastAPI overlay, `--timings`.
 
 Out (v0.2+): YAML pattern tier, Python plugin loading from config (the API
 exists and built-ins use it; external loading waits), MCP server, SARIF,
-autofix, watch mode, free-threading/InterpreterPool backends.
+autofix, watch mode, free-threading/InterpreterPool backends, structure
+rules beyond naming and size (folder depth, grab-bag growth).
 
 The YAML tier and external plugins are deferred for scope, not design:
 the rule API and config schema above already account for them, so adding

@@ -75,9 +75,9 @@ radon, lizard) identified four open gaps:
   proven necessary by FastAPI's endpoint signatures.
 - **Phase 3**: DX & visualization research: error output design (ruff, elm,
   rust), TUI (rich/textual), agent-oriented output formats. Done: one
-  diagnostic model feeding three v1 outputs (human in the Elm/rustc style,
-  agent JSONL — signal-only, deterministic, with composed instructions —
-  and SARIF export), stable rule codes with `--explain`, calibrated
+  diagnostic model feeding every renderer (human in the Elm/rustc style,
+  agent output — signal-only, deterministic, with composed instructions —
+  SARIF deferred to v0.2), stable rule codes with `--explain`, calibrated
   findings show the repo baseline in the message, affirmative suggestions
   with confidence levels, tested finding catalog with golden outputs.
 
@@ -86,6 +86,7 @@ radon, lizard) identified four open gaps:
 - **Phase 4**: Design doc: architecture (engine, rule tiers, calibration,
   cache), public API surface, output formats (human and agent), config
   schema, v0.1 scope cut. Reviewed before any implementation starts.
+  Done: [design.md](design.md), reviewed and frozen for v0.1.
 
 ### Implementation
 
