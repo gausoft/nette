@@ -100,3 +100,27 @@ def test_engine_rules_can_be_named_in_config(tmp_path):
     (tmp_path / "nette.toml").write_text('ignore = ["bare-allow", "parse-error"]\n')
 
     assert load_config(tmp_path).ignore == ("bare-allow", "parse-error")
+
+
+def test_nette_toml_refuses_to_mix_both_shapes(tmp_path):
+    (tmp_path / "nette.toml").write_text(
+        'ignore = ["function-length"]\n\n[tool.nette]\nprofile = "fastapi"\n'
+    )
+
+    with pytest.raises(ValueError, match="mixes"):
+        load_config(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        'output = "concise"\n',
+        "thresholds = 3\n",
+        'profile = ["fastapi"]\n',
+    ],
+)
+def test_wrong_shapes_raise_value_error_not_a_type_error(tmp_path, body):
+    (tmp_path / "nette.toml").write_text(body)
+
+    with pytest.raises(ValueError):
+        load_config(tmp_path)

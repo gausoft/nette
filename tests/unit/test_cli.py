@@ -175,3 +175,16 @@ def test_unreadable_config_is_a_diagnostic_not_a_traceback(tmp_path):
     assert result.returncode == 2
     assert "Traceback" not in result.stderr
     assert result.stderr.startswith("error:")
+
+
+def test_ignoring_an_engine_rule_actually_silences_it(tmp_path):
+    (tmp_path / "broken.py").write_text("def broken(:\n")
+
+    loud = run_nette("check", ".", "--format", "concise", cwd=tmp_path)
+    assert "parse-error" in loud.stdout
+
+    (tmp_path / "nette.toml").write_text('ignore = ["parse-error"]\n')
+    quiet = run_nette("check", ".", "--format", "concise", cwd=tmp_path)
+
+    assert quiet.stdout == ""
+    assert quiet.returncode == 0

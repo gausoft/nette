@@ -39,11 +39,11 @@ def load_config(root: Path) -> Config:
 
     _reject_unknown(section.keys(), KNOWN_KEYS, where)
 
-    thresholds = dict(section.get("thresholds", {}))
+    thresholds = dict(_table(section.get("thresholds", {}), "thresholds"))
     _reject_unknown(thresholds.keys(), DEFAULT_THRESHOLDS.keys(), f"{where} thresholds")
     _reject_bad_types(thresholds)
 
-    output = section.get("output", {})
+    output = _table(section.get("output", {}), "output")
     _reject_unknown(output.keys(), KNOWN_OUTPUT_KEYS, f"{where} output")
 
     output_format = output.get("format", "full")
@@ -54,12 +54,13 @@ def load_config(root: Path) -> Config:
         )
 
     framework = section.get("profile")
-    if framework is not None and framework not in KNOWN_PROFILES:
+    if framework is not None and (
+        not isinstance(framework, str) or framework not in KNOWN_PROFILES
+    ):
         raise ValueError(
             f"unknown framework profile {framework!r}; "
             f"expected one of: {', '.join(sorted(KNOWN_PROFILES))}"
         )
-
     return Config(
         select=_rule_names(section.get("select", tuple(sorted(KNOWN_FAMILIES))), "select"),
         ignore=_rule_names(section.get("ignore", ()), "ignore"),
@@ -72,8 +73,7 @@ def load_config(root: Path) -> Config:
 def _read_section(root: Path) -> tuple[dict, str]:
     dedicated = root / "nette.toml"
     if dedicated.exists():
-        payload = _load_toml(dedicated)
-        return payload.get("tool", {}).get("nette", payload), "nette.toml"
+        return _dedicated_section(_load_toml(dedicated)), "nette.toml"
 
     pyproject = root / "pyproject.toml"
     if pyproject.exists():
@@ -81,6 +81,19 @@ def _read_section(root: Path) -> tuple[dict, str]:
         return payload.get("tool", {}).get("nette", {}), "[tool.nette]"
 
     return {}, ""
+
+
+def _dedicated_section(payload: dict) -> dict:
+    tool = payload.get("tool")
+    if not isinstance(tool, dict) or "nette" not in tool:
+        return payload
+
+    if len(payload) > 1:
+        raise ValueError(
+            "nette.toml mixes top-level keys with a [tool.nette] table; keep one"
+        )
+
+    return tool["nette"]
 
 
 def _load_toml(path: Path) -> dict:
@@ -95,6 +108,13 @@ def _reject_unknown(present, known, where: str) -> None:
     if unknown:
         names = ", ".join(sorted(unknown))
         raise ValueError(f"unknown key in {where}: {names}")
+
+
+def _table(value, key: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{key} must be a table, got {value!r}")
+
+    return value
 
 
 def _string_tuple(value, key: str) -> tuple[str, ...]:

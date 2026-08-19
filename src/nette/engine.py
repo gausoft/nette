@@ -20,6 +20,7 @@ def check_files(
     profile: Profile | None = None,
     cache: Cache | None = None,
     framework: str | None = None,
+    silenced: frozenset[str] = frozenset(),
 ) -> list[Finding]:
     key = (
         config_key(thresholds, [rule.code for rule in rules], profile, framework)
@@ -39,7 +40,7 @@ def check_files(
             cache.put(file, key, fresh)
         findings.extend(fresh)
 
-    return sorted(findings)
+    return sorted(f for f in findings if f.code not in silenced)
 
 
 def _check_one(

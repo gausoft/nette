@@ -14,12 +14,12 @@ ALL_RULES = (
     FileNaming,
     FileSize,
 )
-KNOWN_RULE_CODES = frozenset(
-    {rule.code for rule in ALL_RULES} | {PARSE_ERROR_CODE, MISSING_REASON_CODE}
-)
+ENGINE_CODES = (PARSE_ERROR_CODE, MISSING_REASON_CODE)
+KNOWN_RULE_CODES = frozenset({rule.code for rule in ALL_RULES} | set(ENGINE_CODES))
 
 __all__ = [
     "ALL_RULES",
+    "ENGINE_CODES",
     "KNOWN_RULE_CODES",
     "Context",
     "Rule",
