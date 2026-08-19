@@ -54,7 +54,9 @@ radon, lizard) identified four open gaps:
 - **Phase 0**: Vision & requirements (this document). Done.
 - **Phase 1**: Foundations research: how ruff, uv and pydantic-core achieve
   performance; tree-sitter vs stdlib ast; mypyc and Cython options; state of
-  the art in metrics.
+  the art in metrics. Done: stdlib `ast` + `tokenize`, file-level result
+  cache, single-pass rule engine, mypyc-friendly core, repo-calibrated
+  detections over absolute scores.
 - **Phase 2**: "Beautiful code" benchmarking: extract measurable patterns
   from exemplary Python codebases (CPython stdlib, FastAPI, pydantic, httpx,
   attrs). Scientific basis for the rules.
