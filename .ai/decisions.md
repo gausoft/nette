@@ -81,3 +81,16 @@ Clippy validated this at scale; ruff's numeric codes are inherited flake8
 legacy. Stability rule unchanged: a published slug is never renamed.
 Third-party plugin rules are prefixed (`org/no-print-in-prod`).
 
+## 011: the calibrated profile is a ratchet
+
+`nette calibrate` never writes a looser baseline than the committed one.
+Each metric keeps its stricter side (higher annotation rate, lower guard,
+try, camelCase and file-size values); only `--reset` accepts a relaxation.
+Without this, an agent that degrades a repo and recalibrates turns the
+degradation into the norm, which is the exact entropy the tool exists to
+stop. The escape hatch stays because a legitimate style change (dropping
+annotations from a generated module, a deliberate framework migration)
+must remain possible, and it lands as a visible diff on `.nette/profile.json`.
+A metric the new measure cannot see (calibrating a subtree with no
+functions in it) keeps its previous value rather than disappearing, since
+a dropped baseline is a relaxation like any other.
