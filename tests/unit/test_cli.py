@@ -28,7 +28,7 @@ def test_check_reports_findings_and_exits_one(tmp_path):
     result = run_nette("check", ".", "--format", "concise", cwd=tmp_path)
 
     assert result.returncode == 1
-    assert "NET101" in result.stdout
+    assert "function-length" in result.stdout
 
 
 def test_warning_findings_do_not_fail_when_errors_required(tmp_path):
@@ -39,7 +39,7 @@ def test_warning_findings_do_not_fail_when_errors_required(tmp_path):
     )
 
     assert result.returncode == 0
-    assert "NET101" in result.stdout
+    assert "function-length" in result.stdout
 
 
 def test_syntax_error_fails_even_with_fail_on_error(tmp_path):
@@ -50,7 +50,7 @@ def test_syntax_error_fails_even_with_fail_on_error(tmp_path):
     )
 
     assert result.returncode == 1
-    assert "NET000" in result.stdout
+    assert "parse-error" in result.stdout
 
 
 def test_check_agent_format_emits_json(tmp_path):
@@ -74,21 +74,21 @@ def test_calibrate_writes_profile(tmp_path):
 
 def test_allows_lists_markers(tmp_path):
     (tmp_path / "mod.py").write_text(
-        "def f():  # nette: allow(NET101) generated table\n    pass\n"
+        "def f():  # nette: allow(function-length) generated table\n    pass\n"
     )
 
     result = run_nette("allows", ".", cwd=tmp_path)
 
     assert result.returncode == 0
-    assert "NET101" in result.stdout
+    assert "function-length" in result.stdout
     assert "generated table" in result.stdout
 
 
 def test_explain_prints_rule_doc(tmp_path):
-    result = run_nette("explain", "NET101", cwd=tmp_path)
+    result = run_nette("explain", "function-length", cwd=tmp_path)
 
     assert result.returncode == 0
-    assert "NET101" in result.stdout
+    assert "function-length" in result.stdout
     assert len(result.stdout.splitlines()) > 3
 
 
@@ -111,7 +111,7 @@ def test_check_without_paths_judges_current_tree(tmp_path):
     result = run_nette("check", "--format", "concise", cwd=tmp_path)
 
     assert result.returncode == 1
-    assert "NET101" in result.stdout
+    assert "function-length" in result.stdout
 
 
 def test_version_flag_reports_the_package_version(tmp_path):
@@ -128,7 +128,7 @@ def test_timings_reports_per_rule_cost(tmp_path):
 
     result = run_nette("check", ".", "--timings", cwd=tmp_path)
 
-    assert "NET101" in result.stderr
+    assert "function-length" in result.stderr
     assert "ms" in result.stderr
 
 
