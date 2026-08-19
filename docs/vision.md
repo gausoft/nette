@@ -51,6 +51,8 @@ radon, lizard) identified four open gaps:
 
 ## Roadmap phases
 
+### Research
+
 - **Phase 0**: Vision & requirements (this document). Done.
 - **Phase 1**: Foundations research: how ruff, uv and pydantic-core achieve
   performance; tree-sitter vs stdlib ast; mypyc and Cython options; state of
@@ -59,8 +61,40 @@ radon, lizard) identified four open gaps:
   detections over absolute scores.
 - **Phase 2**: "Beautiful code" benchmarking: extract measurable patterns
   from exemplary Python codebases (CPython stdlib, FastAPI, pydantic, httpx,
-  attrs). Scientific basis for the rules.
+  attrs). Scientific basis for the rules. Done: universal thresholds
+  (function length, nesting, args, returns) vs repo-calibrated dimensions
+  (annotations, docstrings, comments, defensiveness); framework awareness
+  proven necessary by FastAPI's endpoint signatures.
 - **Phase 3**: DX & visualization research: error output design (ruff, elm,
   rust), TUI (rich/textual), agent-oriented output formats.
-- **Phase 4**: Design doc: architecture, output format, v0.1 roadmap.
-- **Phase 5**: Prototype on a real production codebase.
+
+### Design
+
+- **Phase 4**: Design doc: architecture (engine, rule tiers, calibration,
+  cache), public API surface, output formats (human and agent), config
+  schema, v0.1 scope cut. Reviewed before any implementation starts.
+
+### Implementation
+
+TDD throughout: each step starts with failing tests, ends green. Every
+phase preserves the two core invariants: extensible (three rule tiers,
+single shared AST) and fast (diff-aware, file-level cache, single pass).
+
+- **Phase 5**: Core engine: file discovery, `ast` + `tokenize` parsing,
+  rule runner, diagnostics model. The minimal loop: files in, findings out.
+- **Phase 6**: First rule set: the universal-threshold rules from Phase 2
+  (function length, nesting depth, argument count, returns per function).
+- **Phase 7**: Calibration: `nette calibrate` produces the repo profile
+  (p50/p90/p99 per metric); calibrated rules judge deviation from it.
+- **Phase 8**: Diff-aware mode and file-level result cache: judge only
+  changed code, re-runs near-free.
+- **Phase 9**: Extensibility tiers: TOML thresholds, YAML declarative
+  patterns, Python plugin API (dogfooded by our own rules).
+- **Phase 10**: Output & integration: agent-oriented output, human CLI
+  output, MCP server, framework profiles (FastAPI first).
+
+### Release
+
+- **Phase 11**: Prototype on a real production codebase; fix what reality
+  breaks.
+- **Phase 12**: v0.1 on PyPI: packaging, docs, benchmark numbers published.
