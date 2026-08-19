@@ -123,5 +123,20 @@ single shared AST) and fast (diff-aware, file-level cache, single pass).
 ### Release
 
 - **Phase 11**: Prototype on a real production codebase; fix what reality
-  breaks.
+  breaks. Done: 964-file FastAPI monorepo. Calibration 1.7s, full check
+  3.1s cold / 0.17s warm. 127 findings, zero crashes, zero endpoint false
+  positives. Cross-checked against 12 months of git fix-churn: 9 of the 15
+  most bug-fixed files flagged; 4 of the 6 missed are structurally sound
+  (churn from product change, silence correct). Two v0.2 candidates born
+  from the field: branch-density rule (flat if/elif chains evade length
+  and nesting thresholds) and churn-weighted hotspots.
 - **Phase 12**: v0.1 on PyPI: packaging, docs, benchmark numbers published.
+
+### v0.2 candidates (from field testing)
+
+- Branch-density rule: decisions per function, orthogonal to length and
+  nesting. Target: dense flat converter/driver files.
+- Churn-weighted hotspots: cross findings with git history; a borderline
+  file that changes weekly outranks one never touched.
+- Per-service/folder aggregated view: field findings clustered heavily by
+  service; the report should surface that shape.
