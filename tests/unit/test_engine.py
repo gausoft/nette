@@ -2,7 +2,7 @@ import ast
 
 from nette.engine import check_files
 from nette.findings import Severity
-from nette.rules import Context, Rule
+from nette.rules.base import Context, Rule
 
 
 class FlagEveryFunction(Rule):
