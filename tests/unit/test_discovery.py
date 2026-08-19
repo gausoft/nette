@@ -31,6 +31,18 @@ def test_discover_skips_hidden_and_cache_dirs(tmp_path):
     assert [f.name for f in files] == ["real.py"]
 
 
+def test_discover_skips_virtualenvs_whatever_their_name(tmp_path):
+    venv = tmp_path / "v"
+    (venv / "lib").mkdir(parents=True)
+    (venv / "pyvenv.cfg").write_text("home = /usr\n")
+    (venv / "lib" / "vendored.py").write_text("")
+    (tmp_path / "real.py").write_text("")
+
+    files = discover([tmp_path])
+
+    assert [f.name for f in files] == ["real.py"]
+
+
 def test_discover_returns_sorted_deduplicated(tmp_path):
     (tmp_path / "z.py").write_text("")
     (tmp_path / "a.py").write_text("")

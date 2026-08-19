@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Final, Iterable
 
@@ -20,12 +21,17 @@ def discover(paths: Iterable[Path]) -> list[Path]:
 
 
 def _walk(root: Path) -> Iterable[Path]:
-    for path in root.rglob("*.py"):
-        relative = path.relative_to(root)
-        if any(_skipped(part) for part in relative.parts[:-1]):
-            continue
-        yield path
+    for dirpath, dirnames, filenames in os.walk(root):
+        parent = Path(dirpath)
+        dirnames[:] = [name for name in dirnames if not _skipped(parent / name)]
+        for name in filenames:
+            if name.lower().endswith(".py"):
+                yield parent / name
 
 
-def _skipped(dirname: str) -> bool:
-    return dirname.startswith(SKIPPED_DIR_PREFIXES) or dirname in SKIPPED_DIR_NAMES
+def _skipped(directory: Path) -> bool:
+    name = directory.name
+    if name.startswith(SKIPPED_DIR_PREFIXES) or name in SKIPPED_DIR_NAMES:
+        return True
+
+    return (directory / "pyvenv.cfg").exists()

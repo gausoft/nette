@@ -10,19 +10,15 @@
 **AI writes code. nette keeps it clean.**
 
 A code readability checker for the AI-agent era. Deterministic, diff-aware,
-calibrated on your codebase, fast enough to live inside the agent's
+calibrated on your repo's own style, fast enough to live inside the agent's
 write-check-fix loop.
 
-[![status](https://img.shields.io/badge/status-pre--release-f97316)](docs/vision.md)
+[![status](https://img.shields.io/badge/status-v0.1-f97316)](CHANGELOG.md)
 [![python](https://img.shields.io/badge/python-%E2%89%A53.11-18181b)](pyproject.toml)
 [![license](https://img.shields.io/badge/license-MIT-18181b)](LICENSE)
 [![style](https://img.shields.io/badge/deps-zero-18181b)](pyproject.toml)
 
 </div>
-
-> [!NOTE]
-> **Pre-release.** The engine, rules, calibration, and CLI work today from a
-> source checkout. First PyPI release coming as v0.1.
 
 ## Why
 
@@ -51,8 +47,7 @@ bare numbers.
 ## Quickstart
 
 ```bash
-git clone https://github.com/gausoft/nette && cd nette
-pip install -e .
+pip install nette
 
 nette check                  # judge the current tree
 nette check --diff           # judge only what changed (the agent loop)
@@ -69,6 +64,28 @@ nette check --diff --format agent
 It emits a deterministic JSON envelope: summary counts, flat findings,
 and a ready-to-act instruction per finding. Identical input produces
 identical bytes, so agent runs cache and diff cleanly.
+
+## Calibration, and why it only tightens
+
+`nette calibrate` measures five style dimensions on your tree — annotation
+rate, guard density, `try` density, camelCase leakage, file size p90 — and
+writes them to `.nette/profile.json`, which you commit. Style rules then
+judge new code against those numbers rather than against a universal ideal.
+Other tools calibrate ceilings on code *size*; nette calibrates the style
+an agent has to stay consistent with.
+
+The profile is a ratchet. Recalibrating on a tree that has drifted keeps
+the stricter of the two values per dimension, so a repo's baseline can
+improve but never quietly rot:
+
+```
+$ nette calibrate
+profile written to .nette/profile.json (964 files measured)
+kept the stricter baseline for annotated_function_rate (--reset to relax)
+```
+
+Relaxing takes `nette calibrate --reset`, an explicit human act, visible in
+the diff of the committed profile.
 
 ## Rules
 
@@ -124,7 +141,7 @@ nesting_depth = 4
 | # | Promise | Meaning |
 |---|---------|---------|
 | 1 | **Judges new code, not legacy** | Diff mode. A 10-year-old repo is never "all red". |
-| 2 | **Calibrated on YOUR repo** | Learns the local style, flags deviations. No universal style imposed. |
+| 2 | **Calibrated on YOUR repo** | Learns the local style — annotations, guards, file size — and flags deviation. The baseline ratchets: it can tighten, never loosen by accident. |
 | 3 | **Verdict in under a second** | Deterministic: same code, same verdict, zero LLM at runtime. |
 | 4 | **Findings say what to do** | Not "complexity 12 > 9" but the problem, the reason, and the fix direction. |
 | 5 | **Pure Python, zero deps** | `pip install nette` just works. nette's own code is the showcase. |
@@ -139,8 +156,19 @@ nesting_depth = 4
   as a sibling product.
 - LLM review. Deterministic or nothing.
 
+## Known gaps in 0.1
+
+- A dense flat `if/elif` chain passes under the length and nesting
+  thresholds. Field testing found two such files. A branch-density rule is
+  planned for 0.2.
+- FastAPI is the only framework profile. Django and SQLAlchemy signatures
+  are judged by the generic rules.
+- The YAML pattern tier, external Python plugins, SARIF output and the MCP
+  server are designed but not shipped.
+
 ## Documentation
 
+- [Changelog](CHANGELOG.md)
 - [Design: how nette works](docs/design.md)
 - [Rules reference](docs/rules/README.md)
 - [Vision & requirements](docs/vision.md)
@@ -148,8 +176,10 @@ nesting_depth = 4
 
 ## Contributing
 
-Design feedback and issue reports are welcome. Code contributions open
-after the v0.1 release; until then the surface moves fast.
+Design feedback and issue reports are welcome. Code contributions are open
+from 0.1 on. Read [docs/design.md](docs/design.md) first: a rule that does
+not fit the three-tier engine or the calibration model will be declined on
+shape, not on merit.
 
 Agents contributing here follow [AGENTS.md](AGENTS.md).
 
