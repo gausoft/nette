@@ -1,16 +1,30 @@
-# Design: nette v0.1
+# nette v0.1 design
 
-Phase 4 of the [roadmap](vision.md). This document turns the research
-(phases 1-3) into a buildable design: architecture, public API, output
-formats, config schema, and the v0.1 scope cut. Implementation starts only
-after this document is reviewed.
+nette is a code readability checker for Python, built to live inside an AI
+agent's write-check-fix loop. It is deterministic, diff-aware, and
+calibrated on the repository it checks. This document is the buildable
+design for the first release: how the engine works, what rules ship, what
+the tool looks like from the command line, and what is deliberately left
+out.
 
-Constraints inherited from [.ai/architecture.md](../.ai/architecture.md):
-one AST, deterministic runtime, diff-first, sub-second verdict, explicit
-opt-in, per-rule timing, declarative tier stays declarative, dogfooding,
-actionable findings, agent-consumable output.
+The research behind every choice here lives in [vision.md](vision.md).
+The architecture invariants (one AST, deterministic runtime, diff-first,
+sub-second verdict) live in [.ai/architecture.md](../.ai/architecture.md)
+and are assumed throughout.
 
-## Pipeline
+## The short version
+
+- One pipeline: discover files, check the cache, parse once, run all rules
+  in a single pass, render.
+- Two kinds of thresholds: universal ones (function length, nesting) with
+  defaults measured on exemplary codebases, and calibrated ones (comment
+  density, file size) that compare code to the repository's own profile.
+- One finding model. Every output format is a thin renderer over it.
+- Agents are the primary audience. The agent output format is designed
+  for token economy and deterministic re-runs, not adapted from the human
+  one as an afterthought.
+
+## How a check runs
 
 ```
 paths/diff ──> discover ──> cache? ──hit──> findings
@@ -25,30 +39,44 @@ paths/diff ──> discover ──> cache? ──hit──> findings
                     render (concise|full|agent|json)
 ```
 
-Six stages, each a module under `src/nette/`:
+Each stage is a module under `src/nette/`.
 
-| Stage | Module | Responsibility |
-|---|---|---|
-| Discover | `discovery.py` | Resolve paths or `--diff` (git) into a file list. |
-| Cache | `cache.py` | Per-file result memoization. Key: content hash + config hash + nette version. Skip parse and rules on hit. |
-| Parse | `parsing.py` | One `ast.parse` and one `tokenize` stream per file, bundled into a `SourceFile` object. Parse failure produces a finding, never a crash. |
-| Run | `engine.py` | Single AST walk. Each node is offered to every active rule via `visit_<node>` dispatch. Rules accumulate findings. |
-| Calibrate | `calibration.py` | Builds and reads the repo profile (used by calibrated rules; not in the hot path). |
-| Render | `output/` | One renderer per format, all consuming the same `Finding` list. |
+**Discover** (`discovery.py`). Resolve explicit paths or `--diff` (via
+git) into a file list.
 
-Execution model: sequential by default. `ProcessPoolExecutor` above a file
-threshold (default 20, configurable). The engine core is written
-mypyc-friendly (strict annotations, `Final`, no dynamic dispatch tricks);
-compilation is a release optimization, not a design dependency.
+**Cache** (`cache.py`). Per-file result memoization. The key is the file's
+content hash plus the config hash plus the nette version. On a hit, parse
+and rules are skipped entirely; the stored findings are returned.
 
-## Data model
+**Parse** (`parsing.py`). One `ast.parse` and one `tokenize` stream per
+file, bundled into a `SourceFile` object shared by every rule. A parse
+failure produces a finding, never a crash.
+
+**Run** (`engine.py`). A single AST walk. Each node is offered to every
+active rule through `visit_<node>` dispatch. Rules accumulate findings.
+
+**Calibrate** (`calibration.py`). Builds and reads the repo profile. Used
+by calibrated rules; not in the hot path.
+
+**Render** (`output/`). One renderer per format, all consuming the same
+finding list.
+
+Execution is sequential by default and switches to a
+`ProcessPoolExecutor` above a file-count threshold (default 20,
+configurable). The engine core is written mypyc-friendly: strict
+annotations, `Final` constants, no dynamic dispatch tricks. Compilation
+with mypyc is a release optimization, never a design dependency.
+
+## The finding model
+
+Everything nette reports is a `Finding`:
 
 ```python
 @dataclass(frozen=True)
 class Finding:
     code: str            # stable rule code, e.g. "NET102"
     message: str         # the claim: what is wrong
-    grounds: str         # the why: threshold or calibrated baseline violated
+    grounds: str         # the why: threshold or baseline violated
     help: str            # the resolution: concrete fix direction
     severity: Severity   # error | warning | info
     file: Path
@@ -59,39 +87,50 @@ class Finding:
     fixable: bool = False
 ```
 
-The claim/grounds/resolution split is load-bearing (FSE 2018 research,
-phase 3). For calibrated rules, `grounds` carries the repo baseline:
-"repo p90 is 34 lines, this function has 120". No finding ships a number
-without its context.
+The claim/grounds/resolution split is load-bearing. For calibrated rules,
+`grounds` carries the repo baseline: "repo p90 is 34 lines, this function
+has 120". No finding ships a number without its context.
 
-Rule codes are stable and never renumbered. Ranges: `NET0xx` engine and
-parse, `NET1xx` shape (length, nesting, args, returns), `NET2xx` naming,
-`NET3xx` defensiveness and error handling, `NET4xx` comments and docs,
-`NET5xx` project structure (file naming, file size vs repo profile),
-`ORGxxx` reserved for user plugins.
+Rule codes are stable and never renumbered:
 
-## Rules
+| Range | Family |
+|---|---|
+| `NET0xx` | Engine and parse errors |
+| `NET1xx` | Shape: length, nesting, arguments, returns |
+| `NET2xx` | Naming |
+| `NET3xx` | Defensiveness and error handling |
+| `NET4xx` | Comments and docs |
+| `NET5xx` | Project structure: file naming, file size |
+| `ORGxxx` | Reserved for user plugins |
 
-Two threshold families (phase 2 result):
+## Rules and thresholds
 
-- **Universal**: function length, nesting depth, argument count, returns
-  per function. Defaults derived from the phase 2 corpus benchmark
-  (p90 across httpx, pydantic, fastapi, attrs, curated stdlib).
-  Overridable in TOML.
-- **Calibrated**: annotation rate, docstring rate, comment density,
-  defensiveness (try/getattr/isinstance density), naming style, file size
-  (a new or grown file measured against the repo's file-size profile).
-  These have
-  no absolute threshold; the rule fires on deviation from the repo profile.
+Rules fall into two threshold families, a distinction that came straight
+out of measuring five exemplary codebases (httpx, pydantic, fastapi,
+attrs, curated stdlib).
 
-Project structure rules (phase 2b) span both families: file naming is
-universal (snake_case was invariant across every exemplary corpus), file
-size is calibrated. Both operate on the file list and the profile; neither
-needs an import graph, which keeps them in the single-pass pipeline.
-Deeper structure signals (folder depth, grab-bag growth) wait for v0.2.
+**Universal rules** cover code shape: function length, nesting depth,
+argument count, returns per function. The exemplary corpora agree on
+these within a narrow band, so the defaults are their measured p90 values.
+Every default is overridable in TOML.
 
-A rule is a class implementing the public API (tier 3). Built-in rules use
-the same API (dogfooding):
+**Calibrated rules** cover style: annotation rate, docstring rate, comment
+density, defensiveness (try/getattr/isinstance density), naming style,
+file size. The same corpora diverge on these by up to 12x while all being
+exemplary, so no absolute threshold is defensible. A calibrated rule fires
+on deviation from the repository's own profile.
+
+Project structure rules span both families: file naming is universal
+(snake_case was invariant across every corpus measured), file size is
+calibrated. Both operate on the file list and the profile; neither needs
+an import graph, which keeps them inside the single-pass pipeline. Deeper
+structure signals (folder depth, grab-bag file growth) wait for v0.2.
+
+### Writing a rule
+
+A rule is a class implementing the public API. Built-in rules use the same
+API as third-party ones; if the API cannot express a rule we need, the API
+gets fixed.
 
 ```python
 from nette import Rule, Context
@@ -105,42 +144,44 @@ class FunctionLength(Rule):
         ctx.report(node, message=..., grounds=..., help=...)
 ```
 
-`Context` exposes: thresholds, the repo profile (calibration data), the
-current `SourceFile` (AST, tokens, lines), and `report()`. It does not
-expose I/O; rules that want the network or subprocess get neither.
+`Context` exposes thresholds, the repo profile, the current `SourceFile`
+(AST, tokens, lines), and `report()`. It exposes no I/O: rules that want
+the network or a subprocess get neither.
 
-Suppression: `# nette: allow(NET101) reason` on the offending line or the
-line above. The reason is mandatory; a bare `allow` is itself a finding
-(NET001). `nette allows` lists every suppression in the tree for audit.
-This is the anti-Goodhart mechanism from phase 3: honest exemption is a
-first-class move, silent gaming is not.
+### Suppressions
+
+`# nette: allow(NET101) reason` on the offending line or the line above
+suppresses a finding. The reason is mandatory; a bare `allow` is itself a
+finding (NET001). `nette allows` lists every suppression in the tree for
+audit. Honest exemption is a first-class move; silent gaming is not.
 
 ## Calibration
 
-`nette calibrate` walks the repo (or a `--ref` baseline), computes
-p50/p90/p99 per metric, and writes `.nette/profile.json` (committed, so CI
-and every agent share the same baseline). The phase 2 measurement script is
-the embryo of this module. Calibrated rules read the profile; when it is
-missing they fall back to corpus defaults and say so in `grounds`.
+`nette calibrate` walks the repository (or a `--ref` baseline), computes
+p50/p90/p99 for every calibrated metric, and writes
+`.nette/profile.json`. The profile is committed, so CI and every agent
+share the same baseline. Calibrated rules read it; when it is missing they
+fall back to corpus defaults and say so in `grounds`.
 
-Framework profiles are calibration overlays: `profile = "fastapi"` exempts
-route-decorated functions from signature thresholds (phase 2 measured
-args p90 = 20 on FastAPI endpoints; they are API surface, not clutter).
-v0.1 ships the FastAPI overlay only.
+Framework profiles are calibration overlays. `profile = "fastapi"` exempts
+route-decorated functions from signature thresholds, because FastAPI
+endpoints measured at args p90 = 20 in the corpus study: those parameters
+are API surface, not clutter. v0.1 ships the FastAPI overlay only.
 
 ## Diff-aware mode
 
-`nette check --diff [REF]` (default `REF` = merge-base with the target
-branch) restricts findings to files touched by the diff, and within them to
-findings whose span intersects changed lines, with one exception: a
-calibrated rule may cite whole-file context in `grounds` while still
-anchoring the finding to a changed line. Whole-repo mode stays available
+`nette check --diff [REF]` restricts findings to files touched by the
+diff, and within them to findings whose span intersects changed lines.
+Default `REF` is the merge-base with the target branch. One exception: a
+calibrated rule may cite whole-file context in `grounds` while anchoring
+the finding to a changed line. Whole-repo mode stays available
 (`nette check .`) for audit and calibration.
 
-## Config
+## Configuration
 
-Single surface: `[tool.nette]` in `pyproject.toml` (or `nette.toml`, same
-schema, taking precedence). No other mechanism, no plugin auto-discovery.
+One surface: `[tool.nette]` in `pyproject.toml`, or `nette.toml` with the
+same schema taking precedence. No other mechanism, no plugin
+auto-discovery.
 
 ```toml
 [tool.nette]
@@ -158,70 +199,143 @@ nesting_depth = 4
 format = "full"               # always explicit; no tty auto-detection
 ```
 
-The YAML tier (pattern rules) keeps the schema shown in
+The YAML tier keeps the schema described in
 [extensibility.md](extensibility.md); its engine compiles patterns to AST
 matchers at load time. No shell, no eval, ever.
 
 ## Output formats
 
-Four renderers over the same `Finding` list (phase 3 decisions):
+Four renderers over the same finding list.
 
-- `concise`: one line per finding, `severity[CODE] file:line:col message`,
-  space separators (editor hyperlink compatibility).
-- `full`: annotated source frame (the Rust/ruff style), default for humans.
-- `agent`: JSON envelope with `schema_version`, summary counts, flat
-  findings list; each finding carries a mechanically templated
-  `instruction` string, `fixable`, and grounds inline. Token budget:
-  `--max-output-tokens N` degrades deterministically (drop help text
-  first, then grounds detail, never the location or code).
-- `json`: the raw `Finding` list, no reshaping.
-
-`--explain NETxxx` prints the long-form rule doc. Exit codes: 0 clean,
-1 findings at error severity, 2 tool failure.
-
-## CLI surface (v0.1, complete)
+**`concise`**: one line per finding, for grep and editor jump-to-error.
 
 ```
-nette check [PATHS|--diff [REF]] [--format F] [--timings] [--no-cache]
-nette calibrate [PATH] [--ref REF]
-nette allows
+warning[NET101] src/api.py:42:1 function 'sync_users' is 120 lines long
+```
+
+**`full`**: annotated source frame in the Rust style, default for humans.
+The offending code is shown as written, the problem underlined, the
+grounds and fix direction below.
+
+**`agent`**: a JSON envelope with `schema_version`, summary counts, and a
+flat findings list. Each finding carries a mechanically templated
+`instruction` string (composed from severity, message, location, and fix
+availability), `fixable`, and grounds inline. Output is sorted and
+deterministic: identical input produces identical bytes, which enables
+prompt caching and meaningful diffs between agent runs.
+`--max-output-tokens N` degrades deterministically: help text is dropped
+first, then grounds detail, never the location or the code.
+
+**`json`**: the raw finding list, no reshaping.
+
+Exit codes: `0` clean, `1` findings at error severity, `2` tool failure.
+
+## CLI
+
+The complete v0.1 surface, four subcommands.
+
+### `nette check`
+
+The core command: run the rules, print the findings.
+
+```
+nette check [PATHS...] [OPTIONS]
+
+  PATHS                  Files or directories. Default: current directory.
+
+  --diff [REF]           Judge only files and lines changed since REF.
+                         Default REF: merge-base with the target branch.
+  --format FORMAT        concise | full | agent | json. Default: full,
+                         or the value from config.
+  --select CODES         Comma-separated rule codes or families to run,
+                         overriding config for this invocation.
+  --ignore CODES         Comma-separated rule codes to skip.
+  --max-output-tokens N  Agent format only: degrade output to fit N tokens.
+  --no-cache             Bypass the result cache (read and write).
+  --timings              Print per-rule wall time after the report.
+  --explain CODE         Print the long-form doc for one rule and exit.
+```
+
+Typical invocations:
+
+```
+nette check                        # whole tree, human output
+nette check --diff                 # what did my change break
+nette check --diff --format agent  # the agent loop
+nette check src/api.py --timings   # one file, with rule costs
+```
+
+### `nette calibrate`
+
+Build or refresh the repository profile.
+
+```
+nette calibrate [PATH] [OPTIONS]
+
+  PATH          Root to measure. Default: current directory.
+
+  --ref REF     Measure a git ref instead of the working tree, so the
+                baseline can be pinned to a known-good state.
+  --dry-run     Print the profile to stdout without writing it.
+```
+
+Writes `.nette/profile.json`. Commit it: the point of the profile is that
+CI, every developer, and every agent judge against the same baseline.
+
+### `nette allows`
+
+Audit every suppression in the tree.
+
+```
+nette allows [PATHS...]
+```
+
+Lists each `# nette: allow(...)` with its file, line, rule code, and
+reason. A suppression without a reason shows up here and as a NET001
+finding in `check`.
+
+### `nette explain`
+
+```
 nette explain CODE
 ```
 
-## MCP server
+Prints the long-form documentation for a rule: what it detects, why it
+matters, how the threshold or baseline works, examples that trigger it,
+and how to fix or legitimately suppress it. Same content as
+`check --explain`, available without running a check.
 
-Deferred to v0.2. The agent format over stdout covers the agent loop in
-v0.1; MCP adds a persistent-process convenience, not a capability. Keeping
-v0.1 CLI-only cuts a dependency and a protocol surface from the first
-release.
+## What v0.1 ships, what it does not
 
-## v0.1 scope cut
+**In**: the engine, the cache, diff mode, the universal shape rules,
+calibration plus two calibrated rules (defensiveness, naming), two
+structure rules (file naming NET501, file size vs profile NET502), the
+TOML config tier, four output formats, suppressions with audit, the
+FastAPI overlay, `--timings`.
 
-In: engine, cache, diff mode, universal rules (shape family), calibration
-plus two calibrated rules (defensiveness, naming), two structure rules
-(file naming NET501, file size vs profile NET502), TOML tier, four output
-formats, suppressions, FastAPI overlay, `--timings`.
+**Out, deferred to v0.2+**: the YAML pattern tier, loading external Python
+plugins from config (the API exists and built-ins use it; external loading
+waits), the MCP server, SARIF export, autofix, watch mode,
+free-threading and InterpreterPool execution backends, structure rules
+beyond naming and size.
 
-Out (v0.2+): YAML pattern tier, Python plugin loading from config (the API
-exists and built-ins use it; external loading waits), MCP server, SARIF,
-autofix, watch mode, free-threading/InterpreterPool backends, structure
-rules beyond naming and size (folder depth, grab-bag growth).
+The deferrals are scope cuts, not design cuts: the rule API and the config
+schema above already account for every deferred feature, so adding them
+later breaks nothing. The MCP server in particular adds a
+persistent-process convenience over the agent format, not a capability,
+which is why the first release is CLI-only.
 
-The YAML tier and external plugins are deferred for scope, not design:
-the rule API and config schema above already account for them, so adding
-them later breaks nothing.
+## Test strategy
 
-## Test strategy (TDD)
+TDD throughout; every implementation phase starts red.
 
-Every implementation phase starts red. Test layers:
+- **Unit**: each rule gets table-driven tests, snippet in, findings out.
+- **Golden**: each output format has golden files diffed byte-for-byte.
+- **Corpus**: the exemplary corpora from the research phase run as a
+  regression suite. Exemplary code must stay quiet: zero error-severity
+  findings on httpx, attrs, and the stdlib picks is a hard budget.
+- **Property**: cache correctness (a warm run's output is identical to a
+  cold run's) and determinism (two runs produce identical bytes).
 
-- Unit: each rule gets table-driven tests (snippet in, findings out).
-- Golden: each output format has golden files diffed byte-for-byte.
-- Corpus: the phase 2 corpus runs as a regression suite; exemplary code
-  must stay quiet (false-positive budget: zero findings at error severity
-  on httpx/attrs/stdlib picks).
-- Property: cache correctness (hit output identical to cold output),
-  determinism (two runs, identical bytes).
-
-Performance gate in CI: `nette check` on its own repo under 500 ms cold,
-under 100 ms warm, measured before every release.
+Performance gate in CI, measured before every release: `nette check` on
+its own repository under 500 ms cold, under 100 ms warm.
