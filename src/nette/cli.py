@@ -30,19 +30,18 @@ ALL_RULES = (
     FileSize,
 )
 RULE_DOCS = {
-    "NET000": ("engine.md", "parse-error"),
-    "NET001": ("engine.md", "bare-allow"),
-    "NET101": ("shape.md", "function-length"),
-    "NET102": ("shape.md", "nesting-depth"),
-    "NET103": ("shape.md", "argument-count"),
-    "NET104": ("shape.md", "return-count"),
-    "NET201": ("naming.md", "short-name-long-scope"),
-    "NET202": ("naming.md", "naming-drift"),
-    "NET301": ("defensiveness.md", "over-guarded"),
-    "NET401": ("structure.md", "file-naming"),
-    "NET402": ("structure.md", "file-size"),
+    "parse-error": "engine.md",
+    "bare-allow": "engine.md",
+    "function-length": "shape.md",
+    "nesting-depth": "shape.md",
+    "argument-count": "shape.md",
+    "return-count": "shape.md",
+    "short-name-long-scope": "naming.md",
+    "naming-drift": "naming.md",
+    "over-guarded": "defensiveness.md",
+    "file-naming": "structure.md",
+    "file-size": "structure.md",
 }
-CODE_BY_NAME = {name: code for code, (_, name) in RULE_DOCS.items()}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -108,7 +107,7 @@ def _run_check(args: argparse.Namespace) -> int:
     else:
         files = discover(args.paths or [Path(".")])
 
-    rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code)]
+    rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
     profile = load_profile(root / PROFILE_PATH)
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
 
@@ -163,17 +162,16 @@ def _run_allows(args: argparse.Namespace) -> int:
 
 
 def _run_explain(args: argparse.Namespace) -> int:
-    code = CODE_BY_NAME.get(args.code, args.code)
-    entry = RULE_DOCS.get(code)
-    if entry is None:
-        known = ", ".join(f"{name} ({code})" for name, code in sorted(CODE_BY_NAME.items()))
-        print(f"unknown rule {args.code}; known: {known}", file=sys.stderr)
+    doc_file = RULE_DOCS.get(args.code)
+    if doc_file is None:
+        print(
+            f"unknown rule {args.code}; known: {', '.join(sorted(RULE_DOCS))}",
+            file=sys.stderr,
+        )
         return 2
 
-    doc_file, section = entry
     text = (Path(__file__).parent / "docs" / doc_file).read_text(encoding="utf-8")
-    print(f"{code} ({section})\n")
-    print(_extract_section(text, section))
+    print(_extract_section(text, args.code))
 
     return 0
 
