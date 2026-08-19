@@ -6,7 +6,7 @@ from nette.output import render
 
 FINDINGS = [
     Finding(
-        code="NET101",
+        code="function-length",
         message="function `load` is hard to take in at one glance",
         grounds="it spans 120 lines of code; the configured limit is 100",
         help="split it by logical step, one step per function",
@@ -18,7 +18,7 @@ FINDINGS = [
         end_column=0,
     ),
     Finding(
-        code="NET000",
+        code="parse-error",
         message="syntax error: invalid syntax",
         grounds="the file does not parse as Python",
         help="fix the syntax error before nette can judge this file",
@@ -38,7 +38,7 @@ def test_concise_is_one_line_per_finding():
     lines = text.splitlines()
     assert len(lines) == 2
     assert lines[0] == (
-        "warning[NET101] src/app.py 10:1 "
+        "warning[function-length] src/app.py 10:1 "
         "function `load` is hard to take in at one glance"
     )
 
@@ -46,7 +46,7 @@ def test_concise_is_one_line_per_finding():
 def test_full_shows_grounds_and_help():
     text = render(FINDINGS, format="full")
 
-    assert "warning[NET101]" in text
+    assert "warning[function-length]" in text
     assert "src/app.py 10:1" in text
     assert "why: it spans 120 lines of code" in text
     assert "fix: split it by logical step" in text
@@ -60,7 +60,7 @@ def test_agent_format_is_versioned_json_with_instructions():
     assert payload["summary"]["by_severity"] == {"error": 1, "warning": 1, "info": 0}
 
     first = payload["findings"][0]
-    assert first["code"] == "NET101"
+    assert first["code"] == "function-length"
     assert first["file"] == "src/app.py"
     assert first["line"] == 10
     assert "src/app.py:10" in first["instruction"]

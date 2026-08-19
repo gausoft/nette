@@ -14,7 +14,8 @@ MINIMUM_DRIFTING: Final = 2
 
 
 class ShortNameLongScope(Rule):
-    code = "NET201"
+    code = "short-name-long-scope"
+    family = "naming"
 
     def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
         self._measure(node, ctx)
@@ -40,7 +41,8 @@ class ShortNameLongScope(Rule):
 
 
 class NamingDrift(Rule):
-    code = "NET202"
+    code = "naming-drift"
+    family = "naming"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
         if ctx.profile is None:

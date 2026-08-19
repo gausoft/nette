@@ -5,7 +5,7 @@ from nette.findings import Finding, Severity
 
 def make_finding(**overrides):
     defaults = dict(
-        code="NET101",
+        code="function-length",
         message="function too long",
         grounds="repo p90 is 34 lines, this one has 120",
         help="split by logical step",

@@ -21,7 +21,7 @@ def test_parse_failure_yields_error_finding_not_crash(write_file):
     assert source.tree is None
     assert len(source.errors) == 1
     error = source.errors[0]
-    assert error.code == "NET000"
+    assert error.code == "parse-error"
     assert error.file == file
     assert error.line == 1
 
@@ -49,4 +49,4 @@ def test_undecodable_file_yields_finding_not_crash(tmp_path):
     source = parse_source(file)
 
     assert source.tree is None
-    assert [f.code for f in source.errors] == ["NET000"]
+    assert [f.code for f in source.errors] == ["parse-error"]

@@ -33,4 +33,4 @@ class Finding:
         return (str(self.file), self.line, self.column, self.code)
 
 
-PARSE_ERROR_CODE: Final = "NET000"
+PARSE_ERROR_CODE: Final = "parse-error"

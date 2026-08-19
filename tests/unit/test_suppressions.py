@@ -11,7 +11,7 @@ def check(file, rules=None):
 
 def test_allow_with_reason_silences_the_finding(write_file):
     file = write_file(
-        f"def big():  # nette: allow(NET101) generated parser table\n{LONG_BODY}\n"
+        f"def big():  # nette: allow(function-length) generated parser table\n{LONG_BODY}\n"
     )
 
     assert check(file) == []
@@ -19,42 +19,42 @@ def test_allow_with_reason_silences_the_finding(write_file):
 
 def test_allow_on_line_above_also_works(write_file):
     file = write_file(
-        f"# nette: allow(NET101) generated parser table\ndef big():\n{LONG_BODY}\n"
+        f"# nette: allow(function-length) generated parser table\ndef big():\n{LONG_BODY}\n"
     )
 
     assert check(file) == []
 
 
 def test_allow_without_reason_is_itself_a_finding(write_file):
-    file = write_file(f"def big():  # nette: allow(NET101)\n{LONG_BODY}\n")
+    file = write_file(f"def big():  # nette: allow(function-length)\n{LONG_BODY}\n")
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET001"]
+    assert [f.code for f in findings] == ["bare-allow"]
     assert "reason" in findings[0].message
 
 
 def test_allow_for_another_code_does_not_silence(write_file):
     file = write_file(
-        f"def big():  # nette: allow(NET104) wrong code\n{LONG_BODY}\n"
+        f"def big():  # nette: allow(return-count) wrong code\n{LONG_BODY}\n"
     )
 
     codes = [f.code for f in check(file)]
 
-    assert "NET101" in codes
+    assert "function-length" in codes
 
 
 def test_list_allows_reports_all_markers(write_file):
     file = write_file(
-        "# nette: allow(NET101) table generator output\n"
+        "# nette: allow(function-length) table generator output\n"
         "def a():\n"
         "    pass\n"
         "\n"
-        "def b():  # nette: allow(NET104) state machine, clearest flat\n"
+        "def b():  # nette: allow(return-count) state machine, clearest flat\n"
         "    pass\n"
     )
 
     allows = list_allows([file])
 
-    assert [(a.code, a.line) for a in allows] == [("NET101", 1), ("NET104", 5)]
+    assert [(a.code, a.line) for a in allows] == [("function-length", 1), ("return-count", 5)]
     assert allows[0].reason == "table generator output"

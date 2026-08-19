@@ -36,7 +36,7 @@ def test_too_many_returns_is_flagged(write_file):
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET104"]
+    assert [f.code for f in findings] == ["return-count"]
     assert "scattered" in findings[0].message
     assert "6" in findings[0].grounds
 

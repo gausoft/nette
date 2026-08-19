@@ -17,7 +17,7 @@ def test_short_name_with_long_life_is_flagged(write_file):
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET201"]
+    assert [f.code for f in findings] == ["short-name-long-scope"]
     assert "`r`" in findings[0].message
 
 

@@ -36,7 +36,7 @@ def test_defensive_file_in_calm_repo_is_flagged(write_file):
 
     findings = check(file, CALM_PROFILE)
 
-    assert [f.code for f in findings] == ["NET301"]
+    assert [f.code for f in findings] == ["over-guarded"]
     assert "5%" in findings[0].grounds
 
 

@@ -19,7 +19,7 @@ def test_function_over_default_threshold_is_flagged(write_file):
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET101"]
+    assert [f.code for f in findings] == ["function-length"]
     assert "big" in findings[0].message
     assert "101" in findings[0].grounds
     assert findings[0].line == 1

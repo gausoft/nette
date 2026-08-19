@@ -25,7 +25,7 @@ def test_camel_functions_in_snake_repo_are_flagged(write_file):
 
     findings = check(file, SNAKE_PROFILE)
 
-    assert [f.code for f in findings] == ["NET202"]
+    assert [f.code for f in findings] == ["naming-drift"]
     assert "fetchUser" in findings[0].message
 
 

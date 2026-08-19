@@ -51,7 +51,7 @@ def test_syntax_error_becomes_finding(write_file):
 
     findings = check_files([file], rules=[FlagEveryFunction()])
 
-    assert [f.code for f in findings] == ["NET000"]
+    assert [f.code for f in findings] == ["parse-error"]
     assert findings[0].severity is Severity.ERROR
 
 

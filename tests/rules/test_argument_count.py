@@ -18,7 +18,7 @@ def test_too_many_arguments_is_flagged(write_file):
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET103"]
+    assert [f.code for f in findings] == ["argument-count"]
     assert "crowded" in findings[0].message
     assert "7" in findings[0].grounds
 
@@ -45,7 +45,7 @@ def test_default_arguments_do_not_count(write_file):
 def test_keyword_only_arguments_count(write_file):
     file = write_file("def f(a, b, c, *, d, e, f, g):\n    return a\n")
 
-    assert [f.code for f in check(file)] == ["NET103"]
+    assert [f.code for f in check(file)] == ["argument-count"]
 
 
 def test_threshold_override(write_file):

@@ -35,10 +35,10 @@ def test_router_decorator_also_exempt(write_file):
 def test_plain_function_still_flagged_under_fastapi_profile(write_file):
     file = write_file(PLAIN_FUNCTION)
 
-    assert [f.code for f in check(file, framework="fastapi")] == ["NET103"]
+    assert [f.code for f in check(file, framework="fastapi")] == ["argument-count"]
 
 
 def test_endpoint_flagged_without_profile(write_file):
     file = write_file(ENDPOINT)
 
-    assert [f.code for f in check(file)] == ["NET103"]
+    assert [f.code for f in check(file)] == ["argument-count"]
