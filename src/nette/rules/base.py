@@ -12,6 +12,7 @@ DEFAULT_THRESHOLDS: dict[str, int] = {
     "nesting_depth": 5,
     "argument_count": 6,
     "return_count": 5,
+    "short_name_scope": 15,
 }
 
 
