@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-  <img src="assets/logo-light.svg" alt="nette" width="96">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/gausoft/nette/main/assets/logo-dark.svg">
+  <img src="https://raw.githubusercontent.com/gausoft/nette/main/assets/logo-light.svg" alt="nette" width="96">
 </picture>
 
 # nette
@@ -13,10 +13,10 @@ A code readability checker for the AI-agent era. Deterministic, diff-aware,
 calibrated on your repo's own style, fast enough to live inside the agent's
 write-check-fix loop.
 
-[![status](https://img.shields.io/badge/status-v0.1-f97316)](CHANGELOG.md)
-[![python](https://img.shields.io/badge/python-%E2%89%A53.11-18181b)](pyproject.toml)
-[![license](https://img.shields.io/badge/license-MIT-18181b)](LICENSE)
-[![style](https://img.shields.io/badge/deps-zero-18181b)](pyproject.toml)
+[![status](https://img.shields.io/badge/status-v0.1-f97316)](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
+[![python](https://img.shields.io/badge/python-%E2%89%A53.11-18181b)](https://github.com/gausoft/nette/blob/main/pyproject.toml)
+[![license](https://img.shields.io/badge/license-MIT-18181b)](https://github.com/gausoft/nette/blob/main/LICENSE)
+[![style](https://img.shields.io/badge/deps-zero-18181b)](https://github.com/gausoft/nette/blob/main/pyproject.toml)
 
 </div>
 
@@ -168,21 +168,21 @@ nesting_depth = 4
 
 ## Documentation
 
-- [Changelog](CHANGELOG.md)
-- [Design: how nette works](docs/design.md)
-- [Rules reference](docs/rules/README.md)
-- [Vision & requirements](docs/vision.md)
-- [Extensibility design](docs/extensibility.md)
+- [Changelog](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
+- [Design: how nette works](https://github.com/gausoft/nette/blob/main/docs/design.md)
+- [Rules reference](https://github.com/gausoft/nette/blob/main/docs/rules/README.md)
+- [Vision & requirements](https://github.com/gausoft/nette/blob/main/docs/vision.md)
+- [Extensibility design](https://github.com/gausoft/nette/blob/main/docs/extensibility.md)
 
 ## Contributing
 
 Design feedback and issue reports are welcome. Code contributions are open
-from 0.1 on. Read [docs/design.md](docs/design.md) first: a rule that does
+from 0.1 on. Read [docs/design.md](https://github.com/gausoft/nette/blob/main/docs/design.md) first: a rule that does
 not fit the three-tier engine or the calibration model will be declined on
 shape, not on merit.
 
-Agents contributing here follow [AGENTS.md](AGENTS.md).
+Agents contributing here follow [AGENTS.md](https://github.com/gausoft/nette/blob/main/AGENTS.md).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/gausoft/nette/blob/main/LICENSE)
