@@ -99,8 +99,8 @@ def test_explain_accepts_rule_name(tmp_path):
     assert "over-guarded" in result.stdout
 
 
-def test_explain_unknown_code_fails(tmp_path):
-    result = run_nette("explain", "NET999", cwd=tmp_path)
+def test_explain_unknown_rule_fails(tmp_path):
+    result = run_nette("explain", "no-such-rule", cwd=tmp_path)
 
     assert result.returncode == 2
 
@@ -153,3 +153,25 @@ def test_calibrate_reset_accepts_the_looser_profile(tmp_path):
 
     profile = json.loads((tmp_path / ".nette" / "profile.json").read_text())
     assert profile["metrics"]["annotated_function_rate"] == 0.0
+
+
+def test_bad_config_is_a_diagnostic_not_a_traceback(tmp_path):
+    (tmp_path / "mod.py").write_text("def f():\n    return 1\n")
+    (tmp_path / "nette.toml").write_text('ignore = ["argument-conut"]\n')
+
+    result = run_nette("check", ".", cwd=tmp_path)
+
+    assert result.returncode == 2
+    assert "Traceback" not in result.stderr
+    assert "argument-count" in result.stderr
+
+
+def test_unreadable_config_is_a_diagnostic_not_a_traceback(tmp_path):
+    (tmp_path / "mod.py").write_text("def f():\n    return 1\n")
+    (tmp_path / "nette.toml").write_text("ignore = [\n")
+
+    result = run_nette("check", ".", cwd=tmp_path)
+
+    assert result.returncode == 2
+    assert "Traceback" not in result.stderr
+    assert result.stderr.startswith("error:")

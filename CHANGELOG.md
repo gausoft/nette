@@ -7,6 +7,8 @@ loop: deterministic, diff-aware, calibrated on the repo it judges.
 
 ### Rules
 
+Rules are named, never numbered. A published name is never renamed.
+
 - shape: `function-length`, `nesting-depth`, `argument-count`,
   `return-count`. Universal defaults derived from five exemplary codebases
   (httpx, pydantic, fastapi, attrs, curated stdlib).
@@ -23,7 +25,7 @@ loop: deterministic, diff-aware, calibrated on the repo it judges.
   Re-calibrating keeps the stricter side of every metric, so the baseline
   cannot drift looser by accident. `--reset` accepts the new measure as is.
 - `nette allows` lists every suppression and its reason.
-- `nette explain RULE` prints the long-form doc for a rule name or code.
+- `nette explain RULE` prints the long-form doc for a rule.
 
 ### Behaviour
 
@@ -32,7 +34,9 @@ loop: deterministic, diff-aware, calibrated on the repo it judges.
 - Per-file result cache keyed on content, config, profile and version.
   Corrupt entries are discarded instead of raising.
 - Config in `[tool.nette]` of `pyproject.toml` or in `nette.toml`, with
-  strict key and type validation.
+  strict key and type validation. An unknown rule name is refused with the
+  closest match suggested; a malformed file names itself. Config mistakes
+  are diagnostics on stderr with exit code 2, never tracebacks.
 - `profile = "fastapi"` exempts route endpoints from signature rules.
 - Syntax and encoding errors become findings, never crashes.
 

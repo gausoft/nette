@@ -23,7 +23,7 @@ def make_finding(**overrides):
 def test_finding_is_immutable():
     finding = make_finding()
     try:
-        finding.code = "NET999"
+        finding.code = "something-else"
         raised = False
     except AttributeError:
         raised = True

@@ -56,7 +56,7 @@ def test_nette_toml_takes_precedence_over_pyproject(tmp_path):
 
 
 def test_unknown_key_is_rejected(tmp_path):
-    write_pyproject(tmp_path, '[tool.nette]\nselct = ["NET"]\n')
+    write_pyproject(tmp_path, '[tool.nette]\nselct = ["shape"]\n')
 
     with pytest.raises(ValueError, match="selct"):
         load_config(tmp_path)
@@ -78,3 +78,25 @@ def test_config_filters_rules_by_family_and_name():
     assert config.rule_enabled("function-length", "shape") is True
     assert config.rule_enabled("nesting-depth", "shape") is False
     assert config.rule_enabled("over-guarded", "defensiveness") is False
+
+
+def test_unknown_rule_name_is_rejected_with_a_suggestion(tmp_path):
+    (tmp_path / "nette.toml").write_text('ignore = ["argument-conut"]\n')
+
+    with pytest.raises(ValueError) as error:
+        load_config(tmp_path)
+
+    assert "argument-conut" in str(error.value)
+    assert "argument-count" in str(error.value)
+
+
+def test_nette_toml_accepts_the_pyproject_section_header(tmp_path):
+    (tmp_path / "nette.toml").write_text('[tool.nette]\nignore = ["function-length"]\n')
+
+    assert load_config(tmp_path).ignore == ("function-length",)
+
+
+def test_engine_rules_can_be_named_in_config(tmp_path):
+    (tmp_path / "nette.toml").write_text('ignore = ["bare-allow", "parse-error"]\n')
+
+    assert load_config(tmp_path).ignore == ("bare-allow", "parse-error")
