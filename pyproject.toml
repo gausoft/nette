@@ -1,11 +1,29 @@
 [project]
 name = "nette"
-version = "0.0.0"
+dynamic = ["version"]
 description = "AI writes code. nette keeps it clean. A readability tool for Python in the AI-agent era."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Gauthier Eholoum", email = "gauthier.eholoum@gmail.com" }]
+keywords = ["linter", "readability", "code-quality", "static-analysis", "ai-agents"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/gausoft/nette"
+Source = "https://github.com/gausoft/nette"
+Issues = "https://github.com/gausoft/nette/issues"
 
 [project.scripts]
 nette = "nette.cli:main"
@@ -16,3 +34,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nette"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "docs", "README.md", "CHANGELOG.md", "LICENSE"]
+exclude = ["docs/private"]
+
+[tool.hatch.version]
+path = "src/nette/__init__.py"

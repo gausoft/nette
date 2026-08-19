@@ -4,8 +4,9 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
+from nette import __version__
 from nette.cache import Cache
-from nette.calibration import build_profile, load_profile, save_profile
+from nette.calibration import build_profile, load_profile, ratchet, save_profile
 from nette.config import load_config
 from nette.discovery import discover
 from nette.engine import check_files
@@ -41,6 +42,7 @@ RULE_DOCS = {
     "NET401": ("structure.md", "file-naming"),
     "NET402": ("structure.md", "file-size"),
 }
+CODE_BY_NAME = {name: code for code, (_, name) in RULE_DOCS.items()}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -57,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="nette")
+    parser.add_argument("--version", action="version", version=f"nette {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
 
     check = commands.add_parser("check", help="check files for readability findings")
@@ -81,12 +84,17 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 
     calibrate = commands.add_parser("calibrate", help="measure the repo style profile")
     calibrate.add_argument("path", nargs="?", default=Path("."), type=Path)
+    calibrate.add_argument(
+        "--reset",
+        action="store_true",
+        help="accept a looser profile than the current one (drops the ratchet)",
+    )
 
     allows = commands.add_parser("allows", help="list every suppression marker")
     allows.add_argument("paths", nargs="*", default=[Path(".")], type=Path)
 
     explain = commands.add_parser("explain", help="print the long-form doc of a rule")
-    explain.add_argument("code")
+    explain.add_argument("code", metavar="RULE", help="rule name or code")
 
     return parser.parse_args(argv)
 
@@ -97,11 +105,8 @@ def _run_check(args: argparse.Namespace) -> int:
 
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)
-    elif args.paths:
-        files = discover(args.paths)
     else:
-        print("error: give paths to check, or --diff", file=sys.stderr)
-        return 2
+        files = discover(args.paths or [Path(".")])
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code)]
     profile = load_profile(root / PROFILE_PATH)
@@ -132,11 +137,17 @@ def _run_check(args: argparse.Namespace) -> int:
 
 
 def _run_calibrate(args: argparse.Namespace) -> int:
-    profile = build_profile(args.path)
+    measured = build_profile(args.path)
     destination = Path.cwd() / PROFILE_PATH
+    previous = None if args.reset else load_profile(destination)
+
+    profile = measured if previous is None else ratchet(previous, measured)
+    loosened = [name for name, value in measured.metrics.items() if profile.metrics[name] != value]
 
     save_profile(profile, destination)
     print(f"profile written to {destination} ({profile.files_measured} files measured)")
+    if loosened:
+        print(f"kept the stricter baseline for {', '.join(sorted(loosened))} (--reset to relax)")
 
     return 0
 
@@ -152,15 +163,16 @@ def _run_allows(args: argparse.Namespace) -> int:
 
 
 def _run_explain(args: argparse.Namespace) -> int:
-    entry = RULE_DOCS.get(args.code)
+    code = CODE_BY_NAME.get(args.code, args.code)
+    entry = RULE_DOCS.get(code)
     if entry is None:
-        known = ", ".join(sorted(RULE_DOCS))
-        print(f"unknown rule code {args.code}; known: {known}", file=sys.stderr)
+        known = ", ".join(f"{name} ({code})" for name, code in sorted(CODE_BY_NAME.items()))
+        print(f"unknown rule {args.code}; known: {known}", file=sys.stderr)
         return 2
 
     doc_file, section = entry
-    text = (Path(__file__).parent / "docs" / doc_file).read_text()
-    print(f"{args.code} ({section})\n")
+    text = (Path(__file__).parent / "docs" / doc_file).read_text(encoding="utf-8")
+    print(f"{code} ({section})\n")
     print(_extract_section(text, section))
 
     return 0
