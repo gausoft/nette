@@ -68,3 +68,16 @@ mypyc breaks Python stack traces and complicates packaging. Documented
 pure-Python wins (pylint fast-path checks, custom ast.walk) show 2-200x
 gains are available first. Compilation may come later as an optional
 accelerated wheel, and must never shape the architecture.
+
+## 010: speaking rule slugs, not numeric codes
+
+Rule identifiers are kebab-case slugs naming the detected problem
+(`function-length`, `over-guarded`, `file-naming`), grouped into families
+for config selection (`shape`, `naming`, `defensiveness`, `structure`,
+`engine`). Numeric codes (NET101) are dropped before first release. The
+primary audience is an AI agent: a slug is understood inside the finding
+message itself, with no `explain` lookup, no extra tokens. ESLint and
+Clippy validated this at scale; ruff's numeric codes are inherited flake8
+legacy. Stability rule unchanged: a published slug is never renamed.
+Third-party plugin rules are prefixed (`org/no-print-in-prod`).
+

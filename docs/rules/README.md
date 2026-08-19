@@ -1,16 +1,20 @@
 # Rules
 
 Long-form documentation for every nette rule. This is the content served
-by `nette explain CODE`.
+by `nette explain RULE`.
 
-Codes are stable and never renumbered.
+Rule identifiers are speaking slugs: they name the detected problem, so a
+finding is understandable without a lookup. A published slug is never
+renamed. Rules group into families, which is what `select` takes in
+config.
 
-| Range | Family | Threshold kind |
+| Family | Rules | Threshold kind |
 |---|---|---|
-| [NET0xx](net0xx-engine.md) | Engine and parse | none |
-| [NET1xx](net1xx-shape.md) | Shape: length, nesting, arguments, returns | universal |
-| [NET3xx](net3xx-defensiveness.md) | Defensiveness and error handling | calibrated |
-| [NET5xx](net5xx-structure.md) | Project structure | mixed |
+| [engine](engine.md) | `parse-error`, `bare-allow` | none |
+| [shape](shape.md) | `function-length`, `nesting-depth`, `argument-count`, `return-count` | universal |
+| [naming](naming.md) | `short-name-long-scope`, `naming-drift` | mixed |
+| [defensiveness](defensiveness.md) | `over-guarded` | calibrated |
+| [structure](structure.md) | `file-naming`, `file-size` | mixed |
 
 Two threshold kinds:
 
@@ -21,6 +25,9 @@ Two threshold kinds:
   under judgment to the repository's own profile (`.nette/profile.json`,
   built by `nette calibrate`) and fire on deviation from it.
 
-Suppressing a finding: put `# nette: allow(CODE) reason` on the offending
-line or the line above. The reason is mandatory. `nette allows` lists
-every suppression in the tree.
+Suppressing a finding: put `# nette: allow(rule-slug) reason` on the
+offending line or the line above. The reason is mandatory. `nette allows`
+lists every suppression in the tree.
+
+Third-party plugin rules (v0.2+) are prefixed with their package name:
+`org/no-print-in-prod`. Native slugs are never prefixed.

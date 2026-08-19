@@ -1,4 +1,4 @@
-# NET5xx: project structure
+# Family: project structure
 
 Structure rules judge the file, not the code inside it: what it is named
 and how big it is relative to the repository. Linters traditionally stop
@@ -8,12 +8,12 @@ the wrong place).
 
 Both rules are planned for v0.1 and not yet implemented.
 
-## NET501: file naming
+## `file-naming`
 
 **Severity: warning. Universal, no threshold.**
 
 ```
-warning[NET501] src/UserService.py:1:1 file name does not follow snake_case
+warning[file-naming] src/UserService.py:1:1 file name does not follow snake_case
 ```
 
 Across every exemplary corpus measured, module naming was fully uniform:
@@ -27,13 +27,13 @@ conventions, usually by an agent porting an example.
 **Legitimate suppression**: a file whose name is imposed from outside,
 such as a generated protocol module that must match an external artifact.
 
-## NET502: file size against the repo profile
+## `file-size`
 
 **Severity: warning. Calibrated: compares the file's line count to the
 repository's file-size profile.**
 
 ```
-warning[NET502] src/models.py:1:1 this file is far larger than the rest of the repo
+warning[file-size] src/models.py:1:1 this file is far larger than the rest of the repo
   grounds: it has 1840 lines; the repo p90 is 310 lines
 ```
 
@@ -56,5 +56,5 @@ four cohesive modules wearing one filename.
 accepted trade (a generated client, a single-file public API facade).
 
 ```python
-# nette: allow(NET502) generated OpenAPI client, regenerated wholesale
+# nette: allow(file-size) generated OpenAPI client, regenerated wholesale
 ```

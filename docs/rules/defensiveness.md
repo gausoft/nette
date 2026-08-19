@@ -1,4 +1,4 @@
-# NET3xx: defensiveness and error handling
+# Family: defensiveness and error handling
 
 Defensiveness rules judge how much a file guards against its own inputs:
 try blocks, `isinstance` checks, `getattr` with fallbacks. These are
@@ -11,14 +11,14 @@ than the rest of its own repository.
 Calibrated rules need a profile. Run `nette calibrate` to write
 `.nette/profile.json`; without it, defensiveness rules stay silent.
 
-## NET301: over-guarded file
+## `over-guarded`
 
 **Severity: warning. Baseline: `guarded_function_rate` from the repo
 profile. Fires when the file's rate exceeds 3x the baseline, with at
 least 3 guarded functions.**
 
 ```
-warning[NET301] src/client.py:12:1 this file guards far more than the rest of the repo
+warning[over-guarded] src/client.py:12:1 this file guards far more than the rest of the repo
   grounds: 9 of its 12 functions wrap code in try blocks (75%); the repo baseline is 18% of functions
 ```
 
@@ -43,5 +43,5 @@ three frames later.
 **Legitimate suppression**: a module whose whole job is to be a boundary.
 
 ```python
-# nette: allow(NET301) this module wraps every vendor SDK call, guarding is its purpose
+# nette: allow(over-guarded) this module wraps every vendor SDK call, guarding is its purpose
 ```

@@ -1,4 +1,4 @@
-# NET1xx: shape
+# Family: shape
 
 Shape rules judge the geometry of a function: how long it is, how deep it
 nests, how many arguments it takes, how many exits it has. These are
@@ -10,12 +10,12 @@ Every default is overridable under `[tool.nette.thresholds]`.
 Shape rules measure functions, not files. All four apply to `def` and
 `async def` alike, including methods.
 
-## NET101: function length
+## `function-length`
 
 **Severity: warning. Threshold: `function_length`, default 100 lines.**
 
 ```
-warning[NET101] src/sync.py:42:1 function `sync_users` is hard to take in at one glance
+warning[function-length] src/sync.py:42:1 function `sync_users` is hard to take in at one glance
 ```
 
 Length is counted as lines actually covered by code statements: the
@@ -36,15 +36,15 @@ function boundary announcing itself.
 decoder whose steps are trivially uniform.
 
 ```python
-def decode_frame(raw: bytes) -> Frame:  # nette: allow(NET101) flat wire-format decoder, one case per opcode
+def decode_frame(raw: bytes) -> Frame:  # nette: allow(function-length) flat wire-format decoder, one case per opcode
 ```
 
-## NET102: nesting depth
+## `nesting-depth`
 
 **Severity: warning. Threshold: `nesting_depth`, default 5 levels.**
 
 ```
-warning[NET102] src/sync.py:42:1 function `sync_users` nests too deeply to follow
+warning[nesting-depth] src/sync.py:42:1 function `sync_users` nests too deeply to follow
 ```
 
 Depth counts nested `if`, `for`, `while`, `with`, and `try` blocks inside
@@ -70,13 +70,13 @@ for order in user.orders:
     ...
 ```
 
-## NET103: argument count
+## `argument-count`
 
 **Severity: warning. Threshold: `argument_count`, default 6 required
 arguments.**
 
 ```
-warning[NET103] src/report.py:10:1 function `build_report` takes too many arguments to call safely
+warning[argument-count] src/report.py:10:1 function `build_report` takes too many arguments to call safely
 ```
 
 Only required arguments count: parameters with defaults are excluded, and
@@ -94,12 +94,12 @@ route-decorated functions are exempt.
 the function. Three arguments that always appear together are one concept
 asking to be named.
 
-## NET104: return count
+## `return-count`
 
 **Severity: warning. Threshold: `return_count`, default 5 returns.**
 
 ```
-warning[NET104] src/pricing.py:77:1 function `quote` exits from too many places
+warning[return-count] src/pricing.py:77:1 function `quote` exits from too many places
 ```
 
 Counts `return` statements belonging to the function itself (nested
@@ -111,7 +111,7 @@ scan everything to know what the function can produce. Corpus p90 is 2 to
 **Fix**: converge the branches toward one or two exit points, or split
 the function so each piece has an obvious single result.
 
-NET104 interacts with NET102: flattening nesting with early returns adds
+return-count interacts with nesting-depth: flattening nesting with early returns adds
 returns. The defaults leave room for that pattern (guard clauses plus one
 main exit); a function that exceeds both limits at once is simply doing
 too much.

@@ -74,7 +74,7 @@ Everything nette reports is a `Finding`:
 ```python
 @dataclass(frozen=True)
 class Finding:
-    code: str            # stable rule code, e.g. "NET102"
+    code: str            # stable rule slug, e.g. "nesting-depth"
     message: str         # the claim: what is wrong
     grounds: str         # the why: threshold or baseline violated
     help: str            # the resolution: concrete fix direction
@@ -91,17 +91,22 @@ The claim/grounds/resolution split is load-bearing. For calibrated rules,
 `grounds` carries the repo baseline: "repo p90 is 34 lines, this function
 has 120". No finding ships a number without its context.
 
-Rule codes are stable and never renumbered:
+Rule identifiers are speaking slugs naming the detected problem, so a
+finding is understandable (by a human or an agent) without a lookup. A
+published slug is never renamed. Rules group into families, which is the
+unit of selection in config:
 
-| Range | Family |
+| Family | Rules |
 |---|---|
-| `NET0xx` | Engine and parse errors |
-| `NET1xx` | Shape: length, nesting, arguments, returns |
-| `NET2xx` | Naming |
-| `NET3xx` | Defensiveness and error handling |
-| `NET4xx` | Comments and docs |
-| `NET5xx` | Project structure: file naming, file size |
-| `ORGxxx` | Reserved for user plugins |
+| `engine` | `parse-error`, `bare-allow` |
+| `shape` | `function-length`, `nesting-depth`, `argument-count`, `return-count` |
+| `naming` | `short-name-long-scope`, `naming-drift` |
+| `defensiveness` | `over-guarded` |
+| `docs` | reserved for v0.2 (comments and docstrings) |
+| `structure` | `file-naming`, `file-size` |
+
+Third-party plugin rules (v0.2+) are prefixed with their package name
+(`org/no-print-in-prod`); native slugs are never prefixed.
 
 ## Rules and thresholds
 
@@ -136,7 +141,7 @@ gets fixed.
 from nette import Rule, Context
 
 class FunctionLength(Rule):
-    code = "NET101"
+    code = "function-length"
 
     def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
         limit = ctx.threshold("function_length")  # TOML override or default
@@ -150,9 +155,9 @@ the network or a subprocess get neither.
 
 ### Suppressions
 
-`# nette: allow(NET101) reason` on the offending line or the line above
+`# nette: allow(function-length) reason` on the offending line or the line above
 suppresses a finding. The reason is mandatory; a bare `allow` is itself a
-finding (NET001). `nette allows` lists every suppression in the tree for
+finding (`bare-allow`). `nette allows` lists every suppression in the tree for
 audit. Honest exemption is a first-class move; silent gaming is not.
 
 ## Calibration
@@ -185,8 +190,8 @@ auto-discovery.
 
 ```toml
 [tool.nette]
-select = ["NET"]              # rule families to enable (explicit opt-in)
-ignore = ["NET301"]
+select = ["shape", "naming", "defensiveness", "structure"]  # families, explicit opt-in
+ignore = ["over-guarded"]
 profile = "fastapi"           # framework overlay, optional
 yaml-rules = ["rules/"]       # tier 2 pattern files
 plugins = ["myorg.nette_rules"]  # tier 3 modules, explicit
@@ -210,7 +215,7 @@ Four renderers over the same finding list.
 **`concise`**: one line per finding, for grep and editor jump-to-error.
 
 ```
-warning[NET101] src/api.py:42:1 function 'sync_users' is 120 lines long
+warning[function-length] src/api.py:42:1 function 'sync_users' is 120 lines long
 ```
 
 **`full`**: annotated source frame in the Rust style, default for humans.
@@ -247,13 +252,13 @@ nette check [PATHS...] [OPTIONS]
                          Default REF: merge-base with the target branch.
   --format FORMAT        concise | full | agent | json. Default: full,
                          or the value from config.
-  --select CODES         Comma-separated rule codes or families to run,
+  --select RULES         Comma-separated rule slugs or families to run,
                          overriding config for this invocation.
-  --ignore CODES         Comma-separated rule codes to skip.
+  --ignore RULES         Comma-separated rule slugs to skip.
   --max-output-tokens N  Agent format only: degrade output to fit N tokens.
   --no-cache             Bypass the result cache (read and write).
   --timings              Print per-rule wall time after the report.
-  --explain CODE         Print the long-form doc for one rule and exit.
+  --explain RULE         Print the long-form doc for one rule and exit.
 ```
 
 Typical invocations:
@@ -290,14 +295,14 @@ Audit every suppression in the tree.
 nette allows [PATHS...]
 ```
 
-Lists each `# nette: allow(...)` with its file, line, rule code, and
-reason. A suppression without a reason shows up here and as a NET001
+Lists each `# nette: allow(...)` with its file, line, rule slug, and
+reason. A suppression without a reason shows up here and as a `bare-allow`
 finding in `check`.
 
 ### `nette explain`
 
 ```
-nette explain CODE
+nette explain RULE
 ```
 
 Prints the long-form documentation for a rule: what it detects, why it
@@ -309,7 +314,7 @@ and how to fix or legitimately suppress it. Same content as
 
 **In**: the engine, the cache, diff mode, the universal shape rules,
 calibration plus two calibrated rules (defensiveness, naming), two
-structure rules (file naming NET501, file size vs profile NET502), the
+structure rules (`file-naming`, `file-size` vs profile), the
 TOML config tier, four output formats, suppressions with audit, the
 FastAPI overlay, `--timings`.
 
