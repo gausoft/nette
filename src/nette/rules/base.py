@@ -4,6 +4,7 @@ import ast
 
 from nette.calibration import Profile
 from nette.findings import Finding, Severity
+from nette.frameworks import SIGNATURE_EXEMPT_RULES, is_route_endpoint
 from nette.parsing import SourceFile
 
 DEFAULT_THRESHOLDS: dict[str, int] = {
@@ -26,15 +27,24 @@ class Context:
         rule: Rule,
         thresholds: dict[str, int] | None = None,
         profile: Profile | None = None,
+        framework: str | None = None,
     ) -> None:
         self.source = source
         self.profile = profile
+        self.framework = framework
         self._rule = rule
         self._thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
         self._findings: list[Finding] = []
 
     def threshold(self, name: str) -> int:
         return self._thresholds[name]
+
+    def signature_exempt(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+        return (
+            self.framework == "fastapi"
+            and self._rule.code in SIGNATURE_EXEMPT_RULES
+            and is_route_endpoint(node)
+        )
 
     def report(self, node: ast.AST, *, message: str, grounds: str, help: str) -> None:
         finding = Finding(

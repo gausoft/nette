@@ -19,9 +19,10 @@ def check_files(
     thresholds: dict[str, int] | None = None,
     profile: Profile | None = None,
     cache: Cache | None = None,
+    framework: str | None = None,
 ) -> list[Finding]:
     key = (
-        config_key(thresholds, [rule.code for rule in rules], profile)
+        config_key(thresholds, [rule.code for rule in rules], profile, framework)
         if cache
         else ""
     )
@@ -33,7 +34,7 @@ def check_files(
             findings.extend(cached)
             continue
 
-        fresh = _check_one(file, rules, thresholds, profile)
+        fresh = _check_one(file, rules, thresholds, profile, framework)
         if cache:
             cache.put(file, key, fresh)
         findings.extend(fresh)
@@ -46,12 +47,15 @@ def _check_one(
     rules: Sequence[Rule],
     thresholds: dict[str, int] | None,
     profile: Profile | None,
+    framework: str | None = None,
 ) -> list[Finding]:
     source = parse_source(file)
     if source.tree is None:
         return list(source.errors)
 
-    contexts = [(rule, Context(source, rule, thresholds, profile)) for rule in rules]
+    contexts = [
+        (rule, Context(source, rule, thresholds, profile, framework)) for rule in rules
+    ]
 
     for node in ast.walk(source.tree):
         handler_name = f"visit_{type(node).__name__.lower()}"

@@ -47,12 +47,14 @@ def config_key(
     thresholds: dict[str, int] | None,
     rule_codes: list[str],
     profile: Profile | None = None,
+    framework: str | None = None,
 ) -> str:
     material = json.dumps(
         {
             "thresholds": thresholds or {},
             "rules": sorted(rule_codes),
             "profile": profile.metrics if profile else None,
+            "framework": framework,
         },
         sort_keys=True,
     )

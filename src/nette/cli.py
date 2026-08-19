@@ -100,6 +100,7 @@ def _run_check(args: argparse.Namespace) -> int:
         thresholds=config.thresholds,
         profile=profile,
         cache=cache,
+        framework=config.framework,
     )
 
     if args.timings:
