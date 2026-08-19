@@ -68,7 +68,12 @@ radon, lizard) identified four open gaps:
   (annotations, docstrings, comments, defensiveness); framework awareness
   proven necessary by FastAPI's endpoint signatures.
 - **Phase 3**: DX & visualization research: error output design (ruff, elm,
-  rust), TUI (rich/textual), agent-oriented output formats.
+  rust), TUI (rich/textual), agent-oriented output formats. Done: four
+  output formats (concise, full, agent JSON, raw json), stable rule codes
+  with `--explain`, findings structured as claim/grounds/resolution with
+  the calibrated baseline as the "why", anti-Goodhart design (intent in
+  every message, auditable suppressions with rationale), token-budgeted
+  agent output.
 
 ### Design
 
