@@ -38,6 +38,12 @@ radon, lizard) identified four open gaps:
    flags deviation from them. This is nette's core differentiator.
 4. **Poor DX.** No diff mode in kiss, rudimentary visualization everywhere,
    no output designed for agent consumption.
+5. **Nothing looks above the file.** All tools stop at file boundaries.
+   Project structure — file size norms, file naming conventions, folder
+   depth, where a new file belongs — is unmeasured, and it is precisely
+   where AI agents drift (catch-all 800-line files, `utils2.py`, files
+   dropped in the wrong folder). Repo calibration applies here too: learn
+   the repo's structural signature, flag new files that deviate.
 
 ## Key design lessons (from ecosystem research)
 
