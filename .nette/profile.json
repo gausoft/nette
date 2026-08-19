@@ -1,0 +1,11 @@
+{
+  "files_measured": 20,
+  "metrics": {
+    "annotated_function_rate": 1.0,
+    "camel_case_function_rate": 0.0,
+    "file_size_p90": 163.7,
+    "guarded_function_rate": 0.02,
+    "try_per_kloc": 2.07
+  },
+  "version": 1
+}
