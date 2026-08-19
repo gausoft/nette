@@ -70,3 +70,38 @@ def test_calibrate_writes_profile(tmp_path):
     assert result.returncode == 0
     profile = json.loads((tmp_path / ".nette" / "profile.json").read_text())
     assert profile["files_measured"] == 1
+
+
+def test_allows_lists_markers(tmp_path):
+    (tmp_path / "mod.py").write_text(
+        "def f():  # nette: allow(NET101) generated table\n    pass\n"
+    )
+
+    result = run_nette("allows", ".", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert "NET101" in result.stdout
+    assert "generated table" in result.stdout
+
+
+def test_explain_prints_rule_doc(tmp_path):
+    result = run_nette("explain", "NET101", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert "NET101" in result.stdout
+    assert len(result.stdout.splitlines()) > 3
+
+
+def test_explain_unknown_code_fails(tmp_path):
+    result = run_nette("explain", "NET999", cwd=tmp_path)
+
+    assert result.returncode == 2
+
+
+def test_timings_reports_per_rule_cost(tmp_path):
+    (tmp_path / "mod.py").write_text("def f():\n    return 1\n")
+
+    result = run_nette("check", ".", "--timings", cwd=tmp_path)
+
+    assert "NET101" in result.stderr
+    assert "ms" in result.stderr
