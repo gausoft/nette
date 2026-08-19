@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 
+from nette.calibration import Profile
 from nette.findings import Finding, Severity
 from nette.parsing import SourceFile
 
@@ -24,8 +25,10 @@ class Context:
         source: SourceFile,
         rule: Rule,
         thresholds: dict[str, int] | None = None,
+        profile: Profile | None = None,
     ) -> None:
         self.source = source
+        self.profile = profile
         self._rule = rule
         self._thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
         self._findings: list[Finding] = []
