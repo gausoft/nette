@@ -9,6 +9,7 @@ from nette.cache import Cache, config_key
 from nette.findings import Finding
 from nette.parsing import parse_source
 from nette.rules.base import Context, Rule
+from nette.suppressions import apply_allows
 
 
 def check_files(
@@ -59,4 +60,6 @@ def _check_one(
             if handler is not None:
                 handler(node, ctx)
 
-    return [finding for _, ctx in contexts for finding in ctx.findings]
+    findings = [finding for _, ctx in contexts for finding in ctx.findings]
+
+    return apply_allows(findings, source)
