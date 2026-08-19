@@ -18,6 +18,7 @@ DEFAULT_THRESHOLDS: dict[str, int] = {
 
 class Rule:
     code: str = ""
+    family: str = ""
     severity: Severity = Severity.WARNING
 
 

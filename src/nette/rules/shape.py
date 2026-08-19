@@ -18,7 +18,8 @@ NESTING_NODES = (
 
 
 class FunctionLength(Rule):
-    code = "NET101"
+    code = "function-length"
+    family = "shape"
 
     def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
         self._measure(node, ctx)
@@ -40,7 +41,8 @@ class FunctionLength(Rule):
 
 
 class NestingDepth(Rule):
-    code = "NET102"
+    code = "nesting-depth"
+    family = "shape"
 
     def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
         self._measure(node, ctx)
@@ -62,7 +64,8 @@ class NestingDepth(Rule):
 
 
 class ArgumentCount(Rule):
-    code = "NET103"
+    code = "argument-count"
+    family = "shape"
 
     def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
         self._measure(node, ctx)
@@ -87,7 +90,8 @@ class ArgumentCount(Rule):
 
 
 class ReturnCount(Rule):
-    code = "NET104"
+    code = "return-count"
+    family = "shape"
 
     def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
         self._measure(node, ctx)

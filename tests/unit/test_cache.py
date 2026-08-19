@@ -19,7 +19,7 @@ def test_warm_run_returns_same_findings(write_file, tmp_path):
     warm = check(file, cache)
 
     assert warm == cold
-    assert [f.code for f in warm] == ["NET101"]
+    assert [f.code for f in warm] == ["function-length"]
 
 
 def test_warm_run_skips_analysis(write_file, tmp_path, monkeypatch):
@@ -36,7 +36,7 @@ def test_warm_run_skips_analysis(write_file, tmp_path, monkeypatch):
 
     warm = check(file, cache)
 
-    assert [f.code for f in warm] == ["NET101"]
+    assert [f.code for f in warm] == ["function-length"]
 
 
 def test_editing_the_file_invalidates_its_entry(write_file, tmp_path):
@@ -64,7 +64,7 @@ def test_cache_persists_across_instances(write_file, tmp_path):
 
     warm = check(file, Cache(location))
 
-    assert [f.code for f in warm] == ["NET101"]
+    assert [f.code for f in warm] == ["function-length"]
 
 
 def test_no_cache_still_works(write_file):
@@ -72,7 +72,7 @@ def test_no_cache_still_works(write_file):
 
     findings = check_files([file], rules=[FunctionLength()])
 
-    assert [f.code for f in findings] == ["NET101"]
+    assert [f.code for f in findings] == ["function-length"]
 
 
 def test_changing_profile_invalidates(write_file, tmp_path):
@@ -91,7 +91,7 @@ def test_changing_profile_invalidates(write_file, tmp_path):
     first = check_files([file], rules=[Defensiveness()], profile=calm, cache=cache)
     second = check_files([file], rules=[Defensiveness()], profile=lenient, cache=cache)
 
-    assert [f.code for f in first] == ["NET301"]
+    assert [f.code for f in first] == ["over-guarded"]
     assert second == []
 
 
@@ -106,4 +106,4 @@ def test_corrupted_cache_entry_is_treated_as_miss(write_file, tmp_path):
 
     warm = check(file, Cache(location))
 
-    assert [f.code for f in warm] == ["NET101"]
+    assert [f.code for f in warm] == ["function-length"]

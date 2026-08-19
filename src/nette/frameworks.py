@@ -6,7 +6,7 @@ from typing import Final
 ROUTE_METHODS: Final = frozenset(
     {"get", "post", "put", "patch", "delete", "head", "options", "websocket"}
 )
-SIGNATURE_EXEMPT_RULES: Final = frozenset({"NET103"})
+SIGNATURE_EXEMPT_RULES: Final = frozenset({"argument-count"})
 
 
 def is_route_endpoint(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:

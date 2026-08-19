@@ -8,8 +8,8 @@ from typing import Final, Iterable
 from nette.findings import Finding, Severity
 from nette.parsing import SourceFile, parse_source
 
-ALLOW_PATTERN: Final = re.compile(r"#\s*nette:\s*allow\(([A-Z]+\d+)\)\s*(.*)")
-MISSING_REASON_CODE: Final = "NET001"
+ALLOW_PATTERN: Final = re.compile(r"#\s*nette:\s*allow\(([a-z][a-z-]*)\)\s*(.*)")
+MISSING_REASON_CODE: Final = "bare-allow"
 
 
 @dataclass(frozen=True)

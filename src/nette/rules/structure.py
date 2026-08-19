@@ -12,7 +12,8 @@ SIZE_DEVIATION_FACTOR: Final = 3.0
 
 
 class FileNaming(Rule):
-    code = "NET401"
+    code = "file-naming"
+    family = "structure"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
         name = ctx.source.path.name
@@ -28,7 +29,8 @@ class FileNaming(Rule):
 
 
 class FileSize(Rule):
-    code = "NET402"
+    code = "file-size"
+    family = "structure"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
         if ctx.profile is None:

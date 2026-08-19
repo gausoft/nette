@@ -8,6 +8,9 @@ from typing import Final
 from nette.rules.base import DEFAULT_THRESHOLDS
 
 KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output", "profile"})
+KNOWN_FAMILIES: Final = frozenset(
+    {"shape", "naming", "defensiveness", "structure", "engine"}
+)
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
 KNOWN_FORMATS: Final = frozenset({"concise", "full", "agent", "json"})
 KNOWN_PROFILES: Final = frozenset({"fastapi"})
@@ -15,17 +18,16 @@ KNOWN_PROFILES: Final = frozenset({"fastapi"})
 
 @dataclass(frozen=True)
 class Config:
-    select: tuple[str, ...] = ("NET",)
+    select: tuple[str, ...] = tuple(sorted(KNOWN_FAMILIES))
     ignore: tuple[str, ...] = ()
     thresholds: dict[str, int] = field(default_factory=dict)
     output_format: str = "full"
     framework: str | None = None
 
-    def rule_enabled(self, code: str) -> bool:
-        selected = any(code.startswith(prefix) for prefix in self.select)
-        ignored = any(code.startswith(prefix) for prefix in self.ignore)
-
-        return selected and not ignored
+    def rule_enabled(self, code: str, family: str) -> bool:
+        return {code, family}.isdisjoint(self.ignore) and not {code, family}.isdisjoint(
+            self.select
+        )
 
 
 def load_config(root: Path) -> Config:
@@ -57,7 +59,7 @@ def load_config(root: Path) -> Config:
         )
 
     return Config(
-        select=_string_tuple(section.get("select", ("NET",)), "select"),
+        select=_string_tuple(section.get("select", tuple(sorted(KNOWN_FAMILIES))), "select"),
         ignore=_string_tuple(section.get("ignore", ()), "ignore"),
         thresholds=thresholds,
         output_format=output_format,

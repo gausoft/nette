@@ -11,7 +11,8 @@ FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 
 
 class Defensiveness(Rule):
-    code = "NET301"
+    code = "over-guarded"
+    family = "defensiveness"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
         if ctx.profile is None:

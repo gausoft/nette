@@ -27,7 +27,7 @@ def test_depth_over_default_threshold_is_flagged(write_file):
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET102"]
+    assert [f.code for f in findings] == ["nesting-depth"]
     assert "deep" in findings[0].message
 
 

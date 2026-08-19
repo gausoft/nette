@@ -18,7 +18,7 @@ def test_file_far_above_repo_norm_is_flagged(write_file):
 
     findings = check(file)
 
-    assert [f.code for f in findings] == ["NET402"]
+    assert [f.code for f in findings] == ["file-size"]
     assert "150" in findings[0].grounds
 
 
