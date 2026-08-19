@@ -96,16 +96,29 @@ single shared AST) and fast (diff-aware, file-level cache, single pass).
 
 - **Phase 5**: Core engine: file discovery, `ast` + `tokenize` parsing,
   rule runner, diagnostics model. The minimal loop: files in, findings out.
+  Done: five modules (discovery, parsing, engine, findings, rules.base),
+  syntax and encoding errors become findings instead of crashes.
 - **Phase 6**: First rule set: the universal-threshold rules from Phase 2
   (function length, nesting depth, argument count, returns per function).
-- **Phase 7**: Calibration: `nette calibrate` produces the repo profile
-  (p50/p90/p99 per metric); calibrated rules judge deviation from it.
+  Done: NET101-104, defaults validated against the exemplary corpus
+  (docstrings excluded from length, only required arguments counted).
+- **Phase 7**: Calibration: `nette calibrate` produces the repo profile;
+  calibrated rules judge deviation from it. Done: versioned
+  `.nette/profile.json` and NET301 (over-defensiveness vs repo baseline).
+  Percentile profiles (p50/p90/p99) deferred until more calibrated rules
+  need them.
 - **Phase 8**: Diff-aware mode and file-level result cache: judge only
-  changed code, re-runs near-free.
-- **Phase 9**: Extensibility tiers: TOML thresholds, YAML declarative
-  patterns, Python plugin API (dogfooded by our own rules).
+  changed code, re-runs near-free. Done: cache keyed on content, config,
+  profile and version, corrupt entries self-heal; `--diff [REF]` in the CLI.
+- **Phase 9**: Extensibility tiers: TOML thresholds done (strict key and
+  type validation, `nette.toml` precedence). YAML declarative patterns and
+  external Python plugin loading deferred to v0.2 (the rule API they will
+  use already exists and is dogfooded by every built-in rule).
 - **Phase 10**: Output & integration: agent-oriented output, human CLI
-  output, MCP server, framework profiles (FastAPI first).
+  output, framework profiles. Done: four renderers (concise, full, agent,
+  json) and `nette check` / `nette calibrate` with `--fail-on`. MCP server
+  deferred to v0.2. Remaining for v0.1: suppressions with `nette allows`,
+  `nette explain`, `--timings`, FastAPI profile.
 
 ### Release
 
