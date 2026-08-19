@@ -32,15 +32,24 @@ jobs:
           python - <<'EOF'
           import subprocess, sys, time
 
+          # Budgets are sized for a GitHub runner, roughly half the speed of a
+          # development laptop. They guard against a regression, not a target.
+          COLD_BUDGET_MS = 1000
+          WARM_BUDGET_MS = 300
+
           def run_ms(args):
               start = time.perf_counter()
               subprocess.run(args, check=False, capture_output=True)
               return (time.perf_counter() - start) * 1000
 
-          cold = run_ms(["nette", "check", "src", "tests", "--no-cache"])
-          warm = run_ms(["nette", "check", "src", "tests"])
-          print(f"cold: {cold:.0f} ms (budget 500), warm: {warm:.0f} ms (budget 100)")
-          sys.exit(0 if cold < 500 and warm < 100 else 1)
+          target = ["nette", "check", "src", "tests"]
+          cold = run_ms([*target, "--no-cache"])
+          run_ms(target)              # this run populates the cache
+          warm = run_ms(target)       # only this one is warm
+
+          print(f"cold: {cold:.0f} ms (budget {COLD_BUDGET_MS})")
+          print(f"warm: {warm:.0f} ms (budget {WARM_BUDGET_MS})")
+          sys.exit(0 if cold < COLD_BUDGET_MS and warm < WARM_BUDGET_MS else 1)
           EOF
 
   dogfood:
