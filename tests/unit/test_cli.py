@@ -3,6 +3,13 @@ import subprocess
 import sys
 
 LONG_FUNCTION = "def big():\n" + "\n".join(f"    x{i} = {i}" for i in range(101)) + "\n"
+GUARDED_FILE = "".join(
+    f"def f{i}(d):\n    try:\n        return d['x']\n    except KeyError:\n        return None\n"
+    for i in range(4)
+)
+CALM_PROFILE = json.dumps(
+    {"version": 1, "files_measured": 50, "metrics": {"guarded_function_rate": 0.01}}
+)
 
 
 def run_nette(*args, cwd):
@@ -112,6 +119,89 @@ def test_check_without_paths_judges_current_tree(tmp_path):
 
     assert result.returncode == 1
     assert "function-length" in result.stdout
+
+
+def test_check_from_a_subdirectory_reads_the_root_config(tmp_path):
+    (tmp_path / "nette.toml").write_text('ignore = ["function-length"]\n')
+    package = tmp_path / "src" / "pkg"
+    package.mkdir(parents=True)
+    (package / "big.py").write_text(LONG_FUNCTION)
+
+    result = run_nette("check", ".", "--format", "concise", cwd=package)
+
+    assert result.stdout == ""
+    assert result.returncode == 0
+
+
+def test_check_of_an_outside_path_uses_that_project_profile(tmp_path):
+    project = tmp_path / "project"
+    (project / ".nette").mkdir(parents=True)
+    (project / ".nette" / "profile.json").write_text(CALM_PROFILE)
+    (project / "mod.py").write_text(GUARDED_FILE)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+
+    result = run_nette(
+        "check", str(project / "mod.py"), "--format", "concise", cwd=elsewhere
+    )
+
+    assert "over-guarded" in result.stdout
+
+
+def test_profile_flag_overrides_the_discovered_profile(tmp_path):
+    (tmp_path / "mod.py").write_text(GUARDED_FILE)
+    calm = tmp_path / "calm.json"
+    calm.write_text(CALM_PROFILE)
+
+    result = run_nette(
+        "check", ".", "--profile", str(calm), "--format", "concise", cwd=tmp_path
+    )
+
+    assert "over-guarded" in result.stdout
+
+
+def test_calibrate_from_a_subdirectory_writes_at_the_root(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    package = tmp_path / "src"
+    package.mkdir()
+    (package / "mod.py").write_text("def f(x: int) -> int:\n    return x\n")
+
+    result = run_nette("calibrate", ".", cwd=package)
+
+    assert result.returncode == 0
+    assert (tmp_path / ".nette" / "profile.json").exists()
+    assert not (package / ".nette").exists()
+
+
+def test_paths_from_two_projects_are_refused(tmp_path):
+    for name in ("one", "two"):
+        project = tmp_path / name
+        project.mkdir()
+        (project / "nette.toml").write_text("ignore = []\n")
+        (project / "mod.py").write_text("def f():\n    return 1\n")
+
+    result = run_nette(
+        "check", str(tmp_path / "one"), str(tmp_path / "two"), cwd=tmp_path
+    )
+
+    assert result.returncode == 2
+    assert "different projects" in result.stderr
+
+
+def test_a_path_that_does_not_exist_is_refused(tmp_path):
+    result = run_nette("check", "nope.py", cwd=tmp_path)
+
+    assert result.returncode == 2
+    assert "no such path" in result.stderr
+
+
+def test_a_profile_flag_pointing_nowhere_is_refused(tmp_path):
+    (tmp_path / "mod.py").write_text("def f():\n    return 1\n")
+
+    result = run_nette("check", ".", "--profile", "nope.json", cwd=tmp_path)
+
+    assert result.returncode == 2
+    assert "no such profile file" in result.stderr
 
 
 def test_version_flag_reports_the_package_version(tmp_path):

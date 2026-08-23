@@ -39,8 +39,8 @@ radon, lizard) identified four open gaps:
 4. **Poor DX.** No diff mode in kiss, rudimentary visualization everywhere,
    no output designed for agent consumption.
 5. **Nothing looks above the file.** All tools stop at file boundaries.
-   Project structure — file size norms, file naming conventions, folder
-   depth, where a new file belongs — is unmeasured, and it is precisely
+   Project structure (file size norms, file naming conventions, folder
+   depth, where a new file belongs) is unmeasured, and it is precisely
    where AI agents drift (catch-all 800-line files, `utils2.py`, files
    dropped in the wrong folder). Repo calibration applies here too: learn
    the repo's structural signature, flag new files that deviate.
@@ -76,7 +76,8 @@ radon, lizard) identified four open gaps:
 - **Phase 3**: DX & visualization research: error output design (ruff, elm,
   rust), TUI (rich/textual), agent-oriented output formats. Done: one
   diagnostic model feeding every renderer (human in the Elm/rustc style,
-  agent output — signal-only, deterministic, with composed instructions —
+  agent output that is signal-only, deterministic and carries a composed
+  instruction per finding,
   SARIF deferred to v0.2), stable rule codes with `--explain`, calibrated
   findings show the repo baseline in the message, affirmative suggestions
   with confidence levels, tested finding catalog with golden outputs.

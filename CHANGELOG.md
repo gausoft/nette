@@ -4,6 +4,8 @@
 
 ### Added
 
+- `check --profile PATH` judges against a profile file of your choosing,
+  for CI and multi-root setups.
 - `duplicated-sibling`, a rule for the blind spot that matters most on
   agent-written code: a function that is a near-copy of another function in
   the same scope. Each function is reduced to the sequence of its AST node
@@ -12,6 +14,23 @@
   (percent) and `duplication_min_lines` 20. Measured on a 879-file monorepo:
   37 near-copy pairs in 12 files, in files where every other rule scored
   zero. Quiet on exemplary code: 15 findings across 642 stdlib modules.
+
+### Fixed
+
+- Configuration, profile and cache are resolved by walking up from the paths
+  under check to the nearest project root (`nette.toml`, `pyproject.toml`,
+  `.nette` or `.git`), instead of being read from the current directory.
+  Checking a path in another worktree used to silently use the caller's
+  profile, or none, which meant copying `.nette/profile.json` by hand into
+  every worktree. `calibrate` writes at that same root.
+- A threshold below 1 is refused, and a percentage threshold above 100 is
+  refused. `duplication_similarity = 150` used to disable the rule in silence.
+- `check` refuses a path that does not exist, instead of walking nothing and
+  exiting 0. A typo used to look like a clean tree.
+- `check` refuses paths belonging to different projects in one run, instead of
+  judging all of them with the first path's configuration.
+- `--profile PATH` pointing at a missing file is refused, instead of running
+  with no profile at all.
 
 ## 0.1.1
 

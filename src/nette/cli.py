@@ -3,11 +3,12 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Sequence
 
 from nette import __version__
 from nette.cache import Cache
-from nette.calibration import build_profile, load_profile, ratchet, save_profile
-from nette.config import load_config
+from nette.calibration import Profile, build_profile, load_profile, ratchet, save_profile
+from nette.config import find_root, load_config
 from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Severity
@@ -63,6 +64,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="check only files changed since REF (default: HEAD)",
     )
     check.add_argument("--format", dest="format", default=None)
+    check.add_argument(
+        "--profile",
+        dest="profile_path",
+        default=None,
+        type=Path,
+        help="profile file to judge against (default: .nette/profile.json at the project root)",
+    )
     check.add_argument("--no-cache", action="store_true")
     check.add_argument("--timings", action="store_true")
     check.add_argument(
@@ -90,10 +98,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 
 def _run_check(args: argparse.Namespace) -> int:
-    root = Path.cwd()
+    paths = args.paths or [Path(".")]
 
     try:
+        root = _single_root(paths)
         config = load_config(root)
+        profile = _profile(args.profile_path, root)
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -101,13 +111,12 @@ def _run_check(args: argparse.Namespace) -> int:
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)
     else:
-        files = discover(args.paths or [Path(".")])
+        files = discover(paths)
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
     silenced = frozenset(
         code for code in ENGINE_CODES if not config.rule_enabled(code, "engine")
     )
-    profile = load_profile(root / PROFILE_PATH)
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
 
     findings = check_files(
@@ -135,9 +144,35 @@ def _run_check(args: argparse.Namespace) -> int:
     return 1 if failing else 0
 
 
+def _single_root(paths: Sequence[Path]) -> Path:
+    missing = [path for path in paths if not path.exists()]
+    if missing:
+        raise ValueError(f"no such path: {', '.join(str(path) for path in missing)}")
+
+    roots = {find_root([path]) for path in paths}
+    if len(roots) > 1:
+        named = ", ".join(sorted(str(root) for root in roots))
+        raise ValueError(
+            f"the paths given belong to different projects ({named}); "
+            "check one project at a time"
+        )
+
+    return roots.pop()
+
+
+def _profile(override: Path | None, root: Path) -> Profile | None:
+    if override is None:
+        return load_profile(root / PROFILE_PATH)
+
+    if not override.exists():
+        raise ValueError(f"no such profile file: {override}")
+
+    return load_profile(override)
+
+
 def _run_calibrate(args: argparse.Namespace) -> int:
     measured = build_profile(args.path)
-    destination = Path.cwd() / PROFILE_PATH
+    destination = find_root([args.path]) / PROFILE_PATH
     previous = None if args.reset else load_profile(destination)
 
     profile = measured if previous is None else ratchet(previous, measured)

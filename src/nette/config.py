@@ -4,12 +4,13 @@ import difflib
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final
+from typing import Final, Sequence
 
 from nette.rules import KNOWN_RULE_CODES
 from nette.rules.base import DEFAULT_THRESHOLDS
 
 KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output", "profile"})
+ROOT_MARKERS: Final = ("nette.toml", "pyproject.toml", ".nette", ".git")
 KNOWN_FAMILIES: Final = frozenset(
     {"shape", "naming", "defensiveness", "structure", "duplication", "engine"}
 )
@@ -31,6 +32,17 @@ class Config:
         return {code, family}.isdisjoint(self.ignore) and not {code, family}.isdisjoint(
             self.select
         )
+
+
+def find_root(paths: Sequence[Path]) -> Path:
+    start = (paths[0] if paths else Path(".")).resolve()
+    directory = start if start.is_dir() else start.parent
+
+    for candidate in (directory, *directory.parents):
+        if any((candidate / marker).exists() for marker in ROOT_MARKERS):
+            return candidate
+
+    return directory
 
 
 def load_config(root: Path) -> Config:

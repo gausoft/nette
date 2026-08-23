@@ -67,8 +67,8 @@ identical bytes, so agent runs cache and diff cleanly.
 
 ## Calibration, and why it only tightens
 
-`nette calibrate` measures five style dimensions on your tree — annotation
-rate, guard density, `try` density, camelCase leakage, file size p90 — and
+`nette calibrate` measures five style dimensions on your tree (annotation
+rate, guard density, `try` density, camelCase leakage, file size p90) and
 writes them to `.nette/profile.json`, which you commit. Style rules then
 judge new code against those numbers rather than against a universal ideal.
 Other tools calibrate ceilings on code *size*; nette calibrates the style
@@ -124,7 +124,11 @@ tree.
 
 ## Configuration
 
-One place: `[tool.nette]` in `pyproject.toml` (or `nette.toml`).
+One place: `[tool.nette]` in `pyproject.toml` (or `nette.toml`). nette looks
+for it by walking up from the paths you check, so running it from a
+subdirectory or on a path outside the current directory finds the same
+configuration and the same `.nette/profile.json`. `--profile PATH` points at
+another profile file, for CI and multi-root setups.
 
 ```toml
 [tool.nette]
@@ -142,7 +146,7 @@ nesting_depth = 4
 | # | Promise | Meaning |
 |---|---------|---------|
 | 1 | **Judges new code, not legacy** | Diff mode. A 10-year-old repo is never "all red". |
-| 2 | **Calibrated on YOUR repo** | Learns the local style — annotations, guards, file size — and flags deviation. The baseline ratchets: it can tighten, never loosen by accident. |
+| 2 | **Calibrated on YOUR repo** | Learns the local style (annotations, guards, file size) and flags deviation. The baseline ratchets: it can tighten, never loosen by accident. |
 | 3 | **Verdict in under a second** | Deterministic: same code, same verdict, zero LLM at runtime. |
 | 4 | **Findings say what to do** | Not "complexity 12 > 9" but the problem, the reason, and the fix direction. |
 | 5 | **Pure Python, zero deps** | `pip install nette` just works. nette's own code is the showcase. |

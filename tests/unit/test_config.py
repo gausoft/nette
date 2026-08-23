@@ -1,6 +1,6 @@
 import pytest
 
-from nette.config import Config, load_config
+from nette.config import Config, find_root, load_config
 
 
 def write_pyproject(tmp_path, body):
@@ -91,6 +91,24 @@ def test_percentage_threshold_above_one_hundred_is_rejected(tmp_path):
 
     with pytest.raises(ValueError, match="percentage"):
         load_config(tmp_path)
+
+
+def test_root_is_the_nearest_directory_holding_a_marker(tmp_path):
+    package = tmp_path / "src" / "pkg"
+    package.mkdir(parents=True)
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    module = package / "mod.py"
+    module.write_text("")
+
+    assert find_root([module]) == tmp_path.resolve()
+    assert find_root([package]) == tmp_path.resolve()
+
+
+def test_root_falls_back_to_the_directory_when_no_marker_exists(tmp_path):
+    alone = tmp_path / "alone"
+    alone.mkdir()
+
+    assert find_root([alone]) == alone.resolve()
 
 
 def test_config_filters_rules_by_family_and_name():
