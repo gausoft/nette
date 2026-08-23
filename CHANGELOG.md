@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `duplicated-sibling`, a rule for the blind spot that matters most on
+  agent-written code: a function that is a near-copy of another function in
+  the same scope. Each function is reduced to the sequence of its AST node
+  types, docstring excluded, and compared to its siblings; names, literals
+  and attribute paths do not count. Defaults `duplication_similarity` 85
+  (percent) and `duplication_min_lines` 20. Measured on a 879-file monorepo:
+  37 near-copy pairs in 12 files, in files where every other rule scored
+  zero. Quiet on exemplary code: 15 findings across 642 stdlib modules.
+
 ## 0.1.1
 
 Fixes from a field test on a production FastAPI monorepo (879 files, 7

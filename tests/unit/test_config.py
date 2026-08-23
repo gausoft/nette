@@ -12,7 +12,14 @@ def test_defaults_when_no_config_file(tmp_path):
     config = load_config(tmp_path)
 
     assert config == Config()
-    assert config.select == ("defensiveness", "engine", "naming", "shape", "structure")
+    assert config.select == (
+        "defensiveness",
+        "duplication",
+        "engine",
+        "naming",
+        "shape",
+        "structure",
+    )
     assert config.ignore == ()
     assert config.thresholds == {}
     assert config.output_format == "full"
@@ -69,6 +76,20 @@ def test_unknown_threshold_is_rejected(tmp_path):
     )
 
     with pytest.raises(ValueError, match="function_lenght"):
+        load_config(tmp_path)
+
+
+def test_threshold_below_one_is_rejected(tmp_path):
+    write_pyproject(tmp_path, "[tool.nette.thresholds]\nfunction_length = 0\n")
+
+    with pytest.raises(ValueError, match="greater than zero"):
+        load_config(tmp_path)
+
+
+def test_percentage_threshold_above_one_hundred_is_rejected(tmp_path):
+    write_pyproject(tmp_path, "[tool.nette.thresholds]\nduplication_similarity = 150\n")
+
+    with pytest.raises(ValueError, match="percentage"):
         load_config(tmp_path)
 
 

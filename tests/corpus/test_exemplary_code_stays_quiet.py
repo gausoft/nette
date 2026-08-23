@@ -6,6 +6,7 @@ import pytest
 from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Severity
+from nette.rules.duplication import DuplicatedSibling
 from nette.rules.shape import SHAPE_RULES
 
 STDLIB = Path(sysconfig.get_paths()["stdlib"])
@@ -45,6 +46,15 @@ def test_nette_own_source_is_clean():
     findings = check_files(discover([src]), rules=_rules())
 
     assert findings == []
+
+
+def test_duplicated_sibling_stays_quiet_on_exemplary_stdlib():
+    findings = check_files(
+        [STDLIB / module for module in EXEMPLARY_MODULES],
+        rules=[DuplicatedSibling()],
+    )
+
+    assert findings == [], [f"{f.file.name}:{f.line} {f.message}" for f in findings]
 
 
 def _check(file: Path):

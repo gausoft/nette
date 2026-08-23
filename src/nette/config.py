@@ -11,11 +11,12 @@ from nette.rules.base import DEFAULT_THRESHOLDS
 
 KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output", "profile"})
 KNOWN_FAMILIES: Final = frozenset(
-    {"shape", "naming", "defensiveness", "structure", "engine"}
+    {"shape", "naming", "defensiveness", "structure", "duplication", "engine"}
 )
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
 KNOWN_FORMATS: Final = frozenset({"concise", "full", "agent", "json"})
 KNOWN_PROFILES: Final = frozenset({"fastapi"})
+PERCENT_THRESHOLDS: Final = frozenset({"duplication_similarity"})
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ def load_config(root: Path) -> Config:
 
     thresholds = dict(_table(section.get("thresholds", {}), "thresholds"))
     _reject_unknown(thresholds.keys(), DEFAULT_THRESHOLDS.keys(), f"{where} thresholds")
-    _reject_bad_types(thresholds)
+    _reject_bad_values(thresholds)
 
     output = _table(section.get("output", {}), "output")
     _reject_unknown(output.keys(), KNOWN_OUTPUT_KEYS, f"{where} output")
@@ -140,7 +141,13 @@ def _rule_names(value, key: str) -> tuple[str, ...]:
     return names
 
 
-def _reject_bad_types(thresholds: dict) -> None:
+def _reject_bad_values(thresholds: dict) -> None:
     for name, value in thresholds.items():
         if not isinstance(value, int) or isinstance(value, bool):
             raise ValueError(f"threshold {name} must be an integer, got {value!r}")
+
+        if value < 1:
+            raise ValueError(f"threshold {name} must be greater than zero, got {value!r}")
+
+        if name in PERCENT_THRESHOLDS and value > 100:
+            raise ValueError(f"threshold {name} is a percentage, got {value!r}")

@@ -13,6 +13,8 @@ DEFAULT_THRESHOLDS: dict[str, int] = {
     "argument_count": 6,
     "return_count": 5,
     "short_name_scope": 15,
+    "duplication_similarity": 85,
+    "duplication_min_lines": 20,
 }
 
 

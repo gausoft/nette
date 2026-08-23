@@ -1,6 +1,7 @@
 from nette.findings import PARSE_ERROR_CODE
 from nette.rules.base import DEFAULT_THRESHOLDS, Context, Rule
 from nette.rules.defensiveness import Defensiveness
+from nette.rules.duplication import DuplicatedSibling
 from nette.rules.naming import NamingDrift, ShortNameLongScope
 from nette.rules.shape import SHAPE_RULES
 from nette.rules.structure import FileNaming, FileSize
@@ -13,6 +14,7 @@ ALL_RULES = (
     NamingDrift,
     FileNaming,
     FileSize,
+    DuplicatedSibling,
 )
 ENGINE_CODES = (PARSE_ERROR_CODE, MISSING_REASON_CODE, UNUSED_ALLOW_CODE)
 KNOWN_RULE_CODES = frozenset({rule.code for rule in ALL_RULES} | set(ENGINE_CODES))

@@ -15,6 +15,7 @@ config.
 | [naming](naming.md) | `short-name-long-scope`, `naming-drift` | mixed |
 | [defensiveness](defensiveness.md) | `over-guarded` | calibrated |
 | [structure](structure.md) | `file-naming`, `file-size` | mixed |
+| [duplication](duplication.md) | `duplicated-sibling` | universal |
 
 Two threshold kinds:
 

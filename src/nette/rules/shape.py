@@ -29,7 +29,7 @@ class FunctionLength(Rule):
 
     def _measure(self, node: FunctionNode, ctx: Context) -> None:
         limit = ctx.threshold("function_length")
-        length = _code_line_count(node)
+        length = code_line_count(node)
 
         if length > limit:
             ctx.report(
@@ -128,14 +128,23 @@ def _max_depth(function: FunctionNode) -> int:
     return walk(function, 0)
 
 
-def _code_line_count(function: FunctionNode) -> int:
-    covered: set[int] = set()
+def body_statements(function: FunctionNode) -> list[ast.stmt]:
     body = function.body
 
-    if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
-        body = body[1:]
+    if body and isinstance(body[0], ast.Expr) and _is_docstring(body[0].value):
+        return body[1:]
 
-    for statement in body:
+    return body
+
+
+def _is_docstring(value: ast.expr) -> bool:
+    return isinstance(value, ast.Constant) and isinstance(value.value, str)
+
+
+def code_line_count(function: FunctionNode) -> int:
+    covered: set[int] = set()
+
+    for statement in body_statements(function):
         covered.update(range(statement.lineno, (statement.end_lineno or statement.lineno) + 1))
 
     return len(covered)
