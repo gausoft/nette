@@ -2,8 +2,9 @@
 
 ## 0.2.0
 
-Five rules for blind spots that 0.1 could not see, two commands and a
-pre-commit hook to get nette into the agent's loop, and the field fixes cut
+Five rules for blind spots that 0.1 could not see, three commands and a
+pre-commit hook to get nette into the agent's loop, a profile per directory
+so a monorepo stops being judged by its own average, and the field fixes cut
 for 0.1.1, which was never published.
 
 ### Added
