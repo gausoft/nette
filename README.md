@@ -207,6 +207,27 @@ def decode_frame(raw):  # nette: allow(function-length) flat wire decoder, one c
 The reason is mandatory. `nette allows` lists every suppression in the
 tree.
 
+## Where the pain actually is
+
+A file that is structurally borderline and changes every week costs more
+than a file that is borderline and never touched. `nette hotspots` crosses
+the findings with how often each file changed:
+
+```
+$ nette hotspots --since 12.months
+
+hotspots since 12.months, 12 files changed and flagged
+
+changes  findings  file
+     37         9  services/accounts/api/http_client.py
+     18         6  services/accounts/serializers.py
+```
+
+It is a separate command on purpose. Git history is environment state, and
+`nette check` stays a pure function of the code, the config and the
+profile. Hotspots never change a severity, they only rank, and the command
+always exits 0.
+
 ## Configuration
 
 One place: `[tool.nette]` in `pyproject.toml` (or `nette.toml`). nette looks

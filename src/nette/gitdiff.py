@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 
@@ -15,6 +16,19 @@ def changed_files(repo: Path, *, ref: str) -> list[Path]:
     names = {name for name in tracked + untracked if name.endswith(".py")}
 
     return sorted(root / name for name in names)
+
+
+def change_counts(repo: Path, *, since: str) -> dict[Path, int]:
+    root = repo_root(repo)
+
+    try:
+        names = _git(
+            root, "log", f"--since={since}", "--name-only", "--pretty=format:", "--", "*.py"
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as error:
+        raise ValueError(f"cannot read the git history of {root}: {error}") from error
+
+    return Counter(root / name for name in names if name.endswith(".py"))
 
 
 def repo_root(start: Path) -> Path:

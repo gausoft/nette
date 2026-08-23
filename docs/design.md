@@ -303,6 +303,14 @@ Calibrates the tree, writes `.nette/.gitignore` so the result cache never
 reaches a commit, and prints the next step. One command between `pip
 install` and the first verdict.
 
+### `nette hotspots`
+
+Ranks the flagged files by findings times change count over a window
+(`--since`, git date syntax). Separate from `check` on purpose: reading git
+history makes the result depend on the clone, the fetch depth and the day,
+none of which belong in a deterministic check path. The command reports and
+always exits 0, so it can never gate anything.
+
 ### `nette agent-rules`
 
 Prints the block to append to `AGENTS.md`, `CLAUDE.md`, `.cursorrules` or

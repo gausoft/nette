@@ -8,6 +8,12 @@ for 0.1.1, which was never published.
 
 ### Added
 
+- `nette hotspots`, findings crossed with how often each file changed
+  (`--since`, default 12 months), ranked by the product of the two. A
+  borderline file touched every week outranks one never opened. It is a
+  separate command because git history is environment state: `check` stays a
+  pure function of the code, the config and the profile, and hotspots never
+  change a severity. Always exits 0.
 - Per-directory calibration. Every file is judged against the nearest
   `.nette/profile.json` found walking up to the project root, and
   `nette calibrate PATH --local` writes a profile inside that subtree. One

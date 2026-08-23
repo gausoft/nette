@@ -1,7 +1,7 @@
 import argparse
 import sys
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Callable, Final, Sequence
 
@@ -15,13 +15,14 @@ from nette.calibration import (
     ratchet,
     save_profile,
 )
-from nette.config import KNOWN_FORMATS, find_root, load_config
+from nette.config import Config, KNOWN_FORMATS, find_root, load_config
 from nette.discovery import discover
 from nette.engine import check_files
-from nette.findings import Severity
-from nette.gitdiff import changed_files
+from nette.findings import Finding, Severity
+from nette.gitdiff import change_counts, changed_files
 from nette.output import render
 from nette.rules import ALL_RULES, ENGINE_CODES
+from nette.rules.base import Rule
 from nette.suppressions import list_allows
 
 PROFILE_PATH = Path(".nette/profile.json")
@@ -118,6 +119,16 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "agent-rules", help="print the instructions to paste into AGENTS.md"
     )
 
+    hotspots = commands.add_parser(
+        "hotspots", help="rank flagged files by how often they change"
+    )
+    hotspots.add_argument("paths", nargs="*", type=Path)
+    hotspots.add_argument(
+        "--since",
+        default="12.months",
+        help="how far back to count changes, in git date syntax (default: 12.months)",
+    )
+
     allows = commands.add_parser("allows", help="list every suppression marker")
     allows.add_argument("paths", nargs="*", default=[Path(".")], type=Path)
 
@@ -138,25 +149,10 @@ def _run_check(args: argparse.Namespace) -> int:
         files = discover(paths)
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
-    silenced = frozenset(
-        code for code in ENGINE_CODES if not config.rule_enabled(code, "engine")
-    )
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
     groups = _profile_groups(args.profile_path, files, root)
 
-    findings = sorted(
-        finding
-        for profile, group in groups
-        for finding in check_files(
-            group,
-            rules=rules,
-            thresholds=config.thresholds,
-            profile=profile,
-            cache=cache,
-            framework=config.framework,
-            silenced=silenced,
-        )
-    )
+    findings = _judge(groups, rules, config, cache)
 
     if args.timings:
         _print_timings(groups, rules, config.thresholds)
@@ -171,6 +167,68 @@ def _run_check(args: argparse.Namespace) -> int:
         failing = list(findings)
 
     return 1 if failing else 0
+
+
+def _judge(
+    groups: Sequence[tuple[Profile | None, list[Path]]],
+    rules: Sequence[Rule],
+    config: Config,
+    cache: Cache | None,
+) -> list[Finding]:
+    silenced = frozenset(
+        code for code in ENGINE_CODES if not config.rule_enabled(code, "engine")
+    )
+
+    return sorted(
+        finding
+        for profile, files in groups
+        for finding in check_files(
+            files,
+            rules=rules,
+            thresholds=config.thresholds,
+            profile=profile,
+            cache=cache,
+            framework=config.framework,
+            silenced=silenced,
+        )
+    )
+
+
+def _run_hotspots(args: argparse.Namespace) -> int:
+    paths = args.paths or [Path(".")]
+    root = _single_root(paths)
+    config = load_config(root)
+    files = discover(paths)
+
+    rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
+    groups = _profile_groups(None, files, root)
+    findings = _judge(groups, rules, config, Cache(root / CACHE_PATH))
+
+    print(_hotspots(findings, change_counts(root, since=args.since), args.since))
+
+    return 0
+
+
+def _hotspots(findings: Sequence[Finding], churn: dict[Path, int], since: str) -> str:
+    counted = Counter(f.file.resolve() for f in findings)
+    shown = {f.file.resolve(): f.file for f in findings}
+    ranked = [
+        (churn.get(file, 0), count, shown[file])
+        for file, count in counted.items()
+        if churn.get(file, 0) > 0
+    ]
+    if not ranked:
+        return f"no file changed since {since} carries a finding"
+
+    ranked.sort(key=lambda row: (-row[0] * row[1], str(row[2])))
+    lines = [
+        f"hotspots since {since}, {len(ranked)} files changed and flagged",
+        "",
+        "changes  findings  file",
+    ]
+    lines += [f"{changes:>7}  {count:>8}  {file}" for changes, count, file in ranked]
+
+    return "\n".join(lines)
 
 
 def _single_root(paths: Sequence[Path]) -> Path:
@@ -334,6 +392,7 @@ COMMANDS: Final[dict[str, Callable[[argparse.Namespace], int]]] = {
     "check": _run_check,
     "init": _run_init,
     "agent-rules": _run_agent_rules,
+    "hotspots": _run_hotspots,
     "calibrate": _run_calibrate,
     "allows": _run_allows,
     "explain": _run_explain,
