@@ -204,6 +204,38 @@ def test_a_profile_flag_pointing_nowhere_is_refused(tmp_path):
     assert "no such profile file" in result.stderr
 
 
+def test_init_writes_the_profile_and_ignores_the_cache(tmp_path):
+    (tmp_path / "mod.py").write_text("def f(x: int) -> int:\n    return x\n")
+
+    result = run_nette("init", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert json.loads((tmp_path / ".nette" / "profile.json").read_text())["files_measured"] == 1
+    assert (tmp_path / ".nette" / ".gitignore").read_text().strip() == "cache/"
+    assert "nette agent-rules" in result.stdout
+
+
+def test_init_keeps_an_existing_profile(tmp_path):
+    (tmp_path / "mod.py").write_text("def f(x):\n    return x\n")
+    (tmp_path / ".nette").mkdir()
+    (tmp_path / ".nette" / "profile.json").write_text(CALM_PROFILE)
+
+    result = run_nette("init", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert "keeping it" in result.stdout
+    assert json.loads((tmp_path / ".nette" / "profile.json").read_text())["files_measured"] == 50
+
+
+def test_agent_rules_prints_a_pasteable_block(tmp_path):
+    result = run_nette("agent-rules", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert result.stdout.startswith("## Readability checks with nette")
+    assert "nette check --diff --format agent" in result.stdout
+    assert "nette: allow(" in result.stdout
+
+
 def test_version_flag_reports_the_package_version(tmp_path):
     from nette import __version__
 

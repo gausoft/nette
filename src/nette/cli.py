@@ -3,7 +3,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Final, Sequence
 
 from nette import __version__
 from nette.cache import Cache
@@ -41,13 +41,7 @@ RULE_DOCS = {
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
 
-    if args.command == "check":
-        return _run_check(args)
-    if args.command == "allows":
-        return _run_allows(args)
-    if args.command == "explain":
-        return _run_explain(args)
-    return _run_calibrate(args)
+    return COMMANDS[args.command](args)
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -95,6 +89,15 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--reset",
         action="store_true",
         help="accept a looser profile than the current one (drops the ratchet)",
+    )
+
+    init = commands.add_parser(
+        "init", help="set this repo up: profile, ignored cache, agent instructions"
+    )
+    init.add_argument("path", nargs="?", default=Path("."), type=Path)
+
+    commands.add_parser(
+        "agent-rules", help="print the instructions to paste into AGENTS.md"
     )
 
     allows = commands.add_parser("allows", help="list every suppression marker")
@@ -195,6 +198,34 @@ def _run_calibrate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_init(args: argparse.Namespace) -> int:
+    root = find_root([args.path])
+    profile_path = root / PROFILE_PATH
+
+    if profile_path.exists():
+        print(f"profile already at {profile_path}, keeping it")
+    else:
+        save_profile(build_profile(args.path), profile_path)
+        print(f"profile written to {profile_path}, commit it")
+
+    ignore = root / CACHE_PATH.parent / ".gitignore"
+    if not ignore.exists():
+        ignore.write_text(f"{CACHE_PATH.name}/\n", encoding="utf-8")
+        print(f"{ignore} keeps the result cache out of git")
+
+    print("\nnext: check the tree with `nette check`, or only what changed with")
+    print("`nette check --diff`. To teach your agent the loop, run:\n")
+    print("    nette agent-rules >> AGENTS.md")
+
+    return 0
+
+
+def _run_agent_rules(_: argparse.Namespace) -> int:
+    print(_doc("agent-rules.md"))
+
+    return 0
+
+
 def _run_allows(args: argparse.Namespace) -> int:
     files = discover(args.paths)
 
@@ -214,10 +245,14 @@ def _run_explain(args: argparse.Namespace) -> int:
         )
         return 2
 
-    text = (Path(__file__).parent / "docs" / doc_file).read_text(encoding="utf-8")
+    text = _doc(doc_file)
     print(_extract_section(text, args.code))
 
     return 0
+
+
+def _doc(name: str) -> str:
+    return (Path(__file__).parent / "docs" / name).read_text(encoding="utf-8").rstrip()
 
 
 def _extract_section(text: str, section: str) -> str:
@@ -241,6 +276,16 @@ def _print_timings(files, rules, thresholds, profile) -> None:
 
     for code, seconds in sorted(totals.items(), key=lambda item: -item[1]):
         print(f"{code} {seconds * 1000:.1f} ms", file=sys.stderr)
+
+
+COMMANDS: Final[dict[str, Callable[[argparse.Namespace], int]]] = {
+    "check": _run_check,
+    "init": _run_init,
+    "agent-rules": _run_agent_rules,
+    "calibrate": _run_calibrate,
+    "allows": _run_allows,
+    "explain": _run_explain,
+}
 
 
 if __name__ == "__main__":

@@ -7,8 +7,21 @@ from typing import Callable, Final, Sequence
 
 from nette.findings import Finding, Severity
 
-SCHEMA_VERSION: Final = 1
+SCHEMA_VERSION: Final = 2
 WORST_FILES: Final = 3
+RUN_CONTRACT: Final = {
+    "rerun": "nette check --diff --format agent",
+    "exit": {
+        "0": "clean, nothing to fix",
+        "1": "findings below, fix them and rerun",
+        "2": "nette could not run, read stderr",
+    },
+    "suppress": (
+        "# nette: allow(CODE) reason  "
+        "(only when the finding is wrong for this case; the reason is mandatory)"
+    ),
+    "explain": "nette explain CODE",
+}
 
 
 def render(findings: Sequence[Finding], *, format: str) -> str:
@@ -51,6 +64,7 @@ def _agent(findings: Sequence[Finding]) -> str:
 
     payload = {
         "schema_version": SCHEMA_VERSION,
+        "run": RUN_CONTRACT,
         "summary": {
             "total": len(findings),
             "by_severity": by_severity,

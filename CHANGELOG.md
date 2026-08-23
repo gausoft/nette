@@ -4,6 +4,18 @@
 
 ### Added
 
+- `nette init`: calibrates the repo, keeps the result cache out of git with a
+  `.nette/.gitignore`, and prints the next step. Install to first verdict is
+  one command.
+- `nette agent-rules`: prints the block to append to `AGENTS.md`,
+  `CLAUDE.md`, `.cursorrules` or any file the agent reads, so the agent knows
+  when to run nette and what to do with the output. The integration surface
+  stays a shell command and an exit code, which every agent already supports.
+- The agent envelope carries a `run` block: how to rerun the check, what each
+  exit code means, how to suppress a finding honestly, how to get a rule's
+  doc. Measured need: an agent given the old output and no documentation
+  produced the correct refactor but had to guess how to rerun and whether a
+  warning was blocking. `schema_version` is now 2.
 - `--format summary`, findings grouped by directory, worst first, with the
   three worst files inside each. Findings cluster hard in practice: 87 of the
   127 findings of the field test sat in one service, 9 of them in one file.

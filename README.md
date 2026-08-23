@@ -49,21 +49,62 @@ bare numbers.
 ```bash
 pip install nette
 
+nette init                   # calibrate the repo, ignore the cache, print the next step
 nette check                  # judge the current tree
 nette check --diff           # judge only what changed (the agent loop)
-nette calibrate              # learn this repo's style baseline
 nette explain over-guarded   # long-form doc for any rule
 ```
 
-In an agent loop, use the machine format:
+## Any agent, no plugin
+
+The integration surface is a shell command and an exit code, so every
+agent already supports it: Claude Code, Cursor, Copilot, Codex, Aider,
+your CI. There is nothing to install on their side.
 
 ```bash
-nette check --diff --format agent
+nette agent-rules >> AGENTS.md    # or CLAUDE.md, or .cursorrules
 ```
 
-It emits a deterministic JSON envelope: summary counts, flat findings,
-and a ready-to-act instruction per finding. Identical input produces
-identical bytes, so agent runs cache and diff cleanly.
+That writes the loop your agent has to follow: run
+`nette check --diff --format agent` after editing Python, read the exit
+code, fix, rerun.
+
+The machine format carries its own contract, so an agent that never read
+a line of documentation still knows what to do:
+
+```json
+{
+  "schema_version": 2,
+  "run": {
+    "rerun": "nette check --diff --format agent",
+    "exit": {
+      "0": "clean, nothing to fix",
+      "1": "findings below, fix them and rerun",
+      "2": "nette could not run, read stderr"
+    },
+    "suppress": "# nette: allow(CODE) reason (...)",
+    "explain": "nette explain CODE"
+  },
+  "summary": { "total": 1, "by_severity": { "error": 0, "warning": 1, "info": 0 } },
+  "findings": [
+    {
+      "code": "duplicated-sibling",
+      "file": "src/notify.py",
+      "line": 25,
+      "message": "`send_email_change` is a near-copy of `send_password_reset` in the same scope",
+      "instruction": "warning: ... To resolve: edit src/notify.py:25 - extract what they share into one function and pass what differs as arguments."
+    }
+  ]
+}
+```
+
+That envelope was tested on an agent given no documentation at all: it
+produced the correct refactor from the JSON alone. The `run` block exists
+because the same test showed it had to guess how to rerun the check and
+whether a warning was blocking.
+
+Identical input produces identical bytes, so agent runs cache and diff
+cleanly.
 
 On a large tree, `--format summary` answers a different question: where
 the debt lives.

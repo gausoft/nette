@@ -76,7 +76,7 @@ def test_full_shows_grounds_and_help():
 def test_agent_format_is_versioned_json_with_instructions():
     payload = json.loads(render(FINDINGS, format="agent"))
 
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == 2
     assert payload["summary"]["total"] == 2
     assert payload["summary"]["by_severity"] == {"error": 1, "warning": 1, "info": 0}
 
@@ -86,6 +86,14 @@ def test_agent_format_is_versioned_json_with_instructions():
     assert first["line"] == 10
     assert "src/app.py:10" in first["instruction"]
     assert first["fixable"] is False
+
+
+def test_agent_format_states_how_to_rerun_and_what_the_exit_codes_mean():
+    payload = json.loads(render(FINDINGS, format="agent"))
+
+    assert payload["run"]["rerun"] == "nette check --diff --format agent"
+    assert set(payload["run"]["exit"]) == {"0", "1", "2"}
+    assert "reason is mandatory" in payload["run"]["suppress"]
 
 
 def test_json_format_round_trips_all_fields():

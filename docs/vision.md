@@ -142,3 +142,44 @@ single shared AST) and fast (diff-aware, file-level cache, single pass).
   file that changes weekly outranks one never touched.
 - Per-service/folder aggregated view: field findings clustered heavily by
   service; the report should surface that shape.
+
+### v0.2 candidates (from the cross-language survey, 23 August 2026)
+
+Surveyed the reference linter of fifteen languages (see
+`docs/private/cross-language-competitors-2026-08.md`). Four gaps worth
+closing, each with the prior art that exposed it.
+
+- Profile as agent context: emit the calibrated profile as a block an
+  agent reads before writing (`nette profile --format agent`, pasteable
+  into AGENTS.md, later served over MCP). A whole category now exists to
+  derive repo conventions and feed them to agents (Codehabits, chameleon,
+  style-dna), non-deterministic and verdict-less. We already compute the
+  numbers; only the formatter is missing. Puts nette on both sides of the
+  loop: prevention, then verdict.
+- Line-level diff, with `--whole-files` to opt out. `changed_files()` is
+  file-granular today, so touching one line of an old file can light it up
+  entirely, which contradicts promise 1. golangci-lint hit exactly this and
+  defaults to changed lines with `--whole-files` as the escape hatch. Our
+  merge-base handling already matches their recommended setup.
+- Generalise framework awareness into config: `exempt_decorated_by`, a
+  list of decorators whose signatures are out of the author's control.
+  Checkstyle solves the same problem with `ignoreAnnotatedBy` on
+  `ParameterNumber`. Closes the "FastAPI is the only profile" gap without
+  shipping a profile per framework (Django, SQLAlchemy, Celery, click).
+- File-level aggregate threshold, to arbitrate against branch-density: PMD
+  reports a class once the sum of its method complexities reaches 80, even
+  when no single method exceeds its own limit. That is the shape of the
+  flat `if/elif` miss found in the field: not one function overflowing but
+  a file dying of a thousand cuts. Decide which of the two rules ships,
+  or whether the aggregate subsumes the per-function one.
+
+Two calibrated rule candidates from the same survey, lower priority:
+docstring-style consistency (Google, NumPy and reST mixed in one repo;
+already a listed calibration dimension, not yet a rule) and exception
+naming convention. Both mirror Credo's Consistency checks, the only
+majority-wins mechanism found in any language.
+
+Rejected on purpose, with the reason: a detekt-style baseline (diff mode
+replaces it, and it freezes debt), a maintainability index (CA1505,
+`maintidx`: the bare number the tool refuses on principle), and
+warning/error severity tiers (SwiftLint): configuration surface, no gain.
