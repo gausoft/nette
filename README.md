@@ -221,7 +221,7 @@ The most reliable integration does not depend on the agent remembering.
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/gausoft/nette
-    rev: v0.1.1
+    rev: v0.2.0
     hooks:
       - id: nette
 ```
