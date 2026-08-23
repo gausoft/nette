@@ -1,6 +1,6 @@
 from nette.calibration import Profile
 from nette.engine import check_files
-from nette.rules.defensiveness import GuardDensity
+from nette.rules.defensiveness import Defensiveness, GuardDensity
 
 
 CALM_PROFILE = Profile(
@@ -35,7 +35,34 @@ STACKED_FILE = (
 )
 
 
+SPREAD_FILE = (
+    "def a(d):\n"
+    "    try:\n"
+    "        return d['x']\n"
+    "    except KeyError:\n"
+    "        return None\n"
+    "\n"
+    "def b(d):\n"
+    "    try:\n"
+    "        return d['y']\n"
+    "    except KeyError:\n"
+    "        return None\n"
+    "\n"
+    "def c(d):\n"
+    "    try:\n"
+    "        return d['z']\n"
+    "    except KeyError:\n"
+    "        return None\n"
+)
+
+
 def check(file, profile):
+    return check_files(
+        [file], rules=[Defensiveness(), GuardDensity()], profile=profile
+    )
+
+
+def check_alone(file, profile):
     return check_files([file], rules=[GuardDensity()], profile=profile)
 
 
@@ -80,27 +107,15 @@ def test_two_guards_are_quiet(write_file):
 
 
 def test_file_over_guarded_across_functions_is_left_to_over_guarded(write_file):
-    file = write_file(
-        "def a(d):\n"
-        "    try:\n"
-        "        return d['x']\n"
-        "    except KeyError:\n"
-        "        return None\n"
-        "\n"
-        "def b(d):\n"
-        "    try:\n"
-        "        return d['y']\n"
-        "    except KeyError:\n"
-        "        return None\n"
-        "\n"
-        "def c(d):\n"
-        "    try:\n"
-        "        return d['z']\n"
-        "    except KeyError:\n"
-        "        return None\n"
-    )
+    file = write_file(SPREAD_FILE)
 
-    assert check(file, CALM_PROFILE) == []
+    assert [f.code for f in check(file, CALM_PROFILE)] == ["over-guarded"]
+
+
+def test_guard_density_speaks_when_over_guarded_is_disabled(write_file):
+    file = write_file(SPREAD_FILE)
+
+    assert [f.code for f in check_alone(file, CALM_PROFILE)] == ["guard-density"]
 
 
 def test_guards_spread_over_a_long_file_are_quiet(write_file):

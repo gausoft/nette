@@ -54,8 +54,10 @@ def _check_one(
     if source.tree is None:
         return list(source.errors)
 
+    active_codes = frozenset(rule.code for rule in rules)
     contexts = [
-        (rule, Context(source, rule, thresholds, profile, framework)) for rule in rules
+        (rule, Context(source, rule, thresholds, profile, framework, active_codes))
+        for rule in rules
     ]
 
     for node in ast.walk(source.tree):

@@ -45,9 +45,11 @@ guards keep it quiet where it would be wrong:
 - The file must sit under half the repo rate. A file that annotates two
   functions out of three in a 92% repo is not the problem.
 
-Test modules (`test_*.py`, `*_test.py`, `conftest.py`) are exempt. Their
-functions are called by the test runner, never by other code, so an
-annotation there buys no checking.
+Test modules (`test_*.py`, `*_test.py`, `conftest.py`) sit outside the
+rule, and outside the measurement. Their functions are called by the test
+runner, never by other code, so an annotation there buys no checking, and
+counting them would drag the repository baseline below the convention
+floor in any repo with as many test files as source files.
 
 The baseline ratchets upward: `nette calibrate` on a tree that has drifted
 keeps the higher of the two rates, so a repository's typing discipline can

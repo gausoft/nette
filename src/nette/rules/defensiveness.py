@@ -25,9 +25,7 @@ class Defensiveness(Rule):
         if baseline is None:
             return
 
-        functions = [
-            n for n in ast.walk(node) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-        ]
+        functions = _functions(node)
         if not functions:
             return
 
@@ -65,20 +63,12 @@ class GuardDensity(Rule):
             return
 
         tries = [n for n in ast.walk(node) if isinstance(n, ast.Try)]
-        if len(tries) < MINIMUM_TRIES:
-            return
-
-        functions = [
-            n for n in ast.walk(node) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-        ]
-        guarded = [f for f in functions if _contains_try(f)]
-        guarded_baseline = ctx.profile.metrics.get("guarded_function_rate") if ctx.profile else None
-
-        if functions and _over_guarded(len(guarded), len(functions), guarded_baseline):
-            return
-
         density = 1000 * len(tries) / lines
-        if density <= baseline * DEVIATION_FACTOR:
+
+        if len(tries) < MINIMUM_TRIES or density <= baseline * DEVIATION_FACTOR:
+            return
+
+        if _reported_by_over_guarded(node, ctx):
             return
 
         ctx.report(
@@ -94,6 +84,22 @@ class GuardDensity(Rule):
                 "a failure two lines after a successful read is the same failure"
             ),
         )
+
+
+def _reported_by_over_guarded(node: ast.Module, ctx: Context) -> bool:
+    if Defensiveness.code not in ctx.active_codes or ctx.profile is None:
+        return False
+
+    functions = _functions(node)
+    guarded = [function for function in functions if _contains_try(function)]
+
+    return bool(functions) and _over_guarded(
+        len(guarded), len(functions), ctx.profile.metrics.get(Defensiveness.baseline)
+    )
+
+
+def _functions(node: ast.Module) -> list[FunctionNode]:
+    return [n for n in ast.walk(node) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
 
 
 def _over_guarded(guarded: int, functions: int, baseline: float | None) -> bool:

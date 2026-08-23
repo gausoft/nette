@@ -125,3 +125,33 @@ def test_dunder_and_nested_functions_count_once(write_file):
 
     assert [f.code for f in findings] == ["under-annotated"]
     assert "3 of its 3" in findings[0].grounds
+
+
+def test_keyword_only_and_star_annotations_count(write_file):
+    file = write_file(
+        "def load(*, path: str):\n"
+        "    return path\n"
+        "\n"
+        "def parse(*rows: str):\n"
+        "    return rows\n"
+        "\n"
+        "def store(**fields: str):\n"
+        "    return fields\n"
+    )
+
+    assert check(file, TYPED_PROFILE) == []
+
+
+def test_positional_only_annotations_count(write_file):
+    file = write_file(
+        "def load(path: str, /):\n"
+        "    return path\n"
+        "\n"
+        "def parse(raw: str, /):\n"
+        "    return raw\n"
+        "\n"
+        "def store(row: str, /):\n"
+        "    return row\n"
+    )
+
+    assert check(file, TYPED_PROFILE) == []

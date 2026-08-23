@@ -150,6 +150,12 @@ def _nearest_profile(directory: Path, root: Path, location: Path) -> Path | None
     return None
 
 
+def is_test_module(path: Path) -> bool:
+    name = path.name
+
+    return name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py"
+
+
 def is_annotated(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     if function.returns is not None:
         return True

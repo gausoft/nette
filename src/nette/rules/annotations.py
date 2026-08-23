@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import ast
-from pathlib import Path
 from typing import Final
 
-from nette.calibration import is_annotated
+from nette.calibration import is_annotated, is_test_module
 from nette.rules.base import Context, Rule
 
 CONVENTION_FLOOR: Final = 0.6
@@ -22,7 +21,7 @@ class UnderAnnotated(Rule):
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
         baseline = ctx.baseline()
-        if baseline is None or baseline < CONVENTION_FLOOR or _is_test_module(ctx.source.path):
+        if baseline is None or baseline < CONVENTION_FLOOR or is_test_module(ctx.source.path):
             return
 
         functions = [
@@ -57,9 +56,3 @@ def _named(bare: list[FunctionNode]) -> str:
     rest = len(bare) - len(names)
 
     return ", ".join(names) + (f" and {rest} more" if rest else "")
-
-
-def _is_test_module(path: Path) -> bool:
-    name = path.name
-
-    return name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py"

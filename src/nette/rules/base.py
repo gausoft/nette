@@ -36,10 +36,12 @@ class Context:
         thresholds: dict[str, int] | None = None,
         profile: Profile | None = None,
         framework: str | None = None,
+        active_codes: frozenset[str] = frozenset(),
     ) -> None:
         self.source = source
         self.profile = profile
         self.framework = framework
+        self.active_codes = active_codes
         self._rule = rule
         self._thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
         self._findings: list[Finding] = []
