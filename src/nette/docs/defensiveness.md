@@ -19,8 +19,13 @@ least 3 guarded functions.**
 
 ```
 warning[over-guarded] src/client.py:12:1 this file guards far more than the rest of the repo
-  grounds: 9 of its 12 functions wrap code in try blocks (75%); the repo baseline is 18% of functions
+  grounds: 9 of its 12 functions wrap code in try blocks (75%); the repo baseline is
+  18% of functions. Guarded here: `fetch`, `parse`, `send`, `retry`, `close` and 4 more
 ```
+
+The guarded functions are named so a partial fix is possible. Without the
+names, the only actionable move on a 40-function adapter is a whole-file
+suppression, which then also hides future over-guarding in that file.
 
 Over-defensiveness is the signature failure mode of AI-generated code: a
 try/except around every call, `isinstance` checks on values the type

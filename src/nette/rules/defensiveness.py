@@ -10,6 +10,9 @@ MINIMUM_GUARDED_FUNCTIONS: Final = 3
 FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 
 
+NAMED_GUARDS: Final = 5
+
+
 class Defensiveness(Rule):
     code = "over-guarded"
     family = "defensiveness"
@@ -39,13 +42,21 @@ class Defensiveness(Rule):
                 message="this file guards far more than the rest of the repo",
                 grounds=(
                     f"{len(guarded)} of its {len(functions)} functions wrap code in try blocks "
-                    f"({rate:.0%}); the repo baseline is {baseline:.0%} of functions"
+                    f"({rate:.0%}); the repo baseline is {baseline:.0%} of functions. "
+                    f"Guarded here: {_named(guarded)}"
                 ),
                 help=(
                     "trust internal data and let unexpected errors surface; "
                     "keep try blocks for real boundaries (I/O, parsing, network)"
                 ),
             )
+
+
+def _named(guarded: list[FunctionNode]) -> str:
+    names = [f"`{function.name}`" for function in guarded[:NAMED_GUARDS]]
+    rest = len(guarded) - len(names)
+
+    return ", ".join(names) + (f" and {rest} more" if rest else "")
 
 
 def _contains_try(function: FunctionNode) -> bool:

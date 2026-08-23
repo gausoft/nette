@@ -40,6 +40,24 @@ def test_defensive_file_in_calm_repo_is_flagged(write_file):
     assert "5%" in findings[0].grounds
 
 
+def test_the_guarded_functions_are_named_so_a_partial_fix_is_possible(write_file):
+    file = write_file(DEFENSIVE_FILE)
+
+    findings = check(file, CALM_PROFILE)
+
+    assert "`a`, `b`, `c`" in findings[0].grounds
+
+
+def test_only_the_first_guarded_functions_are_named(write_file):
+    body = "    try:\n        return 1\n    except KeyError:\n        return None\n"
+    file = write_file("".join(f"def f{i}():\n{body}\n" for i in range(8)))
+
+    findings = check(file, CALM_PROFILE)
+
+    assert "`f5`" not in findings[0].grounds
+    assert "and 3 more" in findings[0].grounds
+
+
 def test_same_file_in_guarded_repo_is_quiet(write_file):
     file = write_file(DEFENSIVE_FILE)
 
