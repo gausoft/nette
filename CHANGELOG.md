@@ -8,6 +8,12 @@ for 0.1.1, which was never published.
 
 ### Added
 
+- Per-directory calibration. Every file is judged against the nearest
+  `.nette/profile.json` found walking up to the project root, and
+  `nette calibrate PATH --local` writes a profile inside that subtree. One
+  baseline per repository does not fit a monorepo: measured on 7 services,
+  the repo-wide guard rate of 12% is dominated by CRUD modules and was then
+  used to judge Celery tasks guarding 88% of their functions on purpose.
 - `duplicated-sibling`, a rule for the blind spot that matters most on
   agent-written code: a function that is a near-copy of another function in
   the same scope. Each function is reduced to the sequence of its AST node

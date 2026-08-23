@@ -11,6 +11,12 @@ than the rest of its own repository.
 Calibrated rules need a profile. Run `nette calibrate` to write
 `.nette/profile.json`; without it, defensiveness rules stay silent.
 
+A module that guards because it sits at a boundary (a Celery task, a SOAP
+adapter, anything wrapping the network) is right to guard, and a repo-wide
+baseline drawn from CRUD modules will punish it forever. Give that subtree
+its own baseline with `nette calibrate path/to/subtree --local`: every file
+is judged against the nearest profile found walking up to the project root.
+
 ## `over-guarded`
 
 **Severity: warning. Baseline: `guarded_function_rate` from the repo

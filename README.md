@@ -142,6 +142,25 @@ kept the stricter baseline for annotated_function_rate (--reset to relax)
 Relaxing takes `nette calibrate --reset`, an explicit human act, visible in
 the diff of the committed profile.
 
+### One baseline per repo is wrong for a monorepo
+
+A repository whose boundary modules guard on purpose gets punished by its
+own average. Measured on a 7-service monorepo: the repo-wide guard rate is
+12%, dominated by CRUD modules, and it is then used to judge Celery tasks
+that guard 88% of their functions because an escaping exception kills the
+worker. Both were right, and `over-guarded` fired forever.
+
+Give that subtree its own baseline:
+
+```bash
+nette calibrate services/adapters --local
+```
+
+The profile lands in `services/adapters/.nette/profile.json`. Every file is
+judged against the nearest profile walking up to the project root, so the
+adapters answer to theirs and the rest of the repo keeps the global one.
+Both are committed, both ratchet independently.
+
 ## Rules
 
 Rule names say what they detect. No lookup tables.
@@ -253,8 +272,6 @@ how black and ruff became habits.
 
 - FastAPI is the only framework profile. Django and SQLAlchemy signatures
   are judged by the generic rules.
-- One profile per repository. A monorepo whose boundary modules guard for
-  good reasons has no way to give them their own baseline yet.
 - The YAML pattern tier, external Python plugins and SARIF output are
   designed but not shipped. An MCP server is not planned: it would expose
   nothing the shell does not already expose, and every agent has a shell.

@@ -7,7 +7,14 @@ from typing import Callable, Final, Sequence
 
 from nette import __version__
 from nette.cache import Cache
-from nette.calibration import Profile, build_profile, load_profile, ratchet, save_profile
+from nette.calibration import (
+    Profile,
+    build_profile,
+    group_by_profile,
+    load_profile,
+    ratchet,
+    save_profile,
+)
 from nette.config import KNOWN_FORMATS, find_root, load_config
 from nette.discovery import discover
 from nette.engine import check_files
@@ -92,6 +99,11 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     calibrate = commands.add_parser("calibrate", help="measure the repo style profile")
     calibrate.add_argument("path", nargs="?", default=Path("."), type=Path)
     calibrate.add_argument(
+        "--local",
+        action="store_true",
+        help="write the profile inside PATH, giving that subtree its own baseline",
+    )
+    calibrate.add_argument(
         "--reset",
         action="store_true",
         help="accept a looser profile than the current one (drops the ratchet)",
@@ -119,7 +131,6 @@ def _run_check(args: argparse.Namespace) -> int:
     paths = args.paths or [Path(".")]
     root = _single_root(paths)
     config = load_config(root)
-    profile = _profile(args.profile_path, root)
 
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)
@@ -131,19 +142,24 @@ def _run_check(args: argparse.Namespace) -> int:
         code for code in ENGINE_CODES if not config.rule_enabled(code, "engine")
     )
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
+    groups = _profile_groups(args.profile_path, files, root)
 
-    findings = check_files(
-        files,
-        rules=rules,
-        thresholds=config.thresholds,
-        profile=profile,
-        cache=cache,
-        framework=config.framework,
-        silenced=silenced,
+    findings = sorted(
+        finding
+        for profile, group in groups
+        for finding in check_files(
+            group,
+            rules=rules,
+            thresholds=config.thresholds,
+            profile=profile,
+            cache=cache,
+            framework=config.framework,
+            silenced=silenced,
+        )
     )
 
     if args.timings:
-        _print_timings(files, rules, config.thresholds, profile)
+        _print_timings(groups, rules, config.thresholds)
 
     output = render(findings, format=args.format or config.output_format)
     if output:
@@ -173,19 +189,21 @@ def _single_root(paths: Sequence[Path]) -> Path:
     return roots.pop()
 
 
-def _profile(override: Path | None, root: Path) -> Profile | None:
+def _profile_groups(
+    override: Path | None, files: Sequence[Path], root: Path
+) -> list[tuple[Profile | None, list[Path]]]:
     if override is None:
-        return load_profile(root / PROFILE_PATH)
+        return group_by_profile(files, root, PROFILE_PATH) or [(None, [])]
 
     if not override.exists():
         raise ValueError(f"no such profile file: {override}")
 
-    return load_profile(override)
+    return [(load_profile(override), list(files))]
 
 
 def _run_calibrate(args: argparse.Namespace) -> int:
     measured = build_profile(_existing(args.path))
-    destination = find_root([args.path]) / PROFILE_PATH
+    destination = _profile_home(args.path, local=args.local) / PROFILE_PATH
     previous = None if args.reset else load_profile(destination)
 
     profile = measured if previous is None else ratchet(previous, measured)
@@ -197,6 +215,16 @@ def _run_calibrate(args: argparse.Namespace) -> int:
         print(f"kept the stricter baseline for {', '.join(sorted(loosened))} (--reset to relax)")
 
     return 0
+
+
+def _profile_home(path: Path, *, local: bool) -> Path:
+    if not local:
+        return find_root([path])
+
+    if not path.is_dir():
+        raise ValueError(f"--local needs a directory, {path} is a file")
+
+    return path
 
 
 def _run_init(args: argparse.Namespace) -> int:
@@ -289,12 +317,13 @@ def _extract_section(text: str, section: str) -> str:
     return "\n".join(lines[start:end]).strip()
 
 
-def _print_timings(files, rules, thresholds, profile) -> None:
+def _print_timings(groups, rules, thresholds) -> None:
     totals: dict[str, float] = defaultdict(float)
 
     for rule in rules:
         started = time.perf_counter()
-        check_files(files, rules=[rule], thresholds=thresholds, profile=profile)
+        for profile, files in groups:
+            check_files(files, rules=[rule], thresholds=thresholds, profile=profile)
         totals[rule.code] += time.perf_counter() - started
 
     for code, seconds in sorted(totals.items(), key=lambda item: -item[1]):

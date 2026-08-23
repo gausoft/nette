@@ -199,6 +199,14 @@ p50/p90/p99 for every calibrated metric, and writes
 share the same baseline. Calibrated rules read it; when it is missing they
 fall back to corpus defaults and say so in `grounds`.
 
+The profile is resolved per file, not per run: each file is judged against
+the nearest `.nette/profile.json` found walking up to the project root.
+`nette calibrate PATH --local` writes one inside a subtree, so a monorepo
+can give its boundary modules a baseline of their own without loosening the
+repository's. Files sharing a profile are checked as one group, and the
+cache key already carries the profile, so two subtrees never read each
+other's cached findings.
+
 Framework profiles are calibration overlays. `profile = "fastapi"` exempts
 route-decorated functions from signature thresholds, because FastAPI
 endpoints measured at args p90 = 20 in the corpus study: those parameters

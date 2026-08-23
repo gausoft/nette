@@ -10,6 +10,9 @@ GUARDED_FILE = "".join(
 CALM_PROFILE = json.dumps(
     {"version": 1, "files_measured": 50, "metrics": {"guarded_function_rate": 0.01}}
 )
+GUARDED_PROFILE = json.dumps(
+    {"version": 1, "files_measured": 50, "metrics": {"guarded_function_rate": 0.9}}
+)
 
 
 def run_nette(*args, cwd):
@@ -260,6 +263,43 @@ def test_agent_rules_prints_a_pasteable_block(tmp_path):
     assert result.stdout.startswith("## Readability checks with nette")
     assert "nette check --diff --format agent" in result.stdout
     assert "nette: allow(" in result.stdout
+
+
+def test_a_subtree_profile_overrides_the_repo_one(tmp_path):
+    (tmp_path / ".nette").mkdir()
+    (tmp_path / ".nette" / "profile.json").write_text(CALM_PROFILE)
+    (tmp_path / "domain.py").write_text(GUARDED_FILE)
+    boundary = tmp_path / "adapters"
+    (boundary / ".nette").mkdir(parents=True)
+    (boundary / ".nette" / "profile.json").write_text(GUARDED_PROFILE)
+    (boundary / "outbound.py").write_text(GUARDED_FILE)
+
+    result = run_nette("check", ".", "--format", "concise", cwd=tmp_path)
+
+    assert "domain.py" in result.stdout
+    assert "outbound.py" not in result.stdout
+
+
+def test_calibrate_local_writes_inside_the_subtree(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    boundary = tmp_path / "adapters"
+    boundary.mkdir()
+    (boundary / "outbound.py").write_text(GUARDED_FILE)
+
+    result = run_nette("calibrate", "adapters", "--local", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert (boundary / ".nette" / "profile.json").exists()
+    assert not (tmp_path / ".nette").exists()
+
+
+def test_calibrate_local_refuses_a_file(tmp_path):
+    (tmp_path / "mod.py").write_text("def f():\n    return 1\n")
+
+    result = run_nette("calibrate", "mod.py", "--local", cwd=tmp_path)
+
+    assert result.returncode == 2
+    assert "needs a directory" in result.stderr
 
 
 def test_version_flag_reports_the_package_version(tmp_path):
