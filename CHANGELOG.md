@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
+
+Fixes from a field test on a production FastAPI monorepo (879 files, 7
+services). They all concern trust in the tool: a diff that reported files the
+branch never touched, and suppressions that stopped working without saying so.
 
 ### Fixed
 
@@ -18,7 +22,6 @@
   `over-guarded`, `naming-drift`) is accepted anywhere in the file. Those
   findings anchor on whichever construct comes first, so adding an import
   used to move the anchor and silently break the marker.
-
 - A suppression marker is read from comment tokens only. `# nette: allow(...)`
   written inside a string literal no longer counts as a suppression.
 
