@@ -218,13 +218,10 @@ The most reliable integration does not depend on the agent remembering.
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: local
+  - repo: https://github.com/gausoft/nette
+    rev: v0.1.1
     hooks:
       - id: nette
-        name: nette
-        entry: nette check --diff
-        language: system
-        pass_filenames: false
 ```
 
 An agent whose commit is rejected learns to run the check itself. That is

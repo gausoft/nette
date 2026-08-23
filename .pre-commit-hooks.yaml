@@ -1,0 +1,8 @@
+- id: nette
+  name: nette
+  description: check the readability of the Python files about to be committed
+  entry: nette check --diff
+  language: python
+  types: [python]
+  pass_filenames: false
+  require_serial: true
