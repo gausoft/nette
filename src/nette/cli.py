@@ -123,6 +123,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "hotspots", help="rank flagged files by how often they change"
     )
     hotspots.add_argument("paths", nargs="*", type=Path)
+    hotspots.add_argument("--no-cache", action="store_true")
     hotspots.add_argument(
         "--since",
         default="12.months",
@@ -202,7 +203,8 @@ def _run_hotspots(args: argparse.Namespace) -> int:
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
     groups = _profile_groups(None, files, root)
-    findings = _judge(groups, rules, config, Cache(root / CACHE_PATH))
+    cache = None if args.no_cache else Cache(root / CACHE_PATH)
+    findings = _judge(groups, rules, config, cache)
 
     print(_hotspots(findings, change_counts(root, since=args.since), args.since))
 

@@ -25,7 +25,7 @@ def repo_with_history(root: Path, commits: int) -> Path:
     file = root / "big.py"
 
     for index in range(commits):
-        file.write_text(LONG_FUNCTION + f"\n# revision {index}\n")
+        file.write_text(LONG_FUNCTION + f"\nrevision = {index}\n")
         git(root, "add", "-A")
         git(root, "commit", "-qm", f"change {index}")
 
@@ -63,3 +63,41 @@ def test_outside_a_git_repository_it_is_a_diagnostic(tmp_path):
     assert result.returncode == 2
     assert "Traceback" not in result.stderr
     assert result.stderr.startswith("error:")
+
+
+def test_a_non_ascii_file_name_is_counted(tmp_path):
+    git(tmp_path, "init", "-q")
+    file = tmp_path / "générateur.py"
+    file.write_text(LONG_FUNCTION)
+    git(tmp_path, "add", "-A")
+    git(tmp_path, "commit", "-qm", "add")
+
+    result = run_nette("hotspots", cwd=tmp_path)
+
+    assert "générateur.py" in result.stdout
+
+
+def test_rows_tied_on_score_are_ordered_by_path():
+    from nette.cli import _hotspots
+    from nette.findings import Finding, Severity
+
+    def finding(name: str) -> Finding:
+        return Finding(
+            code="file-size",
+            message="m",
+            grounds="g",
+            help="h",
+            severity=Severity.WARNING,
+            file=Path(name),
+            line=1,
+            column=0,
+            end_line=1,
+            end_column=0,
+        )
+
+    findings = [finding("b.py"), finding("a.py")]
+    churn = {Path("a.py").resolve(): 2, Path("b.py").resolve(): 2}
+
+    text = _hotspots(findings, churn, "12.months")
+
+    assert [line.split()[-1] for line in text.splitlines()[3:]] == ["a.py", "b.py"]

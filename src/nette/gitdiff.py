@@ -22,13 +22,20 @@ def change_counts(repo: Path, *, since: str) -> dict[Path, int]:
     root = repo_root(repo)
 
     try:
-        names = _git(
-            root, "log", f"--since={since}", "--name-only", "--pretty=format:", "--", "*.py"
+        records = _git_text(
+            root,
+            "log",
+            f"--since={since}",
+            "--name-only",
+            "--pretty=format:",
+            "-z",
+            "--",
+            "*.py",
         )
     except (subprocess.CalledProcessError, FileNotFoundError) as error:
         raise ValueError(f"cannot read the git history of {root}: {error}") from error
 
-    return Counter(root / name for name in names if name.endswith(".py"))
+    return Counter(root / name for name in records.split("\0") if name.endswith(".py"))
 
 
 def repo_root(start: Path) -> Path:
@@ -59,6 +66,18 @@ def _merge_base(root: Path, ref: str) -> str:
         return ref
 
     return result.stdout.strip()
+
+
+def _git_text(root: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    return result.stdout
 
 
 def _git(root: Path, *args: str) -> list[str]:
