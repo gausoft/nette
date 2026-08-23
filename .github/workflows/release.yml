@@ -33,5 +33,6 @@ jobs:
             /tmp/smoke/bin/pip install "$dist"
             /tmp/smoke/bin/nette --version
             /tmp/smoke/bin/nette explain over-guarded > /dev/null
+            /tmp/smoke/bin/nette agent-rules > /dev/null
           done
       - uses: pypa/gh-action-pypi-publish@release/v1

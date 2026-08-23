@@ -31,6 +31,7 @@ RULE_DOCS = {
     "short-name-long-scope": "naming.md",
     "naming-drift": "naming.md",
     "over-guarded": "defensiveness.md",
+    "under-annotated": "annotations.md",
     "file-naming": "structure.md",
     "file-size": "structure.md",
     "mixed-module": "structure.md",
@@ -41,7 +42,11 @@ RULE_DOCS = {
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
 
-    return COMMANDS[args.command](args)
+    try:
+        return COMMANDS[args.command](args)
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -111,14 +116,9 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 def _run_check(args: argparse.Namespace) -> int:
     paths = args.paths or [Path(".")]
-
-    try:
-        root = _single_root(paths)
-        config = load_config(root)
-        profile = _profile(args.profile_path, root)
-    except ValueError as error:
-        print(f"error: {error}", file=sys.stderr)
-        return 2
+    root = _single_root(paths)
+    config = load_config(root)
+    profile = _profile(args.profile_path, root)
 
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)
@@ -183,7 +183,7 @@ def _profile(override: Path | None, root: Path) -> Profile | None:
 
 
 def _run_calibrate(args: argparse.Namespace) -> int:
-    measured = build_profile(args.path)
+    measured = build_profile(_existing(args.path))
     destination = find_root([args.path]) / PROFILE_PATH
     previous = None if args.reset else load_profile(destination)
 
@@ -199,25 +199,47 @@ def _run_calibrate(args: argparse.Namespace) -> int:
 
 
 def _run_init(args: argparse.Namespace) -> int:
-    root = find_root([args.path])
+    root = find_root([_existing(args.path)])
     profile_path = root / PROFILE_PATH
 
     if profile_path.exists():
         print(f"profile already at {profile_path}, keeping it")
     else:
-        save_profile(build_profile(args.path), profile_path)
-        print(f"profile written to {profile_path}, commit it")
+        profile = build_profile(args.path)
+        save_profile(profile, profile_path)
+        print(
+            f"profile written to {profile_path} "
+            f"({profile.files_measured} files measured), commit it"
+        )
 
-    ignore = root / CACHE_PATH.parent / ".gitignore"
-    if not ignore.exists():
-        ignore.write_text(f"{CACHE_PATH.name}/\n", encoding="utf-8")
-        print(f"{ignore} keeps the result cache out of git")
+    _ignore_cache(root)
 
     print("\nnext: check the tree with `nette check`, or only what changed with")
     print("`nette check --diff`. To teach your agent the loop, run:\n")
     print("    nette agent-rules >> AGENTS.md")
 
     return 0
+
+
+def _ignore_cache(root: Path) -> None:
+    ignore = root / CACHE_PATH.parent / ".gitignore"
+    pattern = f"{CACHE_PATH.name}/"
+    previous = ignore.read_text(encoding="utf-8") if ignore.exists() else ""
+
+    if pattern in previous.split():
+        return
+
+    separator = "" if not previous or previous.endswith("\n") else "\n"
+    ignore.parent.mkdir(parents=True, exist_ok=True)
+    ignore.write_text(f"{previous}{separator}{pattern}\n", encoding="utf-8")
+    print(f"{ignore} keeps the result cache out of git")
+
+
+def _existing(path: Path) -> Path:
+    if not path.exists():
+        raise ValueError(f"no such path: {path}")
+
+    return path
 
 
 def _run_agent_rules(_: argparse.Namespace) -> int:

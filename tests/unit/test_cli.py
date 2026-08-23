@@ -227,6 +227,32 @@ def test_init_keeps_an_existing_profile(tmp_path):
     assert json.loads((tmp_path / ".nette" / "profile.json").read_text())["files_measured"] == 50
 
 
+def test_init_refuses_a_path_that_does_not_exist(tmp_path):
+    result = run_nette("init", "nope", cwd=tmp_path)
+
+    assert result.returncode == 2
+    assert "no such path" in result.stderr
+    assert not (tmp_path / ".nette").exists()
+
+
+def test_init_keeps_what_the_cache_ignore_file_already_says(tmp_path):
+    (tmp_path / "mod.py").write_text("def f():\n    return 1\n")
+    (tmp_path / ".nette").mkdir()
+    (tmp_path / ".nette" / ".gitignore").write_text("scratch/\n")
+
+    run_nette("init", cwd=tmp_path)
+
+    assert (tmp_path / ".nette" / ".gitignore").read_text().split() == ["scratch/", "cache/"]
+
+
+def test_every_subcommand_is_dispatchable():
+    from nette.cli import COMMANDS, _parse_args
+
+    for command in COMMANDS:
+        arguments = [command, "function-length"] if command == "explain" else [command]
+        assert _parse_args(arguments).command in COMMANDS
+
+
 def test_agent_rules_prints_a_pasteable_block(tmp_path):
     result = run_nette("agent-rules", cwd=tmp_path)
 
