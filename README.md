@@ -102,6 +102,7 @@ Rule names say what they detect. No lookup tables.
 | defensiveness | `over-guarded` | a file guards far more than the rest of the repo |
 | structure | `file-naming` | a file name breaks snake_case |
 | structure | `file-size` | a file dwarfs the repo's norm |
+| structure | `mixed-module` | data types pile up in a module that also holds logic |
 | duplication | `duplicated-sibling` | a function is a near-copy of a sibling function |
 | engine | `parse-error`, `bare-allow`, `unused-allow` | a file cannot be judged; a suppression has no reason or silences nothing |
 

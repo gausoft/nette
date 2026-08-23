@@ -4,6 +4,13 @@
 
 ### Added
 
+- `mixed-module`, a convention rule for data types piling up in a module
+  that also holds behaviour. A module declaring at least
+  `data_types_per_module` (default 2) pure data types beside a function or a
+  class with methods is flagged, and the message names the destination.
+  Destination modules (`schemas.py`, `models.py`, `enums.py` and friends) and
+  private classes are exempt. Measured: 3.5% of a 879-file monorepo, 6
+  findings across 642 stdlib modules.
 - `check --profile PATH` judges against a profile file of your choosing,
   for CI and multi-root setups.
 - `duplicated-sibling`, a rule for the blind spot that matters most on

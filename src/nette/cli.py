@@ -32,6 +32,7 @@ RULE_DOCS = {
     "over-guarded": "defensiveness.md",
     "file-naming": "structure.md",
     "file-size": "structure.md",
+    "mixed-module": "structure.md",
     "duplicated-sibling": "duplication.md",
 }
 

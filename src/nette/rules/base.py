@@ -15,6 +15,7 @@ DEFAULT_THRESHOLDS: dict[str, int] = {
     "short_name_scope": 15,
     "duplication_similarity": 85,
     "duplication_min_lines": 20,
+    "data_types_per_module": 2,
 }
 
 

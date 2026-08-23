@@ -4,7 +4,7 @@ from nette.rules.defensiveness import Defensiveness
 from nette.rules.duplication import DuplicatedSibling
 from nette.rules.naming import NamingDrift, ShortNameLongScope
 from nette.rules.shape import SHAPE_RULES
-from nette.rules.structure import FileNaming, FileSize
+from nette.rules.structure import FileNaming, FileSize, MixedModule
 from nette.suppressions import MISSING_REASON_CODE, UNUSED_ALLOW_CODE
 
 ALL_RULES = (
@@ -15,6 +15,7 @@ ALL_RULES = (
     FileNaming,
     FileSize,
     DuplicatedSibling,
+    MixedModule,
 )
 ENGINE_CODES = (PARSE_ERROR_CODE, MISSING_REASON_CODE, UNUSED_ALLOW_CODE)
 KNOWN_RULE_CODES = frozenset({rule.code for rule in ALL_RULES} | set(ENGINE_CODES))
