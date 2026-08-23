@@ -24,10 +24,15 @@ decisions.md before breaking them.
    arbitrary code or shell commands.
 8. **Dogfooding.** Built-in rules use the same public API as third-party
    Python rules. If the API cannot express a rule we need, fix the API.
+9. **Conventions are declared, never learned.** A rule that judges a
+   decision the repo makes once (where a type lives, whether the same
+   function exists twice) must not read the calibration profile. Learning
+   from a repo that already drifted would silence the rule exactly where
+   it is needed. Calibration is for style intensity only.
 
 ## Output
 
-9. **Actionable findings.** A finding names the problem, the location and
-   the concrete fix direction. Numbers alone are not findings.
-10. **Agent-consumable output.** Structured output (JSON) is a first-class
+10. **Actionable findings.** A finding names the problem, the location and
+    the concrete fix direction. Numbers alone are not findings.
+11. **Agent-consumable output.** Structured output (JSON) is a first-class
     citizen, not an afterthought.

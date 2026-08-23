@@ -110,22 +110,46 @@ Third-party plugin rules (v0.2+) are prefixed with their package name
 
 ## Rules and thresholds
 
-Rules fall into two threshold families, a distinction that came straight
-out of measuring five exemplary codebases (httpx, pydantic, fastapi,
-attrs, curated stdlib).
+Rules fall into three threshold families. The first two came out of
+measuring five exemplary codebases (httpx, pydantic, fastapi, attrs,
+curated stdlib). The third came out of the field.
 
 **Universal rules** cover code shape: function length, nesting depth,
 argument count, returns per function. The exemplary corpora agree on
 these within a narrow band, so the defaults are their measured p90 values.
 Every default is overridable in TOML.
 
-**Calibrated rules** cover style: annotation rate, docstring rate, comment
-density, defensiveness (try/getattr/isinstance density), naming style,
-file size. The same corpora diverge on these by up to 12x while all being
-exemplary, so no absolute threshold is defensible. A calibrated rule fires
-on deviation from the repository's own profile.
+**Calibrated rules** cover style intensity: annotation rate, docstring
+rate, comment density, defensiveness (try/getattr/isinstance density),
+naming style, file size. The same corpora diverge on these by up to 12x
+while all being exemplary, so no absolute threshold is defensible. A
+calibrated rule fires on deviation from the repository's own profile.
 
-Project structure rules span both families: file naming is universal
+**Convention rules** cover decisions a repository makes once and then has
+to keep: where a type belongs, whether the same function may exist twice.
+They are declared, never learned. A convention rule must not read the
+profile, and `Rule.baseline` stays empty on it.
+
+The reason is measured. On the 879-file monorepo of the field test, 82% of
+the data types declared outside tests already lived mixed with behaviour
+and only 18% lived in a destination module. A calibrated `mixed-module`
+rule would learn that mixing is the house style and go quiet, enshrining
+the exact debt the user installed the tool to stop. Duplication behaves
+the same way: a repository full of near-copies would teach the rule that
+near-copies are normal. Calibration answers "how intense is this repo's
+style", and a convention is not an intensity.
+
+| Kind | Example | Baseline source |
+|---|---|---|
+| shape | `function-length`, `nesting-depth` | universal, measured on exemplary corpora |
+| intensity | `over-guarded`, `file-size` | calibrated on the repo, ratcheted |
+| convention | `duplicated-sibling` | declared in TOML, never learned |
+
+A convention rule ships on by default with a threshold conservative
+enough that exemplary code stays quiet (measured, not guessed), and stays
+switchable off by family in `ignore`.
+
+Project structure rules span the families: file naming is universal
 (snake_case was invariant across every corpus measured), file size is
 calibrated. Both operate on the file list and the profile; neither needs
 an import graph, which keeps them inside the single-pass pipeline. Deeper

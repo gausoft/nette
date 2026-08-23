@@ -113,6 +113,13 @@ The same codebases diverge up to 12x on *style* (comment density, guard
 density, file size) while all being exemplary, so style rules compare your
 code to your repo's own baseline (`nette calibrate`), never to an absolute.
 
+A third kind never touches the profile: *convention* rules, for a decision
+a repo makes once and then has to keep (whether the same function may exist
+twice, where a type belongs). Calibrating those would teach the tool that
+the drift is the house style. Measured on a production monorepo: 82% of its
+data types already lived mixed with behaviour, so a calibrated rule would
+have gone silent on exactly the debt it exists to catch.
+
 Suppression is explicit and auditable:
 
 ```python

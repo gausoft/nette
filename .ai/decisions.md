@@ -94,3 +94,17 @@ must remain possible, and it lands as a visible diff on `.nette/profile.json`.
 A metric the new measure cannot see (calibrating a subtree with no
 functions in it) keeps its previous value rather than disappearing, since
 a dropped baseline is a relaxation like any other.
+
+## 012: convention rules are declared, never calibrated
+
+A third rule kind joins shape (universal) and intensity (calibrated):
+convention, for a decision a repository makes once and then has to keep,
+such as where a type lives or whether the same function may exist twice.
+Convention rules never read `.nette/profile.json` and leave `Rule.baseline`
+empty. The field test measured why: on a 879-file monorepo, 82% of the data
+types declared outside tests already lived mixed with behaviour, so a
+calibrated `mixed-module` rule would have learned that mixing is the house
+style and gone silent on the debt it exists to catch. The same trap applies
+to duplication. A convention rule earns its default threshold by staying
+quiet on exemplary code (`duplicated-sibling`: 15 findings across 642 stdlib
+modules), and remains switchable off by family in `ignore`.

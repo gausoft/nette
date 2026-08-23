@@ -15,9 +15,9 @@ config.
 | [naming](naming.md) | `short-name-long-scope`, `naming-drift` | mixed |
 | [defensiveness](defensiveness.md) | `over-guarded` | calibrated |
 | [structure](structure.md) | `file-naming`, `file-size` | mixed |
-| [duplication](duplication.md) | `duplicated-sibling` | universal |
+| [duplication](duplication.md) | `duplicated-sibling` | convention |
 
-Two threshold kinds:
+Three threshold kinds:
 
 - **Universal** rules have a numeric default measured on exemplary
   codebases (httpx, pydantic, fastapi, attrs, curated stdlib), overridable
@@ -25,6 +25,11 @@ Two threshold kinds:
 - **Calibrated** rules have no absolute threshold. They compare the file
   under judgment to the repository's own profile (`.nette/profile.json`,
   built by `nette calibrate`) and fire on deviation from it.
+- **Convention** rules judge a decision the repo makes once and then has
+  to keep. They are declared in TOML and never read the profile: learning
+  from a repo that already drifted would silence the rule where it is
+  needed most. Their defaults are set low enough that exemplary code
+  stays quiet.
 
 Suppressing a finding: put `# nette: allow(rule-slug) reason` on the
 offending line or the line above. The reason is mandatory. `nette allows`

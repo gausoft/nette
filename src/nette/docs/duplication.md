@@ -37,7 +37,7 @@ Comparison stops at the module boundary. Cross-module clone detection
 needs an index of the whole tree, which the single-file engine does not
 have, and the copy-paste-the-neighbour pattern happens inside one file.
 
-**Threshold kind: universal, never calibrated.** This is a convention
+**Threshold kind: convention, never calibrated.** This is a convention
 rule. Learning the repo's own duplication level would silence the rule on
 exactly the repositories that need it most.
 
