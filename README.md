@@ -65,8 +65,8 @@ It emits a deterministic JSON envelope: summary counts, flat findings,
 and a ready-to-act instruction per finding. Identical input produces
 identical bytes, so agent runs cache and diff cleanly.
 
-On a large tree, `--format summary` answers the other question: not what
-to fix first, but where the debt lives.
+On a large tree, `--format summary` answers a different question: where
+the debt lives.
 
 ```
 $ nette check --format summary
