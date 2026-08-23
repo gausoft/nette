@@ -284,7 +284,23 @@ Exit codes: `0` clean, `1` findings at error severity, `2` tool failure.
 
 ## CLI
 
-The complete v0.1 surface, four subcommands.
+Six subcommands. Two of them exist only to get nette into the agent's
+loop: `init` and `agent-rules`.
+
+### `nette init`
+
+Calibrates the tree, writes `.nette/.gitignore` so the result cache never
+reaches a commit, and prints the next step. One command between `pip
+install` and the first verdict.
+
+### `nette agent-rules`
+
+Prints the block to append to `AGENTS.md`, `CLAUDE.md`, `.cursorrules` or
+whatever the harness reads: when to run nette, how to read the exit code,
+how to suppress honestly. The integration surface is a shell command and
+an exit code, which every agent supports without a plugin. No MCP server,
+no editor extension, no protocol to maintain.
+
 
 ### `nette check`
 

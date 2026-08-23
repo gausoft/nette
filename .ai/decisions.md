@@ -108,3 +108,17 @@ style and gone silent on the debt it exists to catch. The same trap applies
 to duplication. A convention rule earns its default threshold by staying
 quiet on exemplary code (`duplicated-sibling`: 15 findings across 642 stdlib
 modules), and remains switchable off by family in `ignore`.
+
+## 013: the integration surface is the shell, never a protocol
+
+nette integrates with agents through a command and an exit code, and
+nothing else. `nette agent-rules` prints the block to paste into the file
+the harness reads; the agent envelope carries a `run` block naming how to
+rerun, what each exit code means and how to suppress honestly. An MCP
+server is dropped from the roadmap: it would expose nothing the shell does
+not already expose, it only reaches the clients that implement MCP, and it
+adds a process and a protocol to maintain forever. Every agent has a shell.
+The claim was tested: an agent handed the agent-format JSON with no
+documentation at all produced the correct refactor, and named exactly two
+gaps (how to rerun, whether a warning blocks), which is what the `run`
+block now answers.

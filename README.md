@@ -205,6 +205,31 @@ function_length = 60
 nesting_depth = 4
 ```
 
+## In CI, and before every commit
+
+The most reliable integration does not depend on the agent remembering.
+
+```yaml
+# .github/workflows/nette.yml
+- run: pip install nette
+- run: nette check --diff origin/main --format concise
+```
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: nette
+        name: nette
+        entry: nette check --diff
+        language: system
+        pass_filenames: false
+```
+
+An agent whose commit is rejected learns to run the check itself. That is
+how black and ruff became habits.
+
 ## Promises
 
 | # | Promise | Meaning |
@@ -225,15 +250,15 @@ nesting_depth = 4
   as a sibling product.
 - LLM review. Deterministic or nothing.
 
-## Known gaps in 0.1
+## Known gaps
 
-- A dense flat `if/elif` chain passes under the length and nesting
-  thresholds. Field testing found two such files. A branch-density rule is
-  planned for 0.2.
 - FastAPI is the only framework profile. Django and SQLAlchemy signatures
   are judged by the generic rules.
-- The YAML pattern tier, external Python plugins, SARIF output and the MCP
-  server are designed but not shipped.
+- One profile per repository. A monorepo whose boundary modules guard for
+  good reasons has no way to give them their own baseline yet.
+- The YAML pattern tier, external Python plugins and SARIF output are
+  designed but not shipped. An MCP server is not planned: it would expose
+  nothing the shell does not already expose, and every agent has a shell.
 
 ## Documentation
 
