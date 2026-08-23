@@ -1,7 +1,7 @@
 from nette.findings import PARSE_ERROR_CODE
 from nette.rules.annotations import UnderAnnotated
 from nette.rules.base import DEFAULT_THRESHOLDS, Context, Rule
-from nette.rules.defensiveness import Defensiveness
+from nette.rules.defensiveness import Defensiveness, GuardDensity
 from nette.rules.duplication import DuplicatedSibling
 from nette.rules.naming import NamingDrift, ShortNameLongScope
 from nette.rules.shape import SHAPE_RULES
@@ -11,6 +11,7 @@ from nette.suppressions import MISSING_REASON_CODE, UNUSED_ALLOW_CODE
 ALL_RULES = (
     *SHAPE_RULES,
     Defensiveness,
+    GuardDensity,
     ShortNameLongScope,
     NamingDrift,
     FileNaming,

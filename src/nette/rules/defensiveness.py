@@ -7,6 +7,7 @@ from nette.rules.base import Context, Rule
 
 DEVIATION_FACTOR: Final = 3.0
 MINIMUM_GUARDED_FUNCTIONS: Final = 3
+MINIMUM_TRIES: Final = 3
 FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 
 
@@ -31,25 +32,75 @@ class Defensiveness(Rule):
             return
 
         guarded = [f for f in functions if _contains_try(f)]
-        if len(guarded) < MINIMUM_GUARDED_FUNCTIONS:
+        if not _over_guarded(len(guarded), len(functions), baseline):
             return
 
         rate = len(guarded) / len(functions)
 
-        if rate > baseline * DEVIATION_FACTOR:
-            ctx.report(
-                guarded[0],
-                message="this file guards far more than the rest of the repo",
-                grounds=(
-                    f"{len(guarded)} of its {len(functions)} functions wrap code in try blocks "
-                    f"({rate:.0%}); the repo baseline is {baseline:.0%} of functions. "
-                    f"Guarded here: {_named(guarded)}"
-                ),
-                help=(
-                    "trust internal data and let unexpected errors surface; "
-                    "keep try blocks for real boundaries (I/O, parsing, network)"
-                ),
-            )
+        ctx.report(
+            guarded[0],
+            message="this file guards far more than the rest of the repo",
+            grounds=(
+                f"{len(guarded)} of its {len(functions)} functions wrap code in try blocks "
+                f"({rate:.0%}); the repo baseline is {baseline:.0%} of functions. "
+                f"Guarded here: {_named(guarded)}"
+            ),
+            help=(
+                "trust internal data and let unexpected errors surface; "
+                "keep try blocks for real boundaries (I/O, parsing, network)"
+            ),
+        )
+
+
+class GuardDensity(Rule):
+    code = "guard-density"
+    family = "defensiveness"
+    scope = "file"
+    baseline = "try_per_kloc"
+
+    def visit_module(self, node: ast.Module, ctx: Context) -> None:
+        baseline = ctx.baseline()
+        lines = len(ctx.source.lines)
+        if baseline is None or not lines:
+            return
+
+        tries = [n for n in ast.walk(node) if isinstance(n, ast.Try)]
+        if len(tries) < MINIMUM_TRIES:
+            return
+
+        functions = [
+            n for n in ast.walk(node) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        ]
+        guarded = [f for f in functions if _contains_try(f)]
+        guarded_baseline = ctx.profile.metrics.get("guarded_function_rate") if ctx.profile else None
+
+        if functions and _over_guarded(len(guarded), len(functions), guarded_baseline):
+            return
+
+        density = 1000 * len(tries) / lines
+        if density <= baseline * DEVIATION_FACTOR:
+            return
+
+        ctx.report(
+            tries[0],
+            message="this file stacks guards far tighter than the rest of the repo",
+            grounds=(
+                f"it wraps {len(tries)} try blocks in {lines} lines "
+                f"({density:.0f} per 1000 lines); across this repo the rate is "
+                f"{baseline} per 1000"
+            ),
+            help=(
+                "guard the boundary call once, not every statement around it; "
+                "a failure two lines after a successful read is the same failure"
+            ),
+        )
+
+
+def _over_guarded(guarded: int, functions: int, baseline: float | None) -> bool:
+    if baseline is None or guarded < MINIMUM_GUARDED_FUNCTIONS:
+        return False
+
+    return guarded / functions > baseline * DEVIATION_FACTOR
 
 
 def _named(guarded: list[FunctionNode]) -> str:

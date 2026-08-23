@@ -31,6 +31,7 @@ RULE_DOCS = {
     "short-name-long-scope": "naming.md",
     "naming-drift": "naming.md",
     "over-guarded": "defensiveness.md",
+    "guard-density": "defensiveness.md",
     "under-annotated": "annotations.md",
     "file-naming": "structure.md",
     "file-size": "structure.md",

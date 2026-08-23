@@ -50,3 +50,43 @@ three frames later.
 ```python
 # nette: allow(over-guarded) this module wraps every vendor SDK call, guarding is its purpose
 ```
+
+## `guard-density`
+
+**Severity: warning. Baseline: `try_per_kloc` from the repo profile.
+Fires when the file wraps more than 3x the repo rate of try blocks per
+1000 lines, with at least 3 try blocks, and only when `over-guarded` does
+not already cover the file.**
+
+```
+warning[guard-density] src/sync.py:12:1 this file stacks guards far tighter than the rest of the repo
+  grounds: it wraps 9 try blocks in 256 lines (35 per 1000 lines); across this repo the
+  rate is 10.59 per 1000
+```
+
+`over-guarded` counts how many functions guard. It cannot see the other
+shape of the same problem: one long function wrapping every second
+statement in its own try block. That file has a single guarded function,
+sits below the three-function floor, and stays silent under `over-guarded`
+no matter how dense it gets. `guard-density` measures the guards against
+the lines instead of against the functions, so the concentration shows up.
+
+The two rules partition the space. When a file has at least three guarded
+functions and exceeds the guarded rate baseline, `over-guarded` owns it
+and `guard-density` steps aside, so a dense defensive file is reported
+once, not twice.
+
+Measured on 201 stdlib modules calibrated on themselves: 2 findings.
+`json/scanner.py` (3 try blocks in 73 lines) and `linecache.py` (9 in
+256), both files where the density is real.
+
+**Fix**: guard the boundary call once. A read that succeeded two lines
+above does not need its own guard on the line that uses the value, and a
+failure there is the same failure the first guard already describes.
+
+**Legitimate suppression**: a module that adapts a vendor SDK call by
+call, where each call fails in its own way.
+
+```python
+# nette: allow(guard-density) one guard per SOAP operation, each returns a different fault
+```
