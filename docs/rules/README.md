@@ -11,7 +11,7 @@ config.
 | Family | Rules | Threshold kind |
 |---|---|---|
 | [engine](engine.md) | `parse-error`, `bare-allow`, `unused-allow` | none |
-| [shape](shape.md) | `function-length`, `nesting-depth`, `argument-count`, `return-count` | universal |
+| [shape](shape.md) | `function-length`, `branch-density`, `nesting-depth`, `argument-count`, `return-count` | universal |
 | [naming](naming.md) | `short-name-long-scope`, `naming-drift` | mixed |
 | [defensiveness](defensiveness.md) | `over-guarded` | calibrated |
 | [structure](structure.md) | `file-naming`, `file-size`, `mixed-module` | mixed |

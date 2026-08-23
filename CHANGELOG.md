@@ -4,6 +4,13 @@
 
 ### Added
 
+- `branch-density`, the rule for the gap 0.1 shipped with: a long flat
+  `if/elif` chain passes under `function-length` and `nesting-depth` while
+  being the least readable thing in the file. A decision is an `if`, an
+  `elif`, a `match` case or a ternary; boolean operators do not count, and
+  branches of a nested function belong to it. Default `branch_density` 12,
+  measured against the exemplary corpora: p99 is 8 to 16, and the default
+  fires on 1.1% of stdlib functions.
 - `mixed-module`, a convention rule for data types piling up in a module
   that also holds behaviour. A module declaring at least
   `data_types_per_module` (default 2) pure data types beside a function or a

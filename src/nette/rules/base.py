@@ -9,6 +9,7 @@ from nette.parsing import SourceFile
 
 DEFAULT_THRESHOLDS: dict[str, int] = {
     "function_length": 100,
+    "branch_density": 12,
     "nesting_depth": 5,
     "argument_count": 6,
     "return_count": 5,

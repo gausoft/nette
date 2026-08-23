@@ -24,6 +24,7 @@ RULE_DOCS = {
     "bare-allow": "engine.md",
     "unused-allow": "engine.md",
     "function-length": "shape.md",
+    "branch-density": "shape.md",
     "nesting-depth": "shape.md",
     "argument-count": "shape.md",
     "return-count": "shape.md",

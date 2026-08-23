@@ -39,6 +39,53 @@ decoder whose steps are trivially uniform.
 def decode_frame(raw: bytes) -> Frame:  # nette: allow(function-length) flat wire-format decoder, one case per opcode
 ```
 
+## `branch-density`
+
+**Severity: warning. Threshold: `branch_density`, default 12 decisions.**
+
+```
+warning[branch-density] src/converters.py:88:1 function `to_domain` decides too many times to follow
+  why: it makes 19 branching decisions; the configured limit is 12
+  fix: replace the chain with a lookup table keyed on what varies, or split it so each case is its own function
+```
+
+Length and nesting both miss the same shape: a long flat `if/elif` chain.
+Every branch sits at one level, no branch is long, and the function sails
+under `function-length` and `nesting-depth` while being the least readable
+thing in the file. This was measured, not guessed: cross-checking nette
+against 12 months of fix commits on a production monorepo, the two files
+it missed were both external API converters whose logic is dense and flat.
+
+A decision is an `if`, an `elif`, a `match` case, or a ternary. Boolean
+operators do not count: `if a and b` is one branch with a compound
+condition. Branches inside a nested function belong to that function, not
+to its parent.
+
+Corpus measurement: p90 is 3 to 4 decisions, p95 is 4 to 7, p99 is 8 to
+16. The default of 12 fires on 1.1% of stdlib functions and 0.2% of
+httpx functions, roughly 0.6 findings per kLOC of exemplary code.
+
+**Fix**: a chain that maps a value to a behaviour is a dictionary. Where
+each branch does real work, give each case its own function and keep the
+dispatch as one line.
+
+```python
+# before
+if kind == "sms":
+    ...
+elif kind == "email":
+    ...
+elif kind == "push":
+    ...
+
+# after
+HANDLERS = {"sms": send_sms, "email": send_email, "push": send_push}
+HANDLERS[kind](payload)
+```
+
+**Legitimate suppression**: a generated dispatch table, or a parser whose
+grammar is the branch list.
+
 ## `nesting-depth`
 
 **Severity: warning. Threshold: `nesting_depth`, default 5 levels.**

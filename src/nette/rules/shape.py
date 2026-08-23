@@ -40,6 +40,34 @@ class FunctionLength(Rule):
             )
 
 
+class BranchDensity(Rule):
+    code = "branch-density"
+    family = "shape"
+
+    def visit_functiondef(self, node: ast.FunctionDef, ctx: Context) -> None:
+        self._measure(node, ctx)
+
+    def visit_asyncfunctiondef(self, node: ast.AsyncFunctionDef, ctx: Context) -> None:
+        self._measure(node, ctx)
+
+    def _measure(self, node: FunctionNode, ctx: Context) -> None:
+        limit = ctx.threshold("branch_density")
+        decisions = _decision_count(node)
+
+        if decisions > limit:
+            ctx.report(
+                node,
+                message=f"function `{node.name}` decides too many times to follow",
+                grounds=(
+                    f"it makes {decisions} branching decisions; the configured limit is {limit}"
+                ),
+                help=(
+                    "replace the chain with a lookup table keyed on what varies, "
+                    "or split it so each case is its own function"
+                ),
+            )
+
+
 class NestingDepth(Rule):
     code = "nesting-depth"
     family = "shape"
@@ -128,6 +156,23 @@ def _max_depth(function: FunctionNode) -> int:
     return walk(function, 0)
 
 
+def _decision_count(function: FunctionNode) -> int:
+    total = 0
+    stack: list[ast.AST] = list(ast.iter_child_nodes(function))
+
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+
+        if isinstance(node, (ast.If, ast.match_case, ast.IfExp)):
+            total += 1
+
+        stack.extend(ast.iter_child_nodes(node))
+
+    return total
+
+
 def body_statements(function: FunctionNode) -> list[ast.stmt]:
     body = function.body
 
@@ -178,4 +223,4 @@ def _own_return_count(function: FunctionNode) -> int:
     return count
 
 
-SHAPE_RULES = (FunctionLength, NestingDepth, ArgumentCount, ReturnCount)
+SHAPE_RULES = (FunctionLength, BranchDensity, NestingDepth, ArgumentCount, ReturnCount)

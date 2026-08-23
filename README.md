@@ -94,6 +94,7 @@ Rule names say what they detect. No lookup tables.
 | Family | Rule | Fires when |
 |---|---|---|
 | shape | `function-length` | a function is too long to take in at one glance |
+| shape | `branch-density` | a function makes too many branching decisions |
 | shape | `nesting-depth` | code nests too deeply to follow |
 | shape | `argument-count` | a function takes too many required arguments |
 | shape | `return-count` | a function exits from too many places |
