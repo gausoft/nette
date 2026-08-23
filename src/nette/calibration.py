@@ -55,7 +55,7 @@ def _accumulate(source: SourceFile, tally: _Tally) -> None:
             tally.tries += 1
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             tally.functions += 1
-            tally.annotated += _is_annotated(node)
+            tally.annotated += is_annotated(node)
             tally.guarded += _contains_try(node)
             tally.camel += bool(CAMEL_CASE.match(node.name))
 
@@ -116,7 +116,7 @@ def load_profile(source: Path) -> Profile | None:
     )
 
 
-def _is_annotated(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+def is_annotated(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     if function.returns is not None:
         return True
     return any(arg.annotation for arg in function.args.args)

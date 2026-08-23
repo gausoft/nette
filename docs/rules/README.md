@@ -14,6 +14,7 @@ config.
 | [shape](shape.md) | `function-length`, `branch-density`, `nesting-depth`, `argument-count`, `return-count` | universal |
 | [naming](naming.md) | `short-name-long-scope`, `naming-drift` | mixed |
 | [defensiveness](defensiveness.md) | `over-guarded` | calibrated |
+| [annotations](annotations.md) | `under-annotated` | calibrated |
 | [structure](structure.md) | `file-naming`, `file-size`, `mixed-module` | mixed |
 | [duplication](duplication.md) | `duplicated-sibling` | convention |
 

@@ -12,7 +12,7 @@ from nette.rules.base import DEFAULT_THRESHOLDS
 KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output", "profile"})
 ROOT_MARKERS: Final = ("nette.toml", "pyproject.toml", ".nette", ".git")
 KNOWN_FAMILIES: Final = frozenset(
-    {"shape", "naming", "defensiveness", "structure", "duplication", "engine"}
+    {"shape", "naming", "defensiveness", "annotations", "structure", "duplication", "engine"}
 )
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
 KNOWN_FORMATS: Final = frozenset({"concise", "full", "summary", "agent", "json"})

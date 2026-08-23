@@ -13,6 +13,7 @@ def test_defaults_when_no_config_file(tmp_path):
 
     assert config == Config()
     assert config.select == (
+        "annotations",
         "defensiveness",
         "duplication",
         "engine",

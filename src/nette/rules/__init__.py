@@ -1,4 +1,5 @@
 from nette.findings import PARSE_ERROR_CODE
+from nette.rules.annotations import UnderAnnotated
 from nette.rules.base import DEFAULT_THRESHOLDS, Context, Rule
 from nette.rules.defensiveness import Defensiveness
 from nette.rules.duplication import DuplicatedSibling
@@ -16,6 +17,7 @@ ALL_RULES = (
     FileSize,
     DuplicatedSibling,
     MixedModule,
+    UnderAnnotated,
 )
 ENGINE_CODES = (PARSE_ERROR_CODE, MISSING_REASON_CODE, UNUSED_ALLOW_CODE)
 KNOWN_RULE_CODES = frozenset({rule.code for rule in ALL_RULES} | set(ENGINE_CODES))
