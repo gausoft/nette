@@ -264,6 +264,7 @@ how black and ruff became habits.
 - [Changelog](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
 - [Design: how nette works](https://github.com/gausoft/nette/blob/main/docs/design.md)
 - [Rules reference](https://github.com/gausoft/nette/blob/main/docs/rules/README.md)
+- [Benchmark: speed, thresholds, field results](https://github.com/gausoft/nette/blob/main/docs/benchmark.md)
 - [Vision & requirements](https://github.com/gausoft/nette/blob/main/docs/vision.md)
 - [Extensibility design](https://github.com/gausoft/nette/blob/main/docs/extensibility.md)
 
