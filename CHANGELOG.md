@@ -2,12 +2,34 @@
 
 ## 0.2.0
 
-Three rules for blind spots that 0.1 could not see, two commands to get nette
-into the agent's loop, and the field fixes cut for 0.1.1, which was never
-published.
+Five rules for blind spots that 0.1 could not see, two commands and a
+pre-commit hook to get nette into the agent's loop, and the field fixes cut
+for 0.1.1, which was never published.
 
 ### Added
 
+- `duplicated-sibling`, a rule for the blind spot that matters most on
+  agent-written code: a function that is a near-copy of another function in
+  the same scope. Each function is reduced to the sequence of its AST node
+  types, docstring excluded, and compared to its siblings; names, literals
+  and attribute paths do not count. Defaults `duplication_similarity` 85
+  (percent) and `duplication_min_lines` 20. Measured on a 879-file monorepo:
+  37 near-copy pairs in 12 files, in files where every other rule scored
+  zero. Quiet on exemplary code: 15 findings across 642 stdlib modules.
+- `mixed-module`, a convention rule for data types piling up in a module
+  that also holds behaviour. A module declaring at least
+  `data_types_per_module` (default 2) pure data types beside a function or a
+  class with methods is flagged, and the message names the destination.
+  Destination modules (`schemas.py`, `models.py`, `enums.py` and friends) and
+  private classes are exempt. Measured: 3.5% of a 879-file monorepo, 6
+  findings across 642 stdlib modules.
+- `branch-density`, the rule for the gap 0.1 shipped with: a long flat
+  `if/elif` chain passes under `function-length` and `nesting-depth` while
+  being the least readable thing in the file. A decision is an `if`, an
+  `elif`, a `match` case or a ternary; boolean operators do not count, and
+  branches of a nested function belong to it. Default `branch_density` 12,
+  measured against the exemplary corpora: p99 is 8 to 16, and the default
+  fires on 1.1% of stdlib functions.
 - `under-annotated`, the rule for a dimension the profile has measured
   since phase 7 and no rule read: `annotated_function_rate`. A file that
   annotates less than half the repo rate is flagged, in a repo that
@@ -21,10 +43,9 @@ published.
   `guard-density` measures guards against lines, and steps aside when
   `over-guarded` already covers the file. Measured on 201 stdlib modules
   calibrated on themselves: 2 findings.
-- `.pre-commit-hooks.yaml`: installing the hook is a repo and a rev, the
-  shape ruff and black use, instead of eight hand-written lines per
-  repository.
-
+- engine: `unused-allow`, a warning for a suppression marker that silences
+  nothing. Markers naming a rule the current configuration does not run, or a
+  calibrated rule whose baseline is absent from the profile, are left alone.
 - `nette init`: calibrates the repo, keeps the result cache out of git with a
   `.nette/.gitignore`, and prints the next step. Install to first verdict is
   one command.
@@ -32,6 +53,10 @@ published.
   `CLAUDE.md`, `.cursorrules` or any file the agent reads, so the agent knows
   when to run nette and what to do with the output. The integration surface
   stays a shell command and an exit code, which every agent already supports.
+- `.pre-commit-hooks.yaml`: installing the hook is a repo and a rev, the
+  shape ruff and black use, instead of eight hand-written lines per
+  repository.
+
 - The agent envelope carries a `run` block: how to rerun the check, what each
   exit code means, how to suppress a finding honestly, how to get a rule's
   doc. Measured need: an agent given the old output and no documentation
@@ -40,35 +65,10 @@ published.
 - `--format summary`, findings grouped by directory, worst first, with the
   three worst files inside each. Findings cluster hard in practice: 87 of the
   127 findings of the field test sat in one service, 9 of them in one file.
-- `branch-density`, the rule for the gap 0.1 shipped with: a long flat
-  `if/elif` chain passes under `function-length` and `nesting-depth` while
-  being the least readable thing in the file. A decision is an `if`, an
-  `elif`, a `match` case or a ternary; boolean operators do not count, and
-  branches of a nested function belong to it. Default `branch_density` 12,
-  measured against the exemplary corpora: p99 is 8 to 16, and the default
-  fires on 1.1% of stdlib functions.
-- `mixed-module`, a convention rule for data types piling up in a module
-  that also holds behaviour. A module declaring at least
-  `data_types_per_module` (default 2) pure data types beside a function or a
-  class with methods is flagged, and the message names the destination.
-  Destination modules (`schemas.py`, `models.py`, `enums.py` and friends) and
-  private classes are exempt. Measured: 3.5% of a 879-file monorepo, 6
-  findings across 642 stdlib modules.
 - `check --profile PATH` judges against a profile file of your choosing,
   for CI and multi-root setups.
-- engine: `unused-allow`, a warning for a suppression marker that silences
-  nothing. Markers naming a rule the current configuration does not run, or a
-  calibrated rule whose baseline is absent from the profile, are left alone.
 - `Rule.baseline` names the profile metric a calibrated rule reads, so the
   engine knows which rules can fire on the current profile.
-- `duplicated-sibling`, a rule for the blind spot that matters most on
-  agent-written code: a function that is a near-copy of another function in
-  the same scope. Each function is reduced to the sequence of its AST node
-  types, docstring excluded, and compared to its siblings; names, literals
-  and attribute paths do not count. Defaults `duplication_similarity` 85
-  (percent) and `duplication_min_lines` 20. Measured on a 879-file monorepo:
-  37 near-copy pairs in 12 files, in files where every other rule scored
-  zero. Quiet on exemplary code: 15 findings across 642 stdlib modules.
 
 ### Fixed
 

@@ -13,7 +13,7 @@ A code readability checker for the AI-agent era. Deterministic, diff-aware,
 calibrated on your repo's own style, fast enough to live inside the agent's
 write-check-fix loop.
 
-[![status](https://img.shields.io/badge/status-v0.1-f97316)](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
+[![status](https://img.shields.io/badge/status-v0.2-f97316)](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
 [![python](https://img.shields.io/badge/python-%E2%89%A53.11-18181b)](https://github.com/gausoft/nette/blob/main/pyproject.toml)
 [![license](https://img.shields.io/badge/license-MIT-18181b)](https://github.com/gausoft/nette/blob/main/LICENSE)
 [![style](https://img.shields.io/badge/deps-zero-18181b)](https://github.com/gausoft/nette/blob/main/pyproject.toml)
