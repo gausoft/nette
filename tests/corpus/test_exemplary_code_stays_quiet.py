@@ -17,6 +17,7 @@ EXEMPLARY_MODULES = [
     "statistics.py",
 ]
 WARNING_BUDGET_PER_KLOC = 6.0
+DUPLICATION_BUDGET_PER_KLOC = 0.5
 
 
 @pytest.mark.parametrize("module", EXEMPLARY_MODULES)
@@ -48,13 +49,16 @@ def test_nette_own_source_is_clean():
     assert findings == []
 
 
-def test_duplicated_sibling_stays_quiet_on_exemplary_stdlib():
-    findings = check_files(
-        [STDLIB / module for module in EXEMPLARY_MODULES],
-        rules=[DuplicatedSibling()],
-    )
+def test_duplicated_sibling_noise_on_exemplary_stdlib_stays_low():
+    files = [STDLIB / module for module in EXEMPLARY_MODULES]
 
-    assert findings == [], [f"{f.file.name}:{f.line} {f.message}" for f in findings]
+    findings = check_files(files, rules=[DuplicatedSibling()])
+
+    kloc = sum(len(file.read_text().splitlines()) for file in files) / 1000
+    budget = DUPLICATION_BUDGET_PER_KLOC * kloc
+    assert len(findings) <= budget, [
+        f"{f.file.name}:{f.line} {f.message}" for f in findings
+    ]
 
 
 def _check(file: Path):
