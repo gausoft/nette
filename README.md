@@ -156,6 +156,8 @@ Rule names say what they detect. No lookup tables.
 | naming | `short-name-long-scope` | a one-letter name lives too long |
 | naming | `naming-drift` | an identifier breaks the repo's own convention |
 | defensiveness | `over-guarded` | a file guards far more than the rest of the repo |
+| defensiveness | `guard-density` | one function stacks guards line after line |
+| annotations | `under-annotated` | a file drops the type annotations the repo keeps |
 | structure | `file-naming` | a file name breaks snake_case |
 | structure | `file-size` | a file dwarfs the repo's norm |
 | structure | `mixed-module` | data types pile up in a module that also holds logic |

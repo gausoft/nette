@@ -1,8 +1,29 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
+
+Three rules for blind spots that 0.1 could not see, two commands to get nette
+into the agent's loop, and the field fixes cut for 0.1.1, which was never
+published.
 
 ### Added
+
+- `under-annotated`, the rule for a dimension the profile has measured
+  since phase 7 and no rule read: `annotated_function_rate`. A file that
+  annotates less than half the repo rate is flagged, in a repo that
+  annotates at least 60% of its functions, with at least three functions in
+  the file. The bare functions are named. Test modules are exempt, their
+  functions are called by the runner and an annotation there buys no
+  checking. New family `annotations`.
+- `guard-density`, the second dimension nobody read: `try_per_kloc`.
+  `over-guarded` needs three guarded functions before it speaks, so a single
+  long function wrapping every second statement stays silent under it.
+  `guard-density` measures guards against lines, and steps aside when
+  `over-guarded` already covers the file. Measured on 201 stdlib modules
+  calibrated on themselves: 2 findings.
+- `.pre-commit-hooks.yaml`: installing the hook is a repo and a rev, the
+  shape ruff and black use, instead of eight hand-written lines per
+  repository.
 
 - `nette init`: calibrates the repo, keeps the result cache out of git with a
   `.nette/.gitignore`, and prints the next step. Install to first verdict is
@@ -35,6 +56,11 @@
   findings across 642 stdlib modules.
 - `check --profile PATH` judges against a profile file of your choosing,
   for CI and multi-root setups.
+- engine: `unused-allow`, a warning for a suppression marker that silences
+  nothing. Markers naming a rule the current configuration does not run, or a
+  calibrated rule whose baseline is absent from the profile, are left alone.
+- `Rule.baseline` names the profile metric a calibrated rule reads, so the
+  engine knows which rules can fire on the current profile.
 - `duplicated-sibling`, a rule for the blind spot that matters most on
   agent-written code: a function that is a near-copy of another function in
   the same scope. Each function is reduced to the sequence of its AST node
@@ -43,29 +69,6 @@
   (percent) and `duplication_min_lines` 20. Measured on a 879-file monorepo:
   37 near-copy pairs in 12 files, in files where every other rule scored
   zero. Quiet on exemplary code: 15 findings across 642 stdlib modules.
-
-### Fixed
-
-- Configuration, profile and cache are resolved by walking up from the paths
-  under check to the nearest project root (`nette.toml`, `pyproject.toml`,
-  `.nette` or `.git`), instead of being read from the current directory.
-  Checking a path in another worktree used to silently use the caller's
-  profile, or none, which meant copying `.nette/profile.json` by hand into
-  every worktree. `calibrate` writes at that same root.
-- A threshold below 1 is refused, and a percentage threshold above 100 is
-  refused. `duplication_similarity = 150` used to disable the rule in silence.
-- `check` refuses a path that does not exist, instead of walking nothing and
-  exiting 0. A typo used to look like a clean tree.
-- `check` refuses paths belonging to different projects in one run, instead of
-  judging all of them with the first path's configuration.
-- `--profile PATH` pointing at a missing file is refused, instead of running
-  with no profile at all.
-
-## 0.1.1
-
-Fixes from a field test on a production FastAPI monorepo (879 files, 7
-services). They all concern trust in the tool: a diff that reported files the
-branch never touched, and suppressions that stopped working without saying so.
 
 ### Fixed
 
@@ -85,14 +88,20 @@ branch never touched, and suppressions that stopped working without saying so.
   used to move the anchor and silently break the marker.
 - A suppression marker is read from comment tokens only. `# nette: allow(...)`
   written inside a string literal no longer counts as a suppression.
-
-### Added
-
-- engine: `unused-allow`, a warning for a suppression marker that silences
-  nothing. Markers naming a rule the current configuration does not run, or a
-  calibrated rule whose baseline is absent from the profile, are left alone.
-- `Rule.baseline` names the profile metric a calibrated rule reads, so the
-  engine knows which rules can fire on the current profile.
+- Configuration, profile and cache are resolved by walking up from the paths
+  under check to the nearest project root (`nette.toml`, `pyproject.toml`,
+  `.nette` or `.git`), instead of being read from the current directory.
+  Checking a path in another worktree used to silently use the caller's
+  profile, or none, which meant copying `.nette/profile.json` by hand into
+  every worktree. `calibrate` writes at that same root.
+- A threshold below 1 is refused, and a percentage threshold above 100 is
+  refused. `duplication_similarity = 150` used to disable the rule in silence.
+- `check` refuses a path that does not exist, instead of walking nothing and
+  exiting 0. A typo used to look like a clean tree.
+- `check` refuses paths belonging to different projects in one run, instead of
+  judging all of them with the first path's configuration.
+- `--profile PATH` pointing at a missing file is refused, instead of running
+  with no profile at all.
 
 ## 0.1.0
 

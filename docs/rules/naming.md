@@ -7,8 +7,6 @@ understanding (narrow-meaning identifiers nearly double comprehension
 odds; single-letter identifiers take measurably longer to read), while no
 size or complexity metric does on its own.
 
-Both rules are planned for v0.1 and not yet implemented.
-
 ## `short-name-long-scope`
 
 **Severity: warning. Threshold: `short_name_scope`, default 15 lines.

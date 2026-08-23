@@ -99,11 +99,13 @@ unit of selection in config:
 | Family | Rules |
 |---|---|
 | `engine` | `parse-error`, `bare-allow`, `unused-allow` |
-| `shape` | `function-length`, `nesting-depth`, `argument-count`, `return-count` |
+| `shape` | `function-length`, `branch-density`, `nesting-depth`, `argument-count`, `return-count` |
 | `naming` | `short-name-long-scope`, `naming-drift` |
-| `defensiveness` | `over-guarded` |
+| `defensiveness` | `over-guarded`, `guard-density` |
+| `annotations` | `under-annotated` |
 | `docs` | reserved for v0.2 (comments and docstrings) |
-| `structure` | `file-naming`, `file-size` |
+| `structure` | `file-naming`, `file-size`, `mixed-module` |
+| `duplication` | `duplicated-sibling` |
 
 Third-party plugin rules (v0.2+) are prefixed with their package name
 (`org/no-print-in-prod`); native slugs are never prefixed.
