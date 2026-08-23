@@ -48,6 +48,16 @@ def test_the_guarded_functions_are_named_so_a_partial_fix_is_possible(write_file
     assert "`a`, `b`, `c`" in findings[0].grounds
 
 
+def test_exactly_five_guarded_functions_are_all_named(write_file):
+    body = "    try:\n        return 1\n    except KeyError:\n        return None\n"
+    file = write_file("".join(f"def f{i}():\n{body}\n" for i in range(5)))
+
+    findings = check(file, CALM_PROFILE)
+
+    assert "`f4`" in findings[0].grounds
+    assert "more" not in findings[0].grounds
+
+
 def test_only_the_first_guarded_functions_are_named(write_file):
     body = "    try:\n        return 1\n    except KeyError:\n        return None\n"
     file = write_file("".join(f"def f{i}():\n{body}\n" for i in range(8)))

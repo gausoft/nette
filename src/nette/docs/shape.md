@@ -58,8 +58,10 @@ it missed were both external API converters whose logic is dense and flat.
 
 A decision is an `if`, an `elif`, a `match` case, or a ternary. Boolean
 operators do not count: `if a and b` is one branch with a compound
-condition. Branches inside a nested function belong to that function, not
-to its parent.
+condition. Only the function body is measured, so a ternary in a decorator
+or in a default value is ignored. Branches inside a nested function belong
+to that function, not to its parent. A lambda is the exception: it is read
+inline, so its ternary counts for whoever reads the enclosing function.
 
 Corpus measurement: p90 is 3 to 4 decisions, p95 is 4 to 7, p99 is 8 to
 16. The default of 12 fires on 1.1% of stdlib functions and 0.2% of

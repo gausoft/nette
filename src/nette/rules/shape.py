@@ -158,7 +158,7 @@ def _max_depth(function: FunctionNode) -> int:
 
 def _decision_count(function: FunctionNode) -> int:
     total = 0
-    stack: list[ast.AST] = list(ast.iter_child_nodes(function))
+    stack: list[ast.AST] = list(function.body)
 
     while stack:
         node = stack.pop()

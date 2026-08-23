@@ -56,6 +56,28 @@ def test_match_cases_count_as_branches(write_file):
     assert [f.code for f in check(file)] == ["branch-density"]
 
 
+def test_a_ternary_in_a_decorator_or_a_default_is_not_a_branch(write_file):
+    chain = "\n".join(
+        f"    {'if' if i == 0 else 'elif'} x == {i}:\n        return {i}" for i in range(11)
+    )
+    file = write_file(
+        "@mark(A if DEBUG else B)\n"
+        "def route(x, mode=('a' if DEBUG else 'b'), other=('c' if DEBUG else 'd')):\n"
+        f"{chain}\n"
+    )
+
+    assert check(file) == []
+
+
+def test_a_ternary_in_a_lambda_counts_for_the_reader_of_the_function(write_file):
+    chain = "\n".join(
+        f"    {'if' if i == 0 else 'elif'} x == {i}:\n        return {i}" for i in range(12)
+    )
+    file = write_file(f"def route(x):\n    pick = lambda v: 1 if v else 0\n{chain}\n")
+
+    assert [f.code for f in check(file)] == ["branch-density"]
+
+
 def test_the_limit_is_configurable(write_file):
     file = write_file(dispatcher("route", 13))
 
