@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+from collections import Counter, defaultdict
+from pathlib import Path
 from typing import Callable, Final, Sequence
 
 from nette.findings import Finding, Severity
 
 SCHEMA_VERSION: Final = 1
+WORST_FILES: Final = 3
 
 
 def render(findings: Sequence[Finding], *, format: str) -> str:
@@ -75,6 +78,33 @@ def _agent(findings: Sequence[Finding]) -> str:
     return json.dumps(payload, indent=2)
 
 
+def _summary(findings: Sequence[Finding]) -> str:
+    if not findings:
+        return ""
+
+    by_directory: dict[Path, list[Finding]] = defaultdict(list)
+    for finding in findings:
+        by_directory[finding.file.parent].append(finding)
+
+    files = {finding.file for finding in findings}
+    lines = [f"{len(findings)} findings in {len(files)} files", ""]
+
+    for directory, group in sorted(
+        by_directory.items(), key=lambda item: (-len(item[1]), str(item[0]))
+    ):
+        touched = Counter(finding.file for finding in group)
+        lines.append(f"{directory or '.'}  {len(group)} findings in {len(touched)} files")
+        lines.extend(_worst(touched))
+
+    return "\n".join(lines)
+
+
+def _worst(touched: Counter[Path]) -> list[str]:
+    ranked = sorted(touched.items(), key=lambda item: (-item[1], item[0].name))
+
+    return [f"  {file.name}  {count}" for file, count in ranked[:WORST_FILES]]
+
+
 def _json(findings: Sequence[Finding]) -> str:
     payload = [
         {
@@ -99,6 +129,7 @@ def _json(findings: Sequence[Finding]) -> str:
 _RENDERERS: Final[dict[str, Callable[[Sequence[Finding]], str]]] = {
     "concise": _concise,
     "full": _full,
+    "summary": _summary,
     "agent": _agent,
     "json": _json,
 }

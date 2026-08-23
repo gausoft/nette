@@ -65,6 +65,20 @@ It emits a deterministic JSON envelope: summary counts, flat findings,
 and a ready-to-act instruction per finding. Identical input produces
 identical bytes, so agent runs cache and diff cleanly.
 
+On a large tree, `--format summary` answers the other question: not what
+to fix first, but where the debt lives.
+
+```
+$ nette check --format summary
+
+127 findings in 42 files
+
+services/accounts  87 findings in 24 files
+  http_client.py  9
+  serializers.py  6
+  filters.py  4
+```
+
 ## Calibration, and why it only tightens
 
 `nette calibrate` measures five style dimensions on your tree (annotation

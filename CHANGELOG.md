@@ -4,6 +4,9 @@
 
 ### Added
 
+- `--format summary`, findings grouped by directory, worst first, with the
+  three worst files inside each. Findings cluster hard in practice: 87 of the
+  127 findings of the field test sat in one service, 9 of them in one file.
 - `branch-density`, the rule for the gap 0.1 shipped with: a long flat
   `if/elif` chain passes under `function-length` and `nesting-depth` while
   being the least readable thing in the file. A decision is an `if`, an

@@ -8,7 +8,7 @@ from typing import Sequence
 from nette import __version__
 from nette.cache import Cache
 from nette.calibration import Profile, build_profile, load_profile, ratchet, save_profile
-from nette.config import find_root, load_config
+from nette.config import KNOWN_FORMATS, find_root, load_config
 from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Severity
@@ -65,7 +65,14 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         metavar="REF",
         help="check only files changed since REF (default: HEAD)",
     )
-    check.add_argument("--format", dest="format", default=None)
+    check.add_argument(
+        "--format",
+        dest="format",
+        default=None,
+        choices=sorted(KNOWN_FORMATS),
+        metavar="FORMAT",
+        help=f"output format: {', '.join(sorted(KNOWN_FORMATS))}",
+    )
     check.add_argument(
         "--profile",
         dest="profile_path",

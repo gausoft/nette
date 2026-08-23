@@ -30,6 +30,27 @@ FINDINGS = [
         end_column=4,
     ),
 ]
+CLUSTER = [
+    Finding(
+        code="over-guarded",
+        message="this file guards far more than the rest of the repo",
+        grounds="9 of its 12 functions wrap code in try blocks",
+        help="keep try blocks for real boundaries",
+        severity=Severity.WARNING,
+        file=Path("services/accounts") / name,
+        line=line,
+        column=0,
+        end_line=line,
+        end_column=0,
+    )
+    for name, line in (
+        ("client.py", 1),
+        ("client.py", 2),
+        ("client.py", 3),
+        ("client.py", 4),
+        ("serializers.py", 5),
+    )
+]
 
 
 def test_concise_is_one_line_per_finding():

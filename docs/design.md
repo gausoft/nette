@@ -242,7 +242,7 @@ matchers at load time. No shell, no eval, ever.
 
 ## Output formats
 
-Four renderers over the same finding list.
+Five renderers over the same finding list.
 
 **`concise`**: one line per finding, for grep and editor jump-to-error.
 
@@ -263,6 +263,21 @@ prompt caching and meaningful diffs between agent runs.
 `--max-output-tokens N` degrades deterministically: help text is dropped
 first, then grounds detail, never the location or the code.
 
+**`summary`**: one block per directory, worst first, with the three worst
+files inside each. Findings cluster: on the monorepo of the field test, 87
+of 127 findings sat in one service and 9 of them in one file. A flat list
+reads as 127 problems; the summary reads as one integration god-file to
+split.
+
+```
+127 findings in 42 files
+
+services/accounts  87 findings in 24 files
+  http_client.py  9
+  serializers.py  6
+  filters.py  4
+```
+
 **`json`**: the raw finding list, no reshaping.
 
 Exit codes: `0` clean, `1` findings at error severity, `2` tool failure.
@@ -282,8 +297,8 @@ nette check [PATHS...] [OPTIONS]
 
   --diff [REF]           Judge only files and lines changed since REF.
                          Default REF: merge-base with the target branch.
-  --format FORMAT        concise | full | agent | json. Default: full,
-                         or the value from config.
+  --format FORMAT        concise | full | summary | agent | json.
+                         Default: full, or the value from config.
   --select RULES         Comma-separated rule slugs or families to run,
                          overriding config for this invocation.
   --ignore RULES         Comma-separated rule slugs to skip.
