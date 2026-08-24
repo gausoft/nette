@@ -10,6 +10,11 @@
   stops reporting the same finding as new on every run. ruff, detekt,
   Checkstyle, PMD and golangci-lint all emit it, and it was the last entry
   ticket nette was missing.
+- `nette calibrate` says when the profile lands above the tree it measured.
+  A stray `.nette` directory anywhere up the path makes that directory the
+  project root, so calibrating a folder outside a project could silently
+  write the profile far away and ratchet it against an unrelated one. Found
+  by an experiment that got 0% everywhere until the cause was understood.
 - `exempt_decorated_by`, a list of decorators whose functions are exempt
   from the signature rules. A Celery task, a click command or a Django
   receiver has a parameter list dictated by its framework, and until now

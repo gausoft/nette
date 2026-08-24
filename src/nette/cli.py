@@ -15,7 +15,13 @@ from nette.calibration import (
     ratchet,
     save_profile,
 )
-from nette.config import Config, KNOWN_FORMATS, find_root, load_config
+from nette.config import (
+    Config,
+    KNOWN_FORMATS,
+    ROOT_MARKERS,
+    find_root,
+    load_config,
+)
 from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Finding, Severity
@@ -298,7 +304,8 @@ def _profile_groups(
 
 def _run_calibrate(args: argparse.Namespace) -> int:
     measured = build_profile(_existing(args.path))
-    destination = _profile_home(args.path, local=args.local) / PROFILE_PATH
+    home = _profile_home(args.path, local=args.local)
+    destination = home / PROFILE_PATH
     previous = None if args.reset else load_profile(destination)
 
     profile = measured if previous is None else ratchet(previous, measured)
@@ -306,10 +313,25 @@ def _run_calibrate(args: argparse.Namespace) -> int:
 
     save_profile(profile, destination)
     print(f"profile written to {destination} ({profile.files_measured} files measured)")
+    _warn_if_written_above(home, _existing(args.path))
     if loosened:
         print(f"kept the stricter baseline for {', '.join(sorted(loosened))} (--reset to relax)")
 
     return 0
+
+
+def _warn_if_written_above(home: Path, measured: Path) -> None:
+    directory = measured.resolve() if measured.is_dir() else measured.resolve().parent
+    if home == directory:
+        return
+
+    marker = next((m for m in ROOT_MARKERS if (home / m).exists()), "")
+    print(
+        f"note: {home} is the project root here (it holds {marker}), so the "
+        f"profile does not sit beside the files it measured; "
+        f"`nette calibrate --local {measured}` writes it there instead",
+        file=sys.stderr,
+    )
 
 
 def _profile_home(path: Path, *, local: bool) -> Path:

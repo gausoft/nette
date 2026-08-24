@@ -431,3 +431,25 @@ def test_a_file_scoped_finding_survives_a_change_anywhere_in_the_file(tmp_path):
     result = run_nette("check", "--diff", "--format", "concise", ".", cwd=tmp_path)
 
     assert "file-naming" in result.stdout
+
+
+def test_calibrate_says_when_the_profile_lands_above_the_measured_tree(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[tool.nette]\n")
+    inner = tmp_path / "vendored"
+    inner.mkdir()
+    (inner / "mod.py").write_text("def f(a: int) -> int:\n    return a\n")
+
+    result = run_nette("calibrate", "vendored", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert "is the project root here" in result.stderr
+    assert "pyproject.toml" in result.stderr
+
+
+def test_calibrate_stays_quiet_when_the_profile_sits_with_the_files(tmp_path):
+    (tmp_path / "pyproject.toml").write_text("[tool.nette]\n")
+    (tmp_path / "mod.py").write_text("def f(a: int) -> int:\n    return a\n")
+
+    result = run_nette("calibrate", ".", cwd=tmp_path)
+
+    assert "is the project root here" not in result.stderr
