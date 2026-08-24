@@ -27,7 +27,7 @@ plus metavariables. Easy to write, easy to share.
 ```yaml
 - id: no-defensive-getattr
   pattern: getattr($OBJ, $ATTR, $DEFAULT)
-  message: "Direct attribute access on internal models; getattr only on external SOAP/external API responses."
+  message: "Direct attribute access on internal models; getattr only on external API responses."
   severity: warning
 ```
 

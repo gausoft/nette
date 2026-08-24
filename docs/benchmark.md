@@ -6,7 +6,7 @@ the result can be judged even though the source cannot be published.
 
 ## Speed
 
-Measured on a 964-file FastAPI monorepo (microservices, external API
+Measured on a 964-file monorepo (microservices, external API
 integrations), Python 3.14, M-series laptop, August 2026.
 
 | Run | Time |

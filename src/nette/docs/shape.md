@@ -54,7 +54,7 @@ Every branch sits at one level, no branch is long, and the function sails
 under `function-length` and `nesting-depth` while being the least readable
 thing in the file. This was measured, not guessed: cross-checking nette
 against 12 months of fix commits on a production monorepo, the two files
-it missed were both external API converters whose logic is dense and flat.
+it missed were both payload converters whose logic is dense and flat.
 
 A decision is an `if`, an `elif`, a `match` case, or a ternary. Boolean
 operators do not count: `if a and b` is one branch with a compound
@@ -148,7 +148,7 @@ asking to be named.
 **Severity: warning. Threshold: `return_count`, default 5 returns.**
 
 ```
-warning[return-count] src/serializers.py:77:1 function `quote` exits from too many places
+warning[return-count] src/accounts/serializers.py:77:1 function `serialize_account` exits from too many places
 ```
 
 Counts `return` statements belonging to the function itself (nested

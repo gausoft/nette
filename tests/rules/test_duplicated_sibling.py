@@ -20,7 +20,9 @@ def check(file, thresholds=None):
 
 
 def test_near_identical_siblings_are_flagged_once_and_name_the_twin(write_file):
-    file = write_file(sender("send_password_reset", "ticket") + "\n" + sender("send_email_change", "order"))
+    file = write_file(
+        sender("send_password_reset", "token") + "\n" + sender("send_email_change", "record")
+    )
 
     findings = check(file)
 

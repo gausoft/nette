@@ -66,7 +66,7 @@ accepted trade (a generated client, a single-file public API facade).
 ```
 warning[mixed-module] src/api/accounts.py:31:1
   this module holds data types and behaviour at once
-  why: it declares 4 pure data types (`AccountIn`, `AccountOut`, `Segment`, `Plan`) beside its logic
+  why: it declares 4 pure data types (`AccountIn`, `AccountOut`, `Address`, `Plan`) beside its logic
   fix: move the types to a sibling module of their own (schemas.py, models.py, enums.py) and import them here
 ```
 

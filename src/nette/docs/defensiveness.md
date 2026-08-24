@@ -11,7 +11,7 @@ than the rest of its own repository.
 Calibrated rules need a profile. Run `nette calibrate` to write
 `.nette/profile.json`; without it, defensiveness rules stay silent.
 
-A module that guards because it sits at a boundary (a Celery task, a SOAP
+A module that guards because it sits at a boundary (a background worker task, an outbound API
 adapter, anything wrapping the network) is right to guard, and a repo-wide
 baseline drawn from CRUD modules will punish it forever. Give that subtree
 its own baseline with `nette calibrate path/to/subtree --local`: every file
@@ -94,5 +94,5 @@ failure there is the same failure the first guard already describes.
 call, where each call fails in its own way.
 
 ```python
-# nette: allow(guard-density) one guard per SOAP operation, each returns a different fault
+# nette: allow(guard-density) one guard per remote operation, each returns a different fault
 ```

@@ -34,7 +34,7 @@ drift into its config.
 
 A repository whose boundary modules guard on purpose gets punished by its
 own average. Measured on a 7-service monorepo: the repo-wide guard rate is
-12%, dominated by CRUD modules, and it is then used to judge Celery tasks
+12%, dominated by CRUD modules, and it is then used to judge background worker tasks
 that guard 88% of their functions because an escaping exception kills the
 worker. Both were right, and `over-guarded` fired forever.
 

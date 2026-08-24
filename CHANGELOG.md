@@ -31,7 +31,7 @@ for 0.1.1, which was never published.
   `nette calibrate PATH --local` writes a profile inside that subtree. One
   baseline per repository does not fit a monorepo: measured on 7 services,
   the repo-wide guard rate of 12% is dominated by CRUD modules and was then
-  used to judge Celery tasks guarding 88% of their functions on purpose.
+  used to judge background worker tasks guarding 88% of their functions on purpose.
 - `duplicated-sibling`, a rule for the blind spot that matters most on
   agent-written code: a function that is a near-copy of another function in
   the same scope. Each function is reduced to the sequence of its AST node
@@ -169,7 +169,7 @@ Rules are named, never numbered. A published name is never renamed.
 
 ### Measured
 
-On a 964-file FastAPI monorepo: calibration 1.7 s, full check 3.1 s cold
+On a 964-file monorepo: calibration 1.7 s, full check 3.1 s cold
 and 0.17 s warm, 127 findings, zero endpoint false positives. Cross-checked
 against 12 months of fix commits, nette flagged 9 of the 15 most-fixed
 files.
