@@ -38,3 +38,8 @@ Text must read as if a careful human wrote it. Hard rules:
 
 All content in this repository (README, docs, code, comments, commit
 messages) is written in English.
+
+One exception: `docs/private/` holds the owner's working notes and is not
+published. Those are written in French, the language their reader thinks
+in. Text destined to be published verbatim (a launch post, an issue
+reply) stays in English inside them.
