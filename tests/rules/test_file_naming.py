@@ -23,3 +23,12 @@ def test_dashes_are_flagged(write_file):
 
 def test_dunder_files_are_quiet(write_file):
     assert check(write_file("", name="__init__.py")) == []
+
+
+def test_an_empty_file_with_a_bad_name_is_reported_at_line_one(write_file):
+    file = write_file("", "Bad-Name.py")
+
+    findings = check_files([file], rules=[FileNaming()])
+
+    assert [f.code for f in findings] == ["file-naming"]
+    assert (findings[0].line, findings[0].column) == (1, 0)

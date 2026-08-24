@@ -63,6 +63,8 @@ class Context:
         )
 
     def report(self, node: ast.AST, *, message: str, grounds: str, help: str) -> None:
+        line = getattr(node, "lineno", 1)
+        column = getattr(node, "col_offset", 0)
         finding = Finding(
             code=self._rule.code,
             message=message,
@@ -70,10 +72,10 @@ class Context:
             help=help,
             severity=self._rule.severity,
             file=self.source.path,
-            line=node.lineno,
-            column=node.col_offset,
-            end_line=node.end_lineno or node.lineno,
-            end_column=node.end_col_offset or node.col_offset,
+            line=line,
+            column=column,
+            end_line=getattr(node, "end_lineno", None) or line,
+            end_column=getattr(node, "end_col_offset", None) or column,
         )
         self._findings.append(finding)
 
