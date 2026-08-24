@@ -2,7 +2,7 @@ import subprocess
 
 import pytest
 
-from nette.gitdiff import changed_files
+from nette.gitdiff import changed_files, changed_lines
 
 
 @pytest.fixture
@@ -97,3 +97,49 @@ def test_paths_are_resolved_from_the_repo_root_not_the_calling_directory(repo):
 
     assert [f.name for f in files] == ["old.py"]
     assert all(f.exists() for f in files)
+
+
+def test_changed_lines_reports_the_touched_ranges(repo):
+    (repo / "old.py").write_text(
+        "def kept():\n    return 1\n\n\ndef added():\n    return 2\n"
+    )
+
+    ranges = changed_lines(repo, ref="HEAD")
+
+    assert ranges[repo / "old.py"] == [(3, 6)]
+
+
+def test_changed_lines_covers_a_new_file_entirely(repo):
+    (repo / "new.py").write_text("def fresh():\n    return 3\n")
+
+    ranges = changed_lines(repo, ref="HEAD")
+
+    assert ranges[repo / "new.py"] == [(1, 2)]
+
+
+def test_changed_lines_reports_several_hunks(repo):
+    body = "".join(f"    step_{index} = {index}\n" for index in range(20))
+    (repo / "old.py").write_text("def kept():\n" + body + "    return 1\n")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "grow"], cwd=repo, check=True, capture_output=True
+    )
+
+    lines = (repo / "old.py").read_text().splitlines()
+    lines[1] = "    step_0 = 99"
+    lines[18] = "    step_17 = 99"
+    (repo / "old.py").write_text("\n".join(lines) + "\n")
+
+    ranges = changed_lines(repo, ref="HEAD")
+
+    assert ranges[repo / "old.py"] == [(2, 2), (19, 19)]
+
+
+def test_changed_lines_on_a_clean_tree_is_empty(repo):
+    assert changed_lines(repo, ref="HEAD") == {}
+
+
+def test_deleted_lines_alone_report_no_range(repo):
+    (repo / "old.py").write_text("def kept():\n")
+
+    assert changed_lines(repo, ref="HEAD") == {}

@@ -273,7 +273,7 @@ how black and ruff became habits.
 
 | # | Promise | Meaning |
 |---|---------|---------|
-| 1 | **Judges new code, not legacy** | Diff mode. A 10-year-old repo is never "all red". |
+| 1 | **Judges new code, not legacy** | `--diff` judges the lines you touched, not the files you touched. A 10-year-old repo is never "all red". `--whole-files` widens it back to the file. |
 | 2 | **Calibrated on YOUR repo** | Learns the local style (annotations, guards, file size) and flags deviation. The baseline ratchets: it can tighten, never loosen by accident. |
 | 3 | **Verdict in under a second** | Deterministic: same code, same verdict, zero LLM at runtime. |
 | 4 | **Findings say what to do** | Not "complexity 12 > 9" but the problem, the reason, and the fix direction. |

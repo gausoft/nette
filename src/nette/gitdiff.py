@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import Final
+
+HUNK: Final = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
 
 
 def changed_files(repo: Path, *, ref: str) -> list[Path]:
@@ -36,6 +40,42 @@ def change_counts(repo: Path, *, since: str) -> dict[Path, int]:
         raise ValueError(f"cannot read the git history of {root}: {error}") from error
 
     return Counter(root / name for name in records.split("\0") if name.endswith(".py"))
+
+
+def changed_lines(repo: Path, *, ref: str) -> dict[Path, list[tuple[int, int]]]:
+    root = repo_root(repo)
+    base = _merge_base(root, ref)
+
+    ranges = _hunks(_git(root, "diff", "-U0", "--diff-filter=d", base, "--", "*.py"), root)
+
+    for name in _git(root, "ls-files", "--others", "--exclude-standard"):
+        path = root / name
+        if name.endswith(".py") and path.is_file():
+            ranges[path] = [(1, len(path.read_text(encoding="utf-8", errors="replace").splitlines()))]
+
+    return ranges
+
+
+def _hunks(lines: list[str], root: Path) -> dict[Path, list[tuple[int, int]]]:
+    ranges: dict[Path, list[tuple[int, int]]] = {}
+    current: Path | None = None
+
+    for line in lines:
+        if line.startswith("+++ "):
+            name = line[4:]
+            current = None if name == "/dev/null" else root / name.partition("/")[2]
+            continue
+
+        match = HUNK.match(line)
+        if match is None or current is None:
+            continue
+
+        start = int(match.group(1))
+        count = int(match.group(2)) if match.group(2) is not None else 1
+        if count:
+            ranges.setdefault(current, []).append((start, start + count - 1))
+
+    return ranges
 
 
 def repo_root(start: Path) -> Path:

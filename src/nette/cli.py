@@ -19,7 +19,7 @@ from nette.config import Config, KNOWN_FORMATS, find_root, load_config
 from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Finding, Severity
-from nette.gitdiff import change_counts, changed_files
+from nette.gitdiff import change_counts, changed_files, changed_lines
 from nette.output import render
 from nette.rules import ALL_RULES, ENGINE_CODES
 from nette.rules.base import Rule
@@ -72,6 +72,11 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         default=None,
         metavar="REF",
         help="check only files changed since REF (default: HEAD)",
+    )
+    check.add_argument(
+        "--whole-files",
+        action="store_true",
+        help="with --diff, judge every changed file whole, not only its changed lines",
     )
     check.add_argument(
         "--format",
@@ -146,14 +151,19 @@ def _run_check(args: argparse.Namespace) -> int:
 
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)
+        touched = None if args.whole_files else changed_lines(root, ref=args.diff)
     else:
         files = discover(paths)
+        touched = None
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
     groups = _profile_groups(args.profile_path, files, root)
 
     findings = _judge(groups, rules, config, cache)
+
+    if touched is not None:
+        findings = _on_changed_lines(findings, touched, _whole_file_codes(rules))
 
     if args.timings:
         _print_timings(groups, rules, config.thresholds)
@@ -168,6 +178,29 @@ def _run_check(args: argparse.Namespace) -> int:
         failing = list(findings)
 
     return 1 if failing else 0
+
+
+def _whole_file_codes(rules: list) -> frozenset[str]:
+    return frozenset(rule.code for rule in rules if rule.scope == "file") | set(ENGINE_CODES)
+
+
+def _on_changed_lines(
+    findings: list[Finding],
+    touched: dict[Path, list[tuple[int, int]]],
+    whole_file: frozenset[str],
+) -> list[Finding]:
+    kept = []
+
+    for finding in findings:
+        ranges = touched.get(finding.file, [])
+        if finding.code in whole_file and ranges:
+            kept.append(finding)
+            continue
+
+        if any(start <= finding.end_line and finding.line <= end for start, end in ranges):
+            kept.append(finding)
+
+    return kept
 
 
 def _judge(

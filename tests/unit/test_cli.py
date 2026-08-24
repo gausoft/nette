@@ -376,3 +376,58 @@ def test_ignoring_an_engine_rule_actually_silences_it(tmp_path):
 
     assert quiet.stdout == ""
     assert quiet.returncode == 0
+
+
+LEGACY_FILE = "".join(
+    f"def helper_{index}(a, b, c, d, e, f, g, h):\n    return a\n\n\n" for index in range(6)
+)
+
+
+def commit_legacy(tmp_path):
+    for args in (
+        ["init", "-q", "-b", "main"],
+        ["config", "user.email", "t@t"],
+        ["config", "user.name", "t"],
+    ):
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    (tmp_path / "legacy.py").write_text(LEGACY_FILE)
+    subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "base"], cwd=tmp_path, check=True, capture_output=True
+    )
+
+    lines = (tmp_path / "legacy.py").read_text().splitlines()
+    lines[1] = "    return b"
+    (tmp_path / "legacy.py").write_text("\n".join(lines) + "\n")
+
+
+def test_diff_judges_the_changed_lines_not_the_whole_legacy_file(tmp_path):
+    commit_legacy(tmp_path)
+
+    result = run_nette("check", "--diff", "--format", "concise", ".", cwd=tmp_path)
+
+    assert result.stdout.count("argument-count") == 1
+    assert "helper_0" in result.stdout
+
+
+def test_whole_files_restores_the_file_wide_verdict(tmp_path):
+    commit_legacy(tmp_path)
+
+    result = run_nette(
+        "check", "--diff", "--whole-files", "--format", "concise", ".", cwd=tmp_path
+    )
+
+    assert result.stdout.count("argument-count") == 6
+
+
+def test_a_file_scoped_finding_survives_a_change_anywhere_in_the_file(tmp_path):
+    commit_legacy(tmp_path)
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.nette]\nselect = ["structure"]\n[tool.nette.thresholds]\n'
+    )
+    (tmp_path / "Bad-Name.py").write_text("def f():\n    return 1\n")
+
+    result = run_nette("check", "--diff", "--format", "concise", ".", cwd=tmp_path)
+
+    assert "file-naming" in result.stdout
