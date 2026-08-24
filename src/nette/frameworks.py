@@ -22,6 +22,9 @@ def wears_decorator(
 
 
 def _matches(name: str, path: str) -> bool:
+    if "." in name:
+        return path == name
+
     return path == name or path.endswith(f".{name}")
 
 
