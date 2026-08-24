@@ -139,7 +139,44 @@ def test_changed_lines_on_a_clean_tree_is_empty(repo):
     assert changed_lines(repo, ref="HEAD") == {}
 
 
-def test_deleted_lines_alone_report_no_range(repo):
+def test_deleted_lines_alone_list_the_file_with_no_range(repo):
     (repo / "old.py").write_text("def kept():\n")
 
-    assert changed_lines(repo, ref="HEAD") == {}
+    assert changed_lines(repo, ref="HEAD") == {repo / "old.py": []}
+
+
+def test_changed_lines_handles_a_non_ascii_path(repo, git):
+    (repo / "accentué.py").write_text("def a():\n    return 1\n")
+    git("add", ".")
+    git("commit", "-q", "-m", "accents")
+    (repo / "accentué.py").write_text("def a():\n    return 2\n")
+
+    ranges = changed_lines(repo, ref="HEAD")
+
+    assert ranges[repo / "accentué.py"] == [(2, 2)]
+
+
+def test_changed_lines_handles_a_path_with_a_space(repo, git):
+    (repo / "with space.py").write_text("def a():\n    return 1\n")
+    git("add", ".")
+    git("commit", "-q", "-m", "space")
+    (repo / "with space.py").write_text("def a():\n    return 2\n")
+
+    ranges = changed_lines(repo, ref="HEAD")
+
+    assert ranges[repo / "with space.py"] == [(2, 2)]
+
+
+def test_changed_lines_survives_a_repo_configured_without_diff_prefixes(repo, git):
+    git("config", "diff.noprefix", "true")
+    (repo / "old.py").write_text("def kept():\n    return 2\n")
+
+    ranges = changed_lines(repo, ref="HEAD")
+
+    assert ranges[repo / "old.py"] == [(2, 2)]
+
+
+def test_a_file_emptied_by_deletions_is_still_listed_with_no_range(repo):
+    (repo / "old.py").write_text("")
+
+    assert changed_lines(repo, ref="HEAD") == {repo / "old.py": []}

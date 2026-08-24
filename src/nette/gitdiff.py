@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Final
 
 HUNK: Final = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
+DESTINATION: Final = "+++ "
+PREFIX: Final = "b/"
 
 
 def changed_files(repo: Path, *, ref: str) -> list[Path]:
@@ -46,14 +48,37 @@ def changed_lines(repo: Path, *, ref: str) -> dict[Path, list[tuple[int, int]]]:
     root = repo_root(repo)
     base = _merge_base(root, ref)
 
-    ranges = _hunks(_git(root, "diff", "-U0", "--diff-filter=d", base, "--", "*.py"), root)
+    ranges = _hunks(
+        _git(
+            root,
+            "-c",
+            "core.quotepath=false",
+            "diff",
+            "-U0",
+            "--src-prefix=a/",
+            "--dst-prefix=b/",
+            "--diff-filter=d",
+            base,
+            "--",
+            "*.py",
+        ),
+        root,
+    )
 
     for name in _git(root, "ls-files", "--others", "--exclude-standard"):
-        path = root / name
-        if name.endswith(".py") and path.is_file():
-            ranges[path] = [(1, len(path.read_text(encoding="utf-8", errors="replace").splitlines()))]
+        if name.endswith(".py"):
+            ranges[root / name] = _whole(root / name)
 
     return ranges
+
+
+def _whole(path: Path) -> list[tuple[int, int]]:
+    try:
+        lines = len(path.read_text(encoding="utf-8", errors="replace").splitlines())
+    except OSError:
+        return []
+
+    return [(1, lines)] if lines else []
 
 
 def _hunks(lines: list[str], root: Path) -> dict[Path, list[tuple[int, int]]]:
@@ -61,9 +86,10 @@ def _hunks(lines: list[str], root: Path) -> dict[Path, list[tuple[int, int]]]:
     current: Path | None = None
 
     for line in lines:
-        if line.startswith("+++ "):
-            name = line[4:]
-            current = None if name == "/dev/null" else root / name.partition("/")[2]
+        if line.startswith(DESTINATION):
+            current = _destination(line[len(DESTINATION) :], root)
+            if current is not None:
+                ranges.setdefault(current, [])
             continue
 
         match = HUNK.match(line)
@@ -73,9 +99,27 @@ def _hunks(lines: list[str], root: Path) -> dict[Path, list[tuple[int, int]]]:
         start = int(match.group(1))
         count = int(match.group(2)) if match.group(2) is not None else 1
         if count:
-            ranges.setdefault(current, []).append((start, start + count - 1))
+            ranges[current].append((start, start + count - 1))
 
     return ranges
+
+
+def _destination(name: str, root: Path) -> Path | None:
+    name = _unquote(name.split("\t", 1)[0])
+
+    if not name.startswith(PREFIX):
+        return None
+
+    return root / name[len(PREFIX) :]
+
+
+def _unquote(name: str) -> str:
+    if not (name.startswith('"') and name.endswith('"')):
+        return name
+
+    escaped = name[1:-1].encode("utf-8").decode("unicode_escape")
+
+    return escaped.encode("latin-1", "replace").decode("utf-8", "replace")
 
 
 def repo_root(start: Path) -> Path:

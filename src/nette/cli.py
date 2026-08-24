@@ -21,7 +21,7 @@ from nette.engine import check_files
 from nette.findings import Finding, Severity
 from nette.gitdiff import change_counts, changed_files, changed_lines
 from nette.output import render
-from nette.rules import ALL_RULES, ENGINE_CODES
+from nette.rules import ALL_RULES, ENGINE_CODES, Rule
 from nette.rules.base import Rule
 from nette.suppressions import list_allows
 
@@ -180,7 +180,7 @@ def _run_check(args: argparse.Namespace) -> int:
     return 1 if failing else 0
 
 
-def _whole_file_codes(rules: list) -> frozenset[str]:
+def _whole_file_codes(rules: Sequence[Rule]) -> frozenset[str]:
     return frozenset(rule.code for rule in rules if rule.scope == "file") | set(ENGINE_CODES)
 
 
@@ -192,12 +192,13 @@ def _on_changed_lines(
     kept = []
 
     for finding in findings:
-        ranges = touched.get(finding.file, [])
-        if finding.code in whole_file and ranges:
-            kept.append(finding)
+        if finding.file not in touched:
             continue
 
-        if any(start <= finding.end_line and finding.line <= end for start, end in ranges):
+        ranges = touched[finding.file]
+        if finding.code in whole_file or any(
+            start <= finding.end_line and finding.line <= end for start, end in ranges
+        ):
             kept.append(finding)
 
     return kept
