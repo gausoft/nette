@@ -247,6 +247,7 @@ Hotspots only rank, never change a severity, and always exit 0.
 | [Rules reference](docs/rules/README.md) | Every rule, with its threshold kind |
 | [Design](docs/design.md) | How the engine works |
 | [Benchmark](docs/benchmark.md) | Speed, thresholds, field results |
+| [FAQ](docs/faq.md) | What nette does not do, and the experiments that say so |
 | [Vision](docs/vision.md) | The research behind every choice |
 | [Changelog](CHANGELOG.md) | What shipped when |
 

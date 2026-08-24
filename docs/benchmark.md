@@ -98,6 +98,36 @@ that it predicts defects.
 One number does hold up: a file flagged by nette is 3.3 times more likely
 to sit in the most-corrected set than a file picked at random.
 
+## Checked against human ratings, and the result was inconclusive
+
+The churn proxy measures defect proneness. To test perceived readability
+directly, nette was run against the Dorn dataset: 119 real Python snippets
+rated by around 220 developers each in 2012, none of whom could have known
+about this tool.
+
+The experiment did not conclude, for a reason worth stating plainly:
+**nette produced no finding at all on 88 of the 90 usable snippets**. Its
+default thresholds fire on the tail of real files, and a 30-line snippet
+never reaches them. The longest function in the entire corpus was 50 lines
+against a limit of 100, and no snippet exceeded the argument, return or
+branch limits.
+
+A control predictor behaved exactly as the literature says it should
+(average line length, Spearman -0.26), so the harness was sound and the
+silence is a fact about nette, not about the wiring.
+
+Measured continuously, with the thresholds removed, none of nette's
+dimensions tracked the human ratings: longest function +0.02, nesting
+-0.02, arguments -0.13, returns -0.03, branch density -0.05. The one
+dimension that did track them is average line length, which nette does not
+measure.
+
+What this leaves standing: the shape rules are guard rails whose defaults
+came from measuring exemplary code, and the local consistency rules are
+untested, because a 30-line snippet has no repository behind it and no
+profile to compare against. That claim is the subject of the next
+experiment, and its result will be published here whatever it says.
+
 ## Rule quietness
 
 A rule earns its default threshold by staying quiet on code that is
