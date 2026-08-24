@@ -122,20 +122,20 @@ p.lead { color:var(--muted); font-size:17px; margin-top:16px; max-width:640px; l
 .term-body { padding:24px 26px; font-family:'Monaspace Neon',monospace; font-size:13.5px; line-height:2; overflow-x:auto; }
 
 /* syntax tokens — shell, json, python, toml, yaml. Hand-tagged, no highlighter
-   dependency. Warm palette only: orange for what you type, amber for values,
-   cream for identifiers, violet for numbers. Green stays reserved for success. */
+   dependency. Orange stays scarce: flags and severities only, so it keeps
+   meaning something. Values are green, keys amber, numbers violet. */
 .t-prompt { color:#52525b; }
 .t-cmd    { color:#fafafa; font-weight:500; }
 .t-flag   { color:var(--orange-hi); }
 .t-arg    { color:#d4d4d8; }
-.t-str    { color:#fcd34d; }
+.t-str    { color:#4ade80; }
 .t-num    { color:#c4b5fd; }
-.t-key    { color:var(--orange-hi); }
+.t-key    { color:#fcd34d; }
 .t-com    { color:#6b6b74; font-style:italic; }
-.t-kw     { color:var(--orange); font-weight:500; }
+.t-kw     { color:#d8b4fe; font-weight:500; }
 .t-warn   { color:var(--orange); font-weight:500; }
 .t-path   { color:var(--cream); }
-.t-id     { color:#fed7aa; }
+.t-id     { color:#5eead4; }
 .t-dim    { color:#9c9ca5; }
 .t-ok     { color:var(--green); }
 .t-punc   { color:#6b6b74; }
