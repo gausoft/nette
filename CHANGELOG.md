@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `nette check --diff` judges the lines you touched, not the files you
+  touched. Editing one line of a legacy module used to bring back every
+  finding in it: six on a six-function file where one was deserved. A
+  function-scoped finding now survives only when it overlaps a touched
+  range, while a file-scoped finding survives any change to its file.
+  `--whole-files` restores the previous behaviour.
+
 ## 0.2.0
 
 Five rules for blind spots that 0.1 could not see, three commands and a
