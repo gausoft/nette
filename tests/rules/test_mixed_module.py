@@ -3,14 +3,14 @@ from nette.rules.structure import MixedModule
 
 DATA_TYPES = (
     "@dataclass\n"
-    "class Order:\n"
+    "class Account:\n"
     "    reference: str\n"
     "\n"
     "class Address(BaseModel):\n"
     "    name: str\n"
     "\n"
 )
-BEHAVIOUR = "def book(order):\n    return order.reference\n"
+BEHAVIOUR = "def save(account):\n    return account.reference\n"
 
 
 def check(file, thresholds=None):
@@ -23,7 +23,7 @@ def test_data_types_next_to_behaviour_are_flagged(write_file):
     findings = check(file)
 
     assert [f.code for f in findings] == ["mixed-module"]
-    assert "Order" in findings[0].grounds
+    assert "Account" in findings[0].grounds
     assert "Address" in findings[0].grounds
     assert "schemas.py" in findings[0].help
 
@@ -54,7 +54,7 @@ def test_a_destination_module_is_exempt(write_file):
 
 def test_a_class_with_methods_is_behaviour_not_data(write_file):
     file = write_file(
-        DATA_TYPES + "class Store:\n    def book(self, order):\n        return order\n"
+        DATA_TYPES + "class Store:\n    def save(self, account):\n        return account\n"
     )
 
     findings = check(file)
@@ -75,7 +75,7 @@ def test_a_protocol_of_stubs_is_not_behaviour(write_file):
     file = write_file(
         DATA_TYPES
         + "class Sender(Protocol):\n"
-        + "    def send(self, order) -> None:\n        ...\n"
+        + "    def send(self, account) -> None:\n        ...\n"
     )
 
     assert check(file) == []
@@ -83,7 +83,7 @@ def test_a_protocol_of_stubs_is_not_behaviour(write_file):
 
 def test_a_class_body_that_runs_code_is_not_a_data_type(write_file):
     file = write_file(
-        "class Order:\n    reference: str\n\n"
+        "class Account:\n    reference: str\n\n"
         "class Wired:\n    register('wired')\n    name: str\n\n" + BEHAVIOUR
     )
 
