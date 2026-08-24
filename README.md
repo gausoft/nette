@@ -231,10 +231,10 @@ Hotspots only rank, never change a severity, and always exit 0.
 - **Other languages.** Python only, done deeply. TypeScript comes later as a
   sibling product.
 - **LLM review.** Deterministic or nothing.
-- **Not shipped yet.** The YAML pattern tier, external Python plugins and
-  SARIF output are designed but not built. FastAPI is the only framework
-  profile, and every other framework is covered by naming its decorators
-  in `exempt_decorated_by`.
+- **Not shipped yet.** The YAML pattern tier and external Python plugins
+  are designed but not built. FastAPI is the only framework profile, and
+  every other framework is covered by naming its decorators in
+  `exempt_decorated_by`.
 
 <br>
 

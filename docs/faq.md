@@ -75,8 +75,8 @@ review can see it move.
 the fix direction. Not `complexity 12 > 9`.
 
 **It fits an agent loop.** Deterministic, cached, diff-aware, exit codes,
-JSON with a ready-to-act instruction per finding. Same bytes, same
-verdict, so runs cache and diff cleanly.
+JSON with a ready-to-act instruction per finding, SARIF for code scanning.
+Same bytes, same verdict, so runs cache and diff cleanly.
 
 Whether the first claim actually produces better code is the experiment we
 have not run yet. It is next, and its result will be published here

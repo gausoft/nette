@@ -45,6 +45,25 @@ The reason is mandatory. A suppression without one is itself a finding
 - run: nette check --diff origin/main --format concise
 ```
 
+To see the findings inside the pull request instead of inside the log,
+emit SARIF and upload it to code scanning:
+
+```yaml
+- run: pip install nette
+- run: nette check --diff origin/main --format sarif > nette.sarif
+  continue-on-error: true
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: nette.sarif
+```
+
+`continue-on-error` matters: `nette check` exits 1 when it finds
+something, and the upload has to run anyway. The gate is then the code
+scanning result, or a second `nette check` step without it.
+
+The document is deterministic, so the same tree produces the same bytes
+and code scanning stops reporting the same finding as new on every run.
+
 ## Before every commit
 
 The most reliable integration does not depend on the agent remembering.

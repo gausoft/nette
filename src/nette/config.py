@@ -17,7 +17,7 @@ KNOWN_FAMILIES: Final = frozenset(
     {"shape", "naming", "defensiveness", "annotations", "structure", "duplication", "engine"}
 )
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
-KNOWN_FORMATS: Final = frozenset({"concise", "full", "summary", "agent", "json"})
+KNOWN_FORMATS: Final = frozenset({"concise", "full", "summary", "agent", "json", "sarif"})
 KNOWN_PROFILES: Final = frozenset({"fastapi"})
 PERCENT_THRESHOLDS: Final = frozenset({"duplication_similarity"})
 

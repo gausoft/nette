@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Callable, Final, Sequence
 
 from nette.findings import Finding, Severity
+from nette.sarif import render_sarif
 
 SCHEMA_VERSION: Final = 2
 WORST_FILES: Final = 3
@@ -146,4 +147,5 @@ _RENDERERS: Final[dict[str, Callable[[Sequence[Finding]], str]]] = {
     "summary": _summary,
     "agent": _agent,
     "json": _json,
+    "sarif": render_sarif,
 }

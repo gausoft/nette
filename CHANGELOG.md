@@ -4,6 +4,12 @@
 
 ### Added
 
+- `--format sarif`, the format GitHub code scanning reads. Findings show up
+  in the pull request instead of in a log nobody opens. The document is
+  deterministic, so the same tree produces the same bytes and code scanning
+  stops reporting the same finding as new on every run. ruff, detekt,
+  Checkstyle, PMD and golangci-lint all emit it, and it was the last entry
+  ticket nette was missing.
 - `exempt_decorated_by`, a list of decorators whose functions are exempt
   from the signature rules. A Celery task, a click command or a Django
   receiver has a parameter list dictated by its framework, and until now
