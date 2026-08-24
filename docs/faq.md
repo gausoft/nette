@@ -71,6 +71,20 @@ codebase for spaces and tabs. None of them learns annotation rate, guard
 density or file size norms, and none of them commits the result where code
 review can see it move.
 
+That one is measured. Across five repositories, with each profile
+calibrated on 80% of its files and judged on the held-out 20%, a file
+taken from another repository is flagged 26% of the time against 12% for a
+native file. On the two repositories with a strict typing habit the gap is
+wider: poetry flags 42% of foreign files and 0% of its own, scrapy 38%
+against 11%.
+
+The same measurement names the limit. On repositories with no discipline
+on any measured dimension, the gap disappears: django annotates 0% of its
+functions, so a rule about annotation has nothing to enforce and a foreign
+file passes unnoticed. Calibration detects code that is looser than your
+repository, never code that is stricter, which is the behaviour you want
+and also the reason a repository without habits gains nothing from it.
+
 **Findings are actionable.** Every one names the problem, the reason and
 the fix direction. Not `complexity 12 > 9`.
 
@@ -122,7 +136,9 @@ be cached.
   data. Our own measurement says nette is the wrong tool for that.
 - **Your repository has no consistent style yet.** Calibration measures
   what exists. On a tree with no convention it will record the absence of
-  one, and the style rules will have nothing to enforce.
+  one, and the style rules will have nothing to enforce. Measured: on a
+  repository that annotates none of its functions, a foreign file written
+  in a completely different style goes unnoticed.
 - **You want a quality score.** There is none, deliberately. The research
   literature has tested 121 metrics against how well developers actually
   understand code and found none that works. A single number would be a

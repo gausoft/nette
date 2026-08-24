@@ -151,3 +151,36 @@ nette check path/to/repo --format summary
 The measurement scripts used for the exemplary corpora live in
 `docs/private/` and are not shipped, because they hardcode local paths to
 the cloned corpora.
+
+## Does the profile capture a repository's style?
+
+The two measurements above judge the shape rules. This one judges
+calibration, the part of nette that has no equivalent in any other linter.
+
+Five repositories, each profile calibrated on 80% of its own files and
+used to judge the held-out 20% plus the files of the four others. Only the
+rules that read the profile are counted.
+
+| Files judged | Flagged |
+|---|---|
+| Native, held out of the calibration | 12% |
+| Foreign, from another repository | 26% |
+
+The gap is carried by the annotation rate (59% of foreign findings), not
+by file size (17%), so it is a style signal rather than a length signal in
+disguise.
+
+It is uneven, and the reason is worth knowing before you install anything.
+The repositories where it works are those with a strict habit: poetry
+flags 42% of foreign files against 0% of its own, scrapy 38% against 11%.
+The repositories where it does nothing are those with no habit to enforce:
+django annotates 0% of its functions, celery 11%, and the rule that
+carries most of the signal stays silent below 60%.
+
+Calibration detects code looser than the surrounding repository, never
+code that is stricter. A repository without habits gains nothing from it.
+
+Separately, a single file is judged poorly: the AUC separating foreign
+from native files is 0.573. The signal is real on average and weak
+per file, which is an argument for reading a verdict over a diff rather
+than over one file.
