@@ -37,8 +37,13 @@ def test_the_driver_carries_the_installed_version():
     assert sarif([])["runs"][0]["tool"]["driver"]["version"] == __version__
 
 
-def test_a_finding_becomes_a_result_with_its_region():
-    region = sarif([finding()])["runs"][0]["results"][0]["locations"][0]["physicalLocation"]
+def test_a_finding_becomes_a_result_with_its_region(tmp_path, monkeypatch):
+    (tmp_path / "pyproject.toml").write_text("")
+    (tmp_path / "src").mkdir()
+    monkeypatch.chdir(tmp_path)
+    region = sarif([finding(path=str(tmp_path / "src/api.py"))])["runs"][0]["results"][0][
+        "locations"
+    ][0]["physicalLocation"]
 
     assert region["artifactLocation"]["uri"] == "src/api.py"
     assert region["region"] == {
@@ -47,6 +52,27 @@ def test_a_finding_becomes_a_result_with_its_region():
         "endLine": 32,
         "endColumn": 6,
     }
+
+
+def test_the_uri_is_relative_to_the_project_root_not_the_shell(tmp_path, monkeypatch):
+    (tmp_path / "pyproject.toml").write_text("")
+    (tmp_path / "src").mkdir()
+    monkeypatch.chdir(tmp_path / "src")
+
+    document = sarif([finding(path=str(tmp_path / "src" / "api.py"))])
+    uri = document["runs"][0]["results"][0]["locations"][0]["physicalLocation"]
+
+    assert uri["artifactLocation"]["uri"] == "src/api.py"
+
+
+def test_a_path_with_a_space_is_escaped(tmp_path, monkeypatch):
+    (tmp_path / "pyproject.toml").write_text("")
+    monkeypatch.chdir(tmp_path)
+
+    document = sarif([finding(path=str(tmp_path / "my module.py"))])
+    uri = document["runs"][0]["results"][0]["locations"][0]["physicalLocation"]
+
+    assert uri["artifactLocation"]["uri"] == "my%20module.py"
 
 
 def test_the_message_carries_the_reason_and_the_fix():
@@ -74,7 +100,7 @@ def test_severity_maps_to_the_sarif_vocabulary():
     assert levels == ["error", "warning", "note"]
 
 
-def test_the_same_findings_render_the_same_bytes():
+def test_the_input_order_does_not_change_the_bytes():
     findings = [finding(), finding(code="nesting-depth", line=3)]
 
-    assert render(findings, format="sarif") == render(findings, format="sarif")
+    assert render(findings, format="sarif") == render(findings[::-1], format="sarif")
