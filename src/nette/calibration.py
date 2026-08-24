@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Final, Sequence
 
 from nette.discovery import discover
+from nette.paths import within_root
 from nette.parsing import SourceFile, parse_source
 
 PROFILE_VERSION: Final = 1
@@ -150,7 +151,7 @@ def _nearest_profile(directory: Path, root: Path, location: Path) -> Path | None
     return None
 
 
-TEST_DIRECTORIES: Final = frozenset({"test", "tests", "testing"})
+TEST_DIRECTORY: Final = "tests"
 TEST_FILES: Final = frozenset({"conftest.py", "tests.py"})
 
 
@@ -160,7 +161,7 @@ def is_test_module(path: Path) -> bool:
     if name.startswith("test_") or name.endswith("_test.py") or name in TEST_FILES:
         return True
 
-    return bool(TEST_DIRECTORIES & set(path.parts))
+    return TEST_DIRECTORY in within_root(path)
 
 
 def is_annotated(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
