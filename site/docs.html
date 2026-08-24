@@ -85,8 +85,8 @@
       <p>Then bootstrap the repo in one step. <code>nette init</code> calibrates the tree,
       adds the cache to <code>.gitignore</code> and prints what to run next.</p>
       <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">init</span>
-<span class="t-dim">profile written to .nette/profile.json (312 files measured)</span>
-<span class="t-dim">next: nette check --diff</span></pre>
+<span class="t-dim">profile written to</span> <span class="t-path">.nette/profile.json</span> <span class="t-punc">(</span><span class="t-num">312</span> <span class="t-dim">files measured</span><span class="t-punc">)</span>
+<span class="t-dim">next:</span> <span class="t-cmd">nette</span> <span class="t-arg">check</span> <span class="t-flag">--diff</span></pre>
     </section>
 
     <section id="commands">
@@ -115,20 +115,20 @@
       fix direction, never a bare number.</p>
       <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">check</span> <span class="t-arg">src/api.py</span>
 
-<span class="t-warn">warning[argument-count]</span> <span class="t-path">src/api.py 1:1</span>
-  function `sync_users` takes too many arguments to call safely
-  <span class="t-dim">why: it takes 7 required arguments; the configured limit is 6</span>
-  <span class="t-dim">fix: group related arguments into a dataclass, or split the function</span></pre>
+<span class="t-warn">warning[argument-count]</span> <span class="t-path">src/api.py</span> <span class="t-num">1:1</span>
+  <span class="t-arg">function</span> <span class="t-id">`sync_users`</span> <span class="t-arg">takes too many arguments to call safely</span>
+  <span class="t-key">why:</span> <span class="t-dim">it takes</span> <span class="t-num">7</span> <span class="t-dim">required arguments; the configured limit is</span> <span class="t-num">6</span>
+  <span class="t-key">fix:</span> <span class="t-dim">group related arguments into a dataclass, or split the function</span></pre>
       <h3>Where the debt lives</h3>
       <p>On a large tree, <code>--format summary</code> answers a different question.</p>
       <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">check</span> <span class="t-flag">--format</span> <span class="t-str">summary</span>
 
-<span class="t-dim">127 findings in 42 files</span>
+<span class="t-num">127</span> <span class="t-dim">findings in</span> <span class="t-num">42</span> <span class="t-dim">files</span>
 
-<span class="t-path">services/accounts</span>  <span class="t-dim">87 findings in 24 files</span>
-  http_client.py  <span class="t-num">9</span>
-  serializers.py  <span class="t-num">6</span>
-  filters.py  <span class="t-num">4</span></pre>
+<span class="t-path">services/accounts</span>  <span class="t-num">87</span> <span class="t-dim">findings in</span> <span class="t-num">24</span> <span class="t-dim">files</span>
+  <span class="t-id">http_client.py</span>  <span class="t-num">9</span>
+  <span class="t-id">serializers.py</span>  <span class="t-num">6</span>
+  <span class="t-id">filters.py</span>  <span class="t-num">4</span></pre>
       <p>The others: <code>--format concise</code> for CI logs, <code>--format agent</code>
       for the JSON envelope below.</p>
     </section>
@@ -144,8 +144,8 @@
       <p>The profile is a ratchet. Recalibrating on a tree that has drifted keeps the stricter
       of the two values per dimension, so a repo's baseline can improve but never quietly rot.</p>
       <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">calibrate</span>
-<span class="t-dim">profile written to .nette/profile.json (964 files measured)</span>
-<span class="t-warn">kept the stricter baseline for annotated_function_rate (--reset to relax)</span></pre>
+<span class="t-dim">profile written to</span> <span class="t-path">.nette/profile.json</span> <span class="t-punc">(</span><span class="t-num">964</span> <span class="t-dim">files measured</span><span class="t-punc">)</span>
+<span class="t-warn">kept the stricter baseline for</span> <span class="t-id">annotated_function_rate</span> <span class="t-punc">(</span><span class="t-flag">--reset</span> <span class="t-dim">to relax</span><span class="t-punc">)</span></pre>
       <p>Relaxing takes <code>nette calibrate --reset</code>, an explicit human act, visible in
       the diff of the committed profile.</p>
     </section>
@@ -170,7 +170,7 @@
       <p>The reason is mandatory. A suppression without one is itself a finding
       (<code>bare-allow</code>), and one that silences nothing is another
       (<code>unused-allow</code>).</p>
-      <pre class="code"><span class="t-kw">def</span> <span class="t-cmd">decode_frame</span>(raw):  <span class="t-com"># nette: allow(function-length) flat wire decoder, one case per opcode</span></pre>
+      <pre class="code"><span class="t-kw">def</span> <span class="t-cmd">decode_frame</span><span class="t-punc">(</span><span class="t-id">raw</span><span class="t-punc">):</span>  <span class="t-com"># nette: allow(function-length) flat wire decoder, one case per opcode</span></pre>
       <p><code>nette allows</code> lists every suppression in the tree.</p>
     </section>
 
@@ -181,9 +181,9 @@
       with how often each file changed.</p>
       <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">hotspots</span> <span class="t-flag">--since</span> <span class="t-str">12.months</span>
 
-<span class="t-dim">hotspots since 12.months, 12 files changed and flagged</span>
+<span class="t-dim">hotspots since</span> <span class="t-str">12.months</span><span class="t-punc">,</span> <span class="t-num">12</span> <span class="t-dim">files changed and flagged</span>
 
-<span class="t-dim">changes  findings  file</span>
+<span class="t-key">changes  findings  file</span>
      <span class="t-num">37</span>         <span class="t-num">9</span>  <span class="t-path">services/accounts/api/http_client.py</span>
      <span class="t-num">18</span>         <span class="t-num">6</span>  <span class="t-path">services/accounts/serializers.py</span></pre>
       <p>It is a separate command on purpose. Git history is environment state, and
@@ -196,34 +196,34 @@
       <p>The integration surface is a shell command and an exit code, so every agent already
       supports it: Claude Code, Cursor, Copilot, Codex, Aider, your CI. There is nothing to
       install on their side.</p>
-      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">agent-rules</span> <span class="t-flag">&gt;&gt;</span> <span class="t-arg">AGENTS.md</span>   <span class="t-com"># or CLAUDE.md, or .cursorrules</span></pre>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">agent-rules</span> <span class="t-flag">&gt;&gt;</span> <span class="t-path">AGENTS.md</span>   <span class="t-com"># or CLAUDE.md, or .cursorrules</span></pre>
       <p>That writes the loop your agent has to follow: run
       <code>nette check --diff --format agent</code> after editing Python, read the exit code,
       fix, rerun.</p>
       <h3>The machine envelope carries its own contract</h3>
-      <pre class="code">{
-  <span class="t-key">"schema_version"</span>: <span class="t-num">2</span>,
-  <span class="t-key">"run"</span>: {
-    <span class="t-key">"rerun"</span>: <span class="t-str">"nette check --diff --format agent"</span>,
-    <span class="t-key">"exit"</span>: {
-      <span class="t-key">"0"</span>: <span class="t-str">"clean, nothing to fix"</span>,
-      <span class="t-key">"1"</span>: <span class="t-str">"findings below, fix them and rerun"</span>,
-      <span class="t-key">"2"</span>: <span class="t-str">"nette could not run, read stderr"</span>
-    },
-    <span class="t-key">"suppress"</span>: <span class="t-str">"# nette: allow(CODE) reason (...)"</span>,
-    <span class="t-key">"explain"</span>: <span class="t-str">"nette explain CODE"</span>
-  },
-  <span class="t-key">"summary"</span>: { <span class="t-key">"total"</span>: <span class="t-num">1</span>, <span class="t-key">"by_severity"</span>: { <span class="t-key">"error"</span>: <span class="t-num">0</span>, <span class="t-key">"warning"</span>: <span class="t-num">1</span>, <span class="t-key">"info"</span>: <span class="t-num">0</span> } },
-  <span class="t-key">"findings"</span>: [
-    {
-      <span class="t-key">"code"</span>: <span class="t-str">"duplicated-sibling"</span>,
-      <span class="t-key">"file"</span>: <span class="t-str">"src/notify.py"</span>,
-      <span class="t-key">"line"</span>: <span class="t-num">25</span>,
-      <span class="t-key">"message"</span>: <span class="t-str">"`send_email_change` is a near-copy of `send_password_reset` in the same scope"</span>,
-      <span class="t-key">"instruction"</span>: <span class="t-str">"warning: ... To resolve: edit src/notify.py:25 - extract what they share into one function and pass what differs as arguments."</span>
-    }
-  ]
-}</pre>
+      <pre class="code"><span class="t-punc">{</span>
+  <span class="t-key">"schema_version"</span><span class="t-punc">:</span> <span class="t-num">2</span><span class="t-punc">,</span>
+  <span class="t-key">"run"</span><span class="t-punc">: {</span>
+    <span class="t-key">"rerun"</span><span class="t-punc">:</span> <span class="t-str">"nette check --diff --format agent"</span><span class="t-punc">,</span>
+    <span class="t-key">"exit"</span><span class="t-punc">: {</span>
+      <span class="t-key">"0"</span><span class="t-punc">:</span> <span class="t-str">"clean, nothing to fix"</span><span class="t-punc">,</span>
+      <span class="t-key">"1"</span><span class="t-punc">:</span> <span class="t-str">"findings below, fix them and rerun"</span><span class="t-punc">,</span>
+      <span class="t-key">"2"</span><span class="t-punc">:</span> <span class="t-str">"nette could not run, read stderr"</span>
+    <span class="t-punc">},</span>
+    <span class="t-key">"suppress"</span><span class="t-punc">:</span> <span class="t-str">"# nette: allow(CODE) reason (...)"</span><span class="t-punc">,</span>
+    <span class="t-key">"explain"</span><span class="t-punc">:</span> <span class="t-str">"nette explain CODE"</span>
+  <span class="t-punc">},</span>
+  <span class="t-key">"summary"</span><span class="t-punc">: {</span> <span class="t-key">"total"</span><span class="t-punc">:</span> <span class="t-num">1</span><span class="t-punc">,</span> <span class="t-key">"by_severity"</span><span class="t-punc">: {</span> <span class="t-key">"error"</span><span class="t-punc">:</span> <span class="t-num">0</span><span class="t-punc">,</span> <span class="t-key">"warning"</span><span class="t-punc">:</span> <span class="t-num">1</span><span class="t-punc">,</span> <span class="t-key">"info"</span><span class="t-punc">:</span> <span class="t-num">0</span> <span class="t-punc">} },</span>
+  <span class="t-key">"findings"</span><span class="t-punc">: [</span>
+    <span class="t-punc">{</span>
+      <span class="t-key">"code"</span><span class="t-punc">:</span> <span class="t-str">"duplicated-sibling"</span><span class="t-punc">,</span>
+      <span class="t-key">"file"</span><span class="t-punc">:</span> <span class="t-str">"src/notify.py"</span><span class="t-punc">,</span>
+      <span class="t-key">"line"</span><span class="t-punc">:</span> <span class="t-num">25</span><span class="t-punc">,</span>
+      <span class="t-key">"message"</span><span class="t-punc">:</span> <span class="t-str">"`send_email_change` is a near-copy of `send_password_reset` in the same scope"</span><span class="t-punc">,</span>
+      <span class="t-key">"instruction"</span><span class="t-punc">:</span> <span class="t-str">"warning: ... To resolve: edit src/notify.py:25 - extract what they share into one function and pass what differs as arguments."</span>
+    <span class="t-punc">}</span>
+  <span class="t-punc">]</span>
+<span class="t-punc">}</span></pre>
       <div class="callout">
         <p>That envelope was tested on an agent given no documentation at all: it produced the
         correct refactor from the JSON alone. The <code>run</code> block exists because the same
@@ -240,13 +240,13 @@
       configuration and the same profile. <code>--profile PATH</code> points at another profile
       file, for CI and multi-root setups.</p>
       <pre class="code"><span class="t-com">[tool.nette]</span>
-<span class="t-key">select</span> = [<span class="t-str">"shape"</span>, <span class="t-str">"naming"</span>, <span class="t-str">"defensiveness"</span>, <span class="t-str">"structure"</span>]
-<span class="t-key">ignore</span> = [<span class="t-str">"return-count"</span>]
-<span class="t-key">profile</span> = <span class="t-str">"fastapi"</span>        <span class="t-com"># exempts route endpoints from signature rules</span>
+<span class="t-key">select</span> <span class="t-punc">=</span> <span class="t-punc">[</span><span class="t-str">"shape"</span><span class="t-punc">,</span> <span class="t-str">"naming"</span><span class="t-punc">,</span> <span class="t-str">"defensiveness"</span><span class="t-punc">,</span> <span class="t-str">"structure"</span><span class="t-punc">]</span>
+<span class="t-key">ignore</span> <span class="t-punc">=</span> <span class="t-punc">[</span><span class="t-str">"return-count"</span><span class="t-punc">]</span>
+<span class="t-key">profile</span> <span class="t-punc">=</span> <span class="t-str">"fastapi"</span>        <span class="t-com"># exempts route endpoints from signature rules</span>
 
 <span class="t-com">[tool.nette.thresholds]</span>
-<span class="t-key">function_length</span> = <span class="t-num">60</span>
-<span class="t-key">nesting_depth</span> = <span class="t-num">4</span></pre>
+<span class="t-key">function_length</span> <span class="t-punc">=</span> <span class="t-num">60</span>
+<span class="t-key">nesting_depth</span> <span class="t-punc">=</span> <span class="t-num">4</span></pre>
       <p><code>select</code> takes rule families. The full list is on the
       <a href="rules.html">rules reference</a>.</p>
     </section>
@@ -255,14 +255,14 @@
       <h2>In CI, and before every commit</h2>
       <p>The most reliable integration does not depend on the agent remembering.</p>
       <pre class="code"><span class="t-com"># .github/workflows/nette.yml</span>
-- <span class="t-key">run</span>: pip install nette
-- <span class="t-key">run</span>: nette check <span class="t-flag">--diff</span> origin/main <span class="t-flag">--format</span> concise</pre>
+<span class="t-punc">-</span> <span class="t-key">run</span><span class="t-punc">:</span> <span class="t-cmd">pip</span> <span class="t-arg">install nette</span>
+<span class="t-punc">-</span> <span class="t-key">run</span><span class="t-punc">:</span> <span class="t-cmd">nette</span> <span class="t-arg">check</span> <span class="t-flag">--diff</span> <span class="t-str">origin/main</span> <span class="t-flag">--format</span> <span class="t-str">concise</span></pre>
       <pre class="code"><span class="t-com"># .pre-commit-config.yaml</span>
-<span class="t-key">repos</span>:
-  - <span class="t-key">repo</span>: https://github.com/gausoft/nette
-    <span class="t-key">rev</span>: v0.2.0
-    <span class="t-key">hooks</span>:
-      - <span class="t-key">id</span>: nette</pre>
+<span class="t-key">repos</span><span class="t-punc">:</span>
+  <span class="t-punc">-</span> <span class="t-key">repo</span><span class="t-punc">:</span> <span class="t-str">https://github.com/gausoft/nette</span>
+    <span class="t-key">rev</span><span class="t-punc">:</span> <span class="t-str">v0.2.0</span>
+    <span class="t-key">hooks</span><span class="t-punc">:</span>
+      <span class="t-punc">-</span> <span class="t-key">id</span><span class="t-punc">:</span> <span class="t-str">nette</span></pre>
       <p>An agent whose commit is rejected learns to run the check itself. That is how black
       and ruff became habits.</p>
     </section>
@@ -328,5 +328,6 @@
   <div class="foot-bottom">nette · deterministic, diff-aware, calibrated on your repo</div>
 </footer>
 
+<script src="nav.js"></script>
 </body>
 </html>
