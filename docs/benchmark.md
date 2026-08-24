@@ -184,3 +184,34 @@ Separately, a single file is judged poorly: the AUC separating foreign
 from native files is 0.573. The signal is real on average and weak
 per file, which is an argument for reading a verdict over a diff rather
 than over one file.
+
+## Can an agent act on a finding?
+
+The claim that findings are actionable had never been measured, only
+asserted. Twelve real files from five public repositories, each flagged by
+nette, handed to an agent with nothing but the `--format agent` output and
+an instruction to fix the findings without changing what the file does.
+Three turns allowed.
+
+| Measure | Result |
+|---|---|
+| Reached zero findings | 12 of 12 |
+| Turns, median | 1 |
+| Loops that oscillated | 0 |
+| New kinds of finding introduced by the fix | none |
+| Public contracts broken | 0 of the 10 that could be checked |
+
+Eleven files were clean after a single turn. The twelfth carried four
+findings from different families and took two.
+
+The public contract check compares public functions and methods with their
+parameter names, ignoring the private helpers the fix adds, since
+extracting a private helper is exactly what a length or branch finding
+asks for.
+
+What this does not show: no test suite was run, so a preserved signature
+is a weak proxy for preserved behaviour, and one model was used. Silencing
+a linter is not the same as writing good code. What it does show is that
+the loop terminates, quickly, without the oscillation that published
+experiments report when a model refactors for readability with no external
+stopping criterion.

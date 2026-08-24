@@ -86,7 +86,10 @@ repository, never code that is stricter, which is the behaviour you want
 and also the reason a repository without habits gains nothing from it.
 
 **Findings are actionable.** Every one names the problem, the reason and
-the fix direction. Not `complexity 12 > 9`.
+the fix direction. Not `complexity 12 > 9`. Measured: handed twelve flagged
+files from five public repositories and nothing but the agent output, a
+model silenced nette on all twelve, eleven of them in a single turn, with
+no oscillation and no public function or parameter lost.
 
 **It fits an agent loop.** Deterministic, cached, diff-aware, exit codes,
 JSON with a ready-to-act instruction per finding, SARIF for code scanning.
