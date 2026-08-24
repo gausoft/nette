@@ -20,17 +20,32 @@ write-check-fix loop.
 
 </div>
 
+<br>
+
+## Contents
+
+- [Why](#why)
+- [Quickstart](#quickstart)
+- [In your agent's loop](#in-your-agents-loop)
+- [Calibrated on your repo](#calibrated-on-your-repo)
+- [Rules](#rules)
+- [Configuration](#configuration)
+- [Where the pain actually is](#where-the-pain-actually-is)
+- [What nette does not do](#what-nette-does-not-do)
+- [Documentation](#documentation)
+
+<br>
+
 ## Why
 
-AI agents now write most of the code. It works, but it is often hard to
+AI agents now write most of the code. It works, and it is often hard to
 read: too long, over-defensive, over-abstracted, inconsistent with the rest
-of the repo. Classic linters like ruff and pylint check syntax and surface
-style. They say nothing about readability or repo consistency, so debt
-accumulates at machine speed.
+of the repo. Linters like ruff and pylint check syntax and surface style.
+They say nothing about readability or repo consistency, so debt accumulates
+at machine speed.
 
-nette lives in the agent loop: the agent writes code, runs nette, gets a
-compact actionable verdict, fixes, re-checks. Like tests, but for
-readability.
+nette lives in the agent loop. The agent writes code, runs nette, gets a
+compact verdict, fixes, re-checks. Like tests, but for readability.
 
 ```
 $ nette check src/api.py
@@ -41,97 +56,88 @@ warning[argument-count] src/api.py 1:1
   fix: group related arguments into a dataclass, or split the function
 ```
 
-Every finding names the problem, the reason, and the fix direction. No
-bare numbers.
+Every finding names the problem, the reason, and the fix direction. No bare
+numbers.
+
+<br>
 
 ## Quickstart
 
 ```bash
 pip install nette
+```
 
+Python 3.11 or later, zero dependencies, nothing else lands in your
+environment.
+
+```bash
 nette init                   # calibrate the repo, ignore the cache, print the next step
 nette check                  # judge the current tree
-nette check --diff           # judge only what changed (the agent loop)
+nette check --diff           # judge only the lines you touched
 nette explain over-guarded   # long-form doc for any rule
 ```
 
-## Any agent, no plugin
+`--diff` is the one that matters day to day: it judges the lines you
+touched, not the files you touched, so a 10-year-old repo is never all red.
 
-The integration surface is a shell command and an exit code, so every
-agent already supports it: Claude Code, Cursor, Copilot, Codex, Aider,
-your CI. There is nothing to install on their side.
+<details>
+<summary><b>All commands</b></summary>
+
+<br>
+
+| Command | What it does |
+|---|---|
+| `nette init` | Calibrate, ignore the cache, print the next step. Once per repo. |
+| `nette check` | Judge the current tree. |
+| `nette check --diff` | Judge only what changed. |
+| `nette calibrate` | Measure the repo's style, write `.nette/profile.json`. |
+| `nette explain RULE` | Long-form documentation for any rule slug. |
+| `nette allows` | List every suppression in the tree, with its reason. |
+| `nette hotspots` | Rank findings by how often the file changes. |
+| `nette agent-rules` | Print the loop to append to AGENTS.md. |
+
+</details>
+
+<br>
+
+## In your agent's loop
+
+The integration surface is a shell command and an exit code, so every agent
+already supports it: Claude Code, Cursor, Copilot, Codex, Aider, your CI.
+There is nothing to install on their side.
 
 ```bash
 nette agent-rules >> AGENTS.md    # or CLAUDE.md, or .cursorrules
 ```
 
-That writes the loop your agent has to follow: run
+That writes the loop the agent follows: run
 `nette check --diff --format agent` after editing Python, read the exit
 code, fix, rerun.
 
-The machine format carries its own contract, so an agent that never read
-a line of documentation still knows what to do:
+| Exit code | Meaning |
+|---|---|
+| `0` | Clean, nothing to fix. |
+| `1` | Findings on stdout, fix them and rerun. |
+| `2` | nette could not run, read stderr. |
 
-```json
-{
-  "schema_version": 2,
-  "run": {
-    "rerun": "nette check --diff --format agent",
-    "exit": {
-      "0": "clean, nothing to fix",
-      "1": "findings below, fix them and rerun",
-      "2": "nette could not run, read stderr"
-    },
-    "suppress": "# nette: allow(CODE) reason (...)",
-    "explain": "nette explain CODE"
-  },
-  "summary": { "total": 1, "by_severity": { "error": 0, "warning": 1, "info": 0 } },
-  "findings": [
-    {
-      "code": "duplicated-sibling",
-      "file": "src/notify.py",
-      "line": 25,
-      "message": "`send_email_change` is a near-copy of `send_password_reset` in the same scope",
-      "instruction": "warning: ... To resolve: edit src/notify.py:25 - extract what they share into one function and pass what differs as arguments."
-    }
-  ]
-}
-```
-
-That envelope was tested on an agent given no documentation at all: it
-produced the correct refactor from the JSON alone. The `run` block exists
-because the same test showed it had to guess how to rerun the check and
-whether a warning was blocking.
-
+`--format agent` emits JSON that carries its own contract: how to rerun,
+what each exit code means, how to suppress. An agent given the envelope and
+no documentation at all produced the correct refactor from the JSON alone.
 Identical input produces identical bytes, so agent runs cache and diff
 cleanly.
 
-On a large tree, `--format summary` answers a different question: where
-the debt lives.
+**→ [The envelope, the other formats, and why there is no MCP server](docs/agents.md)**
 
-```
-$ nette check --format summary
+<br>
 
-127 findings in 42 files
+## Calibrated on your repo
 
-services/accounts  87 findings in 24 files
-  http_client.py  9
-  serializers.py  6
-  filters.py  4
-```
-
-## Calibration, and why it only tightens
-
-`nette calibrate` measures five style dimensions on your tree (annotation
-rate, guard density, `try` density, camelCase leakage, file size p90) and
-writes them to `.nette/profile.json`, which you commit. Style rules then
-judge new code against those numbers rather than against a universal ideal.
-Other tools calibrate ceilings on code *size*; nette calibrates the style
-an agent has to stay consistent with.
-
-The profile is a ratchet. Recalibrating on a tree that has drifted keeps
-the stricter of the two values per dimension, so a repo's baseline can
-improve but never quietly rot:
+Five exemplary codebases diverge up to 12x on style while all being
+exemplary. An absolute threshold would be wrong for four of them. So
+`nette calibrate` measures your tree (annotation rate, guard density, `try`
+density, camelCase leakage, file size p90) and commits the numbers to
+`.nette/profile.json`. Style rules judge new code against that, never
+against a universal ideal.
 
 ```
 $ nette calibrate
@@ -139,84 +145,72 @@ profile written to .nette/profile.json (964 files measured)
 kept the stricter baseline for annotated_function_rate (--reset to relax)
 ```
 
-Relaxing takes `nette calibrate --reset`, an explicit human act, visible in
-the diff of the committed profile.
+The profile is a ratchet. Recalibrating on a tree that has drifted keeps the
+stricter value per dimension, so a baseline can improve and never quietly
+rot. A monorepo can give one subtree its own baseline with
+`nette calibrate services/adapters --local`, and every file is then judged
+against the nearest profile.
 
-### One baseline per repo is wrong for a monorepo
+**→ [What gets measured, the ratchet, and the monorepo case](docs/calibration.md)**
 
-A repository whose boundary modules guard on purpose gets punished by its
-own average. Measured on a 7-service monorepo: the repo-wide guard rate is
-12%, dominated by CRUD modules, and it is then used to judge Celery tasks
-that guard 88% of their functions because an escaping exception kills the
-worker. Both were right, and `over-guarded` fired forever.
-
-Give that subtree its own baseline:
-
-```bash
-nette calibrate services/adapters --local
-```
-
-The profile lands in `services/adapters/.nette/profile.json`. Every file is
-judged against the nearest profile walking up to the project root, so the
-adapters answer to theirs and the rest of the repo keeps the global one.
-Both are committed, both ratchet independently.
+<br>
 
 ## Rules
 
-Rule names say what they detect. No lookup tables.
+Rule names say what they detect. An agent reading a finding knows what to do
+without a round-trip to the docs.
 
-| Family | Rule | Fires when |
+| Family | Rules | Threshold |
 |---|---|---|
-| shape | `function-length` | a function is too long to take in at one glance |
-| shape | `branch-density` | a function makes too many branching decisions |
-| shape | `nesting-depth` | code nests too deeply to follow |
-| shape | `argument-count` | a function takes too many required arguments |
-| shape | `return-count` | a function exits from too many places |
-| naming | `short-name-long-scope` | a one-letter name lives too long |
-| naming | `naming-drift` | an identifier breaks the repo's own convention |
-| defensiveness | `over-guarded` | a file guards far more than the rest of the repo |
-| defensiveness | `guard-density` | one function stacks guards line after line |
-| annotations | `under-annotated` | a file drops the type annotations the repo keeps |
-| structure | `file-naming` | a file name breaks snake_case |
-| structure | `file-size` | a file dwarfs the repo's norm |
-| structure | `mixed-module` | data types pile up in a module that also holds logic |
-| duplication | `duplicated-sibling` | a function is a near-copy of a sibling function |
-| engine | `parse-error`, `bare-allow`, `unused-allow` | a file cannot be judged; a suppression has no reason or silences nothing |
+| `shape` | function length, branch density, nesting, arguments, returns | universal |
+| `naming` | short names in long scopes, drift from the repo's convention | mixed |
+| `defensiveness` | files that over-guard, functions that stack guards | calibrated |
+| `annotations` | files that drop the annotations the repo keeps | calibrated |
+| `structure` | file naming, file size, data types mixed into logic | mixed |
+| `duplication` | a function that is a near-copy of a sibling | convention |
+| `engine` | unparsable files, suppressions with no reason or no effect | none |
 
-Two threshold kinds, and the distinction is measured, not aesthetic. We
-profiled five exemplary codebases (httpx, pydantic, fastapi, attrs, curated
-stdlib): they agree tightly on code *shape* (median function: 8-13 lines,
-2 arguments, near-flat nesting), so shape rules ship universal defaults.
-The same codebases diverge up to 12x on *style* (comment density, guard
-density, file size) while all being exemplary, so style rules compare your
-code to your repo's own baseline (`nette calibrate`), never to an absolute.
+Universal thresholds ship as numbers because exemplary codebases agree on
+code shape. Calibrated ones compare a file to your profile. Convention rules
+never read the profile: on a production monorepo 82% of data types already
+lived mixed with behaviour, so a calibrated `mixed-module` would have gone
+silent on exactly the debt it exists to catch.
 
-A third kind never touches the profile: *convention* rules, for a decision
-a repo makes once and then has to keep (whether the same function may exist
-twice, where a type belongs). Calibrating those would teach the tool that
-the drift is the house style. Measured on a production monorepo: 82% of its
-data types already lived mixed with behaviour, so a calibrated rule would
-have gone silent on exactly the debt it exists to catch.
+**→ [All fifteen rules, one page per family](docs/rules/README.md)**
 
-Suppression is explicit and auditable:
+<br>
+
+## Configuration
+
+One place: `[tool.nette]` in `pyproject.toml`, or `nette.toml`.
+
+```toml
+[tool.nette]
+select = ["shape", "naming", "defensiveness", "structure"]
+ignore = ["return-count"]
+
+[tool.nette.thresholds]
+function_length = 60
+```
+
+Suppression is explicit and auditable. The reason is mandatory, and
+`nette allows` lists every one in the tree.
 
 ```python
 def decode_frame(raw):  # nette: allow(function-length) flat wire decoder, one case per opcode
 ```
 
-The reason is mandatory. `nette allows` lists every suppression in the
-tree.
+**→ [Config discovery, framework profiles, CI and pre-commit](docs/configuration.md)**
+
+<br>
 
 ## Where the pain actually is
 
 A file that is structurally borderline and changes every week costs more
-than a file that is borderline and never touched. `nette hotspots` crosses
-the findings with how often each file changed:
+than a file that is borderline and never touched.
 
 ```
 $ nette hotspots --since 12.months
-
-hotspots since 12.months, 12 files changed and flagged
 
 changes  findings  file
      37         9  services/accounts/api/http_client.py
@@ -224,97 +218,47 @@ changes  findings  file
 ```
 
 It is a separate command on purpose. Git history is environment state, and
-`nette check` stays a pure function of the code, the config and the
-profile. Hotspots never change a severity, they only rank, and the command
-always exits 0.
+`nette check` stays a pure function of the code, the config and the profile.
+Hotspots only rank, never change a severity, and always exit 0.
 
-## Configuration
+<br>
 
-One place: `[tool.nette]` in `pyproject.toml` (or `nette.toml`). nette looks
-for it by walking up from the paths you check, so running it from a
-subdirectory or on a path outside the current directory finds the same
-configuration and the same `.nette/profile.json`. `--profile PATH` points at
-another profile file, for CI and multi-root setups.
+## What nette does not do
 
-```toml
-[tool.nette]
-select = ["shape", "naming", "defensiveness", "structure"]
-ignore = ["return-count"]
-profile = "fastapi"        # exempts route endpoints from signature rules
+- **Security, types, surface style.** [bandit](https://github.com/PyCQA/bandit),
+  [mypy](https://github.com/python/mypy) and [ruff](https://github.com/astral-sh/ruff)
+  already do those. Run them alongside.
+- **Other languages.** Python only, done deeply. TypeScript comes later as a
+  sibling product.
+- **LLM review.** Deterministic or nothing.
+- **Not shipped yet.** The YAML pattern tier, external Python plugins and
+  SARIF output are designed but not built. FastAPI is the only framework
+  profile.
 
-[tool.nette.thresholds]
-function_length = 60
-nesting_depth = 4
-```
-
-## In CI, and before every commit
-
-The most reliable integration does not depend on the agent remembering.
-
-```yaml
-# .github/workflows/nette.yml
-- run: pip install nette
-- run: nette check --diff origin/main --format concise
-```
-
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/gausoft/nette
-    rev: v0.2.0
-    hooks:
-      - id: nette
-```
-
-An agent whose commit is rejected learns to run the check itself. That is
-how black and ruff became habits.
-
-## Promises
-
-| # | Promise | Meaning |
-|---|---------|---------|
-| 1 | **Judges new code, not legacy** | `--diff` judges the lines you touched, not the files you touched. A 10-year-old repo is never "all red". `--whole-files` widens it back to the file. |
-| 2 | **Calibrated on YOUR repo** | Learns the local style (annotations, guards, file size) and flags deviation. The baseline ratchets: it can tighten, never loosen by accident. |
-| 3 | **Verdict in under a second** | Deterministic: same code, same verdict, zero LLM at runtime. |
-| 4 | **Findings say what to do** | Not "complexity 12 > 9" but the problem, the reason, and the fix direction. |
-| 5 | **Pure Python, zero deps** | `pip install nette` just works. nette's own code is the showcase. |
-| 6 | **Extensible in 3 tiers** | Thresholds in TOML, pattern rules in YAML, deep rules in Python. |
-
-## Not in scope
-
-- Security ([bandit](https://github.com/PyCQA/bandit) exists), types
-  ([mypy](https://github.com/python/mypy) exists), surface style
-  ([ruff](https://github.com/astral-sh/ruff) exists).
-- Multi-language support. Python only, done deeply. TypeScript comes later
-  as a sibling product.
-- LLM review. Deterministic or nothing.
-
-## Known gaps
-
-- FastAPI is the only framework profile. Django and SQLAlchemy signatures
-  are judged by the generic rules.
-- The YAML pattern tier, external Python plugins and SARIF output are
-  designed but not shipped. An MCP server is not planned: it would expose
-  nothing the shell does not already expose, and every agent has a shell.
+<br>
 
 ## Documentation
 
-- [Changelog](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
-- [Design: how nette works](https://github.com/gausoft/nette/blob/main/docs/design.md)
-- [Rules reference](https://github.com/gausoft/nette/blob/main/docs/rules/README.md)
-- [Benchmark: speed, thresholds, field results](https://github.com/gausoft/nette/blob/main/docs/benchmark.md)
-- [Vision & requirements](https://github.com/gausoft/nette/blob/main/docs/vision.md)
-- [Extensibility design](https://github.com/gausoft/nette/blob/main/docs/extensibility.md)
+| | |
+|---|---|
+| [Agents](docs/agents.md) | The envelope, output formats, exit codes |
+| [Calibration](docs/calibration.md) | The profile, the ratchet, monorepos |
+| [Configuration](docs/configuration.md) | Config, suppression, CI, pre-commit |
+| [Rules reference](docs/rules/README.md) | Every rule, with its threshold kind |
+| [Design](docs/design.md) | How the engine works |
+| [Benchmark](docs/benchmark.md) | Speed, thresholds, field results |
+| [Vision](docs/vision.md) | The research behind every choice |
+| [Changelog](CHANGELOG.md) | What shipped when |
+
+<br>
 
 ## Contributing
 
 Design feedback and issue reports are welcome. Code contributions are open
-from 0.1 on. Read [docs/design.md](https://github.com/gausoft/nette/blob/main/docs/design.md) first: a rule that does
+from 0.1 on. Read [docs/design.md](docs/design.md) first: a rule that does
 not fit the three-tier engine or the calibration model will be declined on
-shape, not on merit.
-
-Agents contributing here follow [AGENTS.md](https://github.com/gausoft/nette/blob/main/AGENTS.md).
+shape, not on merit. Agents contributing here follow [AGENTS.md](AGENTS.md).
 
 ## License
 
-[MIT](https://github.com/gausoft/nette/blob/main/LICENSE)
+[MIT](LICENSE)
