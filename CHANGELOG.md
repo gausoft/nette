@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.2.1
+
+The diff mode now keeps the promise it was written for, and a crash found
+by running nette over django is fixed.
 
 ### Changed
 
@@ -10,6 +13,13 @@
   function-scoped finding now survives only when it overlaps a touched
   range, while a file-scoped finding survives any change to its file.
   `--whole-files` restores the previous behaviour.
+
+### Fixed
+
+- A file with no statements no longer crashes the rules that anchor on the
+  module. `ast.Module` carries no position, so `report()` raised
+  `AttributeError` and the whole run died. Found by running nette over the
+  django tree.
 
 ## 0.2.0
 
