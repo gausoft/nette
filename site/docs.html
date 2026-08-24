@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs — nette</title>
+<meta name="description" content="Install nette, calibrate your repo, wire the check into your agent loop and your CI.">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html">
+      <svg width="22" height="22" viewBox="0 0 88 88" aria-hidden="true">
+        <rect x="10" y="20" width="38" height="7" rx="3.5" fill="#fb923c"/>
+        <rect x="20" y="38" width="30" height="7" rx="3.5" fill="#fb923c" opacity=".7"/>
+        <rect x="20" y="56" width="20" height="7" rx="3.5" fill="#fb923c" opacity=".45"/>
+        <path d="M56 46 l9 10 l18 -24" fill="none" stroke="#f97316" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      nette
+    </a>
+    <div class="nav-links">
+      <a href="index.html#why">Why</a>
+      <a href="index.html#compare">Compared</a>
+      <a href="docs.html" aria-current="page">Docs</a>
+      <a href="rules.html">Rules</a>
+    </div>
+    <div class="nav-right">
+      <a class="nav-gh" href="https://github.com/gausoft/nette">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38l-.01-1.49C3.8 14.17 3.33 12.9 3.33 12.9c-.36-.93-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.23 1.87.87 2.33.67.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 014 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8 8 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a class="nav-cta" href="#install">Install</a>
+    </div>
+    <details class="burger">
+      <summary><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
+      <div class="burger-panel">
+        <a href="#install">Install</a>
+        <a href="#commands">Commands</a>
+        <a href="#calibration">Calibration</a>
+        <a href="#agents">Agent loop</a>
+        <a href="#config">Configuration</a>
+        <a href="#ci">CI &amp; pre-commit</a>
+        <a href="rules.html">Rules reference</a>
+        <a href="index.html">Home</a>
+      </div>
+    </details>
+  </div>
+</nav>
+
+<div class="doc-layout">
+  <aside class="doc-side">
+    <h4>Getting started</h4>
+    <a href="#install">Install</a>
+    <a href="#commands">Commands</a>
+    <a href="#output">Output formats</a>
+    <h4>Core</h4>
+    <a href="#calibration">Calibration</a>
+    <a href="#monorepo">Monorepos</a>
+    <a href="#suppression">Suppression</a>
+    <a href="#hotspots">Hotspots</a>
+    <h4>Integration</h4>
+    <a href="#agents">Agent loop</a>
+    <a href="#config">Configuration</a>
+    <a href="#ci">CI &amp; pre-commit</a>
+    <h4>Reference</h4>
+    <a href="rules.html">All rules</a>
+    <a href="https://github.com/gausoft/nette/blob/main/docs/design.md">Design doc</a>
+  </aside>
+
+  <main class="doc-main">
+    <div class="doc-hero">
+      <div class="kicker">Documentation</div>
+      <h1>Everything nette does,<br>in the order you need it.</h1>
+      <p>nette is one binary-free Python package and three commands. Install it, calibrate
+      once, then run the check on every diff. This page covers the whole surface.</p>
+    </div>
+
+    <section id="install">
+      <h2>Install</h2>
+      <p>Python 3.11 or later. No dependencies, so nothing else lands in your environment.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">pip</span> <span class="t-arg">install</span> <span class="t-arg">nette</span></pre>
+      <p>Then bootstrap the repo in one step. <code>nette init</code> calibrates the tree,
+      adds the cache to <code>.gitignore</code> and prints what to run next.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">init</span>
+<span class="t-dim">profile written to .nette/profile.json (312 files measured)</span>
+<span class="t-dim">next: nette check --diff</span></pre>
+    </section>
+
+    <section id="commands">
+      <h2>Commands</h2>
+      <table class="doc">
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td class="slug">nette init</td><td>Calibrate, ignore the cache, print the next step. Run once per repo.</td></tr>
+          <tr><td class="slug">nette check</td><td>Judge the current tree.</td></tr>
+          <tr><td class="slug">nette check --diff</td><td>Judge only the lines you touched. This is the agent loop.</td></tr>
+          <tr><td class="slug">nette calibrate</td><td>Measure the repo's style and write <code>.nette/profile.json</code>.</td></tr>
+          <tr><td class="slug">nette explain RULE</td><td>Long-form documentation for any rule slug.</td></tr>
+          <tr><td class="slug">nette allows</td><td>List every suppression in the tree, with its reason.</td></tr>
+          <tr><td class="slug">nette hotspots</td><td>Cross findings with git churn to rank where the debt hurts.</td></tr>
+          <tr><td class="slug">nette agent-rules</td><td>Print the loop to append to AGENTS.md, CLAUDE.md or .cursorrules.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <p><strong style="color:#fafafa">Exit codes.</strong> <code>0</code> clean · <code>1</code> findings, fix and rerun · <code>2</code> nette could not run, read stderr. That is the whole integration contract.</p>
+      </div>
+    </section>
+
+    <section id="output">
+      <h2>Output formats</h2>
+      <p>Four formats, one per audience. Every finding names the problem, the reason and the
+      fix direction, never a bare number.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">check</span> <span class="t-arg">src/api.py</span>
+
+<span class="t-warn">warning[argument-count]</span> <span class="t-path">src/api.py 1:1</span>
+  function `sync_users` takes too many arguments to call safely
+  <span class="t-dim">why: it takes 7 required arguments; the configured limit is 6</span>
+  <span class="t-dim">fix: group related arguments into a dataclass, or split the function</span></pre>
+      <h3>Where the debt lives</h3>
+      <p>On a large tree, <code>--format summary</code> answers a different question.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">check</span> <span class="t-flag">--format</span> <span class="t-str">summary</span>
+
+<span class="t-dim">127 findings in 42 files</span>
+
+<span class="t-path">services/accounts</span>  <span class="t-dim">87 findings in 24 files</span>
+  http_client.py  <span class="t-num">9</span>
+  serializers.py  <span class="t-num">6</span>
+  filters.py  <span class="t-num">4</span></pre>
+      <p>The others: <code>--format concise</code> for CI logs, <code>--format agent</code>
+      for the JSON envelope below.</p>
+    </section>
+
+    <section id="calibration">
+      <h2>Calibration, and why it only tightens</h2>
+      <p><code>nette calibrate</code> measures five style dimensions on your tree (annotation
+      rate, guard density, <code>try</code> density, camelCase leakage, file size p90) and
+      writes them to <code>.nette/profile.json</code>, which you commit. Style rules then judge
+      new code against those numbers rather than against a universal ideal. Other tools
+      calibrate ceilings on code <em>size</em>; nette calibrates the style an agent has to
+      stay consistent with.</p>
+      <p>The profile is a ratchet. Recalibrating on a tree that has drifted keeps the stricter
+      of the two values per dimension, so a repo's baseline can improve but never quietly rot.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">calibrate</span>
+<span class="t-dim">profile written to .nette/profile.json (964 files measured)</span>
+<span class="t-warn">kept the stricter baseline for annotated_function_rate (--reset to relax)</span></pre>
+      <p>Relaxing takes <code>nette calibrate --reset</code>, an explicit human act, visible in
+      the diff of the committed profile.</p>
+    </section>
+
+    <section id="monorepo">
+      <h2>One baseline per repo is wrong for a monorepo</h2>
+      <p>A repository whose boundary modules guard on purpose gets punished by its own average.
+      Measured on a 7-service monorepo: the repo-wide guard rate is 12%, dominated by CRUD
+      modules, and it is then used to judge Celery tasks that guard 88% of their functions
+      because an escaping exception kills the worker. Both were right, and <code>over-guarded</code>
+      fired forever.</p>
+      <p>Give that subtree its own baseline:</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">calibrate</span> <span class="t-arg">services/adapters</span> <span class="t-flag">--local</span></pre>
+      <p>The profile lands in <code>services/adapters/.nette/profile.json</code>. Every file is
+      judged against the nearest profile walking up to the project root, so the adapters answer
+      to theirs and the rest of the repo keeps the global one. Both are committed, both ratchet
+      independently.</p>
+    </section>
+
+    <section id="suppression">
+      <h2>Suppression is explicit and auditable</h2>
+      <p>The reason is mandatory. A suppression without one is itself a finding
+      (<code>bare-allow</code>), and one that silences nothing is another
+      (<code>unused-allow</code>).</p>
+      <pre class="code"><span class="t-kw">def</span> <span class="t-cmd">decode_frame</span>(raw):  <span class="t-com"># nette: allow(function-length) flat wire decoder, one case per opcode</span></pre>
+      <p><code>nette allows</code> lists every suppression in the tree.</p>
+    </section>
+
+    <section id="hotspots">
+      <h2>Where the pain actually is</h2>
+      <p>A file that is structurally borderline and changes every week costs more than a file
+      that is borderline and never touched. <code>nette hotspots</code> crosses the findings
+      with how often each file changed.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">hotspots</span> <span class="t-flag">--since</span> <span class="t-str">12.months</span>
+
+<span class="t-dim">hotspots since 12.months, 12 files changed and flagged</span>
+
+<span class="t-dim">changes  findings  file</span>
+     <span class="t-num">37</span>         <span class="t-num">9</span>  <span class="t-path">services/accounts/api/http_client.py</span>
+     <span class="t-num">18</span>         <span class="t-num">6</span>  <span class="t-path">services/accounts/serializers.py</span></pre>
+      <p>It is a separate command on purpose. Git history is environment state, and
+      <code>nette check</code> stays a pure function of the code, the config and the profile.
+      Hotspots never change a severity, they only rank, and the command always exits 0.</p>
+    </section>
+
+    <section id="agents">
+      <h2>Any agent, no plugin</h2>
+      <p>The integration surface is a shell command and an exit code, so every agent already
+      supports it: Claude Code, Cursor, Copilot, Codex, Aider, your CI. There is nothing to
+      install on their side.</p>
+      <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">agent-rules</span> <span class="t-flag">&gt;&gt;</span> <span class="t-arg">AGENTS.md</span>   <span class="t-com"># or CLAUDE.md, or .cursorrules</span></pre>
+      <p>That writes the loop your agent has to follow: run
+      <code>nette check --diff --format agent</code> after editing Python, read the exit code,
+      fix, rerun.</p>
+      <h3>The machine envelope carries its own contract</h3>
+      <pre class="code">{
+  <span class="t-key">"schema_version"</span>: <span class="t-num">2</span>,
+  <span class="t-key">"run"</span>: {
+    <span class="t-key">"rerun"</span>: <span class="t-str">"nette check --diff --format agent"</span>,
+    <span class="t-key">"exit"</span>: {
+      <span class="t-key">"0"</span>: <span class="t-str">"clean, nothing to fix"</span>,
+      <span class="t-key">"1"</span>: <span class="t-str">"findings below, fix them and rerun"</span>,
+      <span class="t-key">"2"</span>: <span class="t-str">"nette could not run, read stderr"</span>
+    },
+    <span class="t-key">"suppress"</span>: <span class="t-str">"# nette: allow(CODE) reason (...)"</span>,
+    <span class="t-key">"explain"</span>: <span class="t-str">"nette explain CODE"</span>
+  },
+  <span class="t-key">"summary"</span>: { <span class="t-key">"total"</span>: <span class="t-num">1</span>, <span class="t-key">"by_severity"</span>: { <span class="t-key">"error"</span>: <span class="t-num">0</span>, <span class="t-key">"warning"</span>: <span class="t-num">1</span>, <span class="t-key">"info"</span>: <span class="t-num">0</span> } },
+  <span class="t-key">"findings"</span>: [
+    {
+      <span class="t-key">"code"</span>: <span class="t-str">"duplicated-sibling"</span>,
+      <span class="t-key">"file"</span>: <span class="t-str">"src/notify.py"</span>,
+      <span class="t-key">"line"</span>: <span class="t-num">25</span>,
+      <span class="t-key">"message"</span>: <span class="t-str">"`send_email_change` is a near-copy of `send_password_reset` in the same scope"</span>,
+      <span class="t-key">"instruction"</span>: <span class="t-str">"warning: ... To resolve: edit src/notify.py:25 - extract what they share into one function and pass what differs as arguments."</span>
+    }
+  ]
+}</pre>
+      <div class="callout">
+        <p>That envelope was tested on an agent given no documentation at all: it produced the
+        correct refactor from the JSON alone. The <code>run</code> block exists because the same
+        test showed it had to guess how to rerun the check and whether a warning was blocking.</p>
+      </div>
+      <p>Identical input produces identical bytes, so agent runs cache and diff cleanly.</p>
+    </section>
+
+    <section id="config">
+      <h2>Configuration</h2>
+      <p>One place: <code>[tool.nette]</code> in <code>pyproject.toml</code> (or
+      <code>nette.toml</code>). nette looks for it by walking up from the paths you check, so
+      running it from a subdirectory or on a path outside the current directory finds the same
+      configuration and the same profile. <code>--profile PATH</code> points at another profile
+      file, for CI and multi-root setups.</p>
+      <pre class="code"><span class="t-com">[tool.nette]</span>
+<span class="t-key">select</span> = [<span class="t-str">"shape"</span>, <span class="t-str">"naming"</span>, <span class="t-str">"defensiveness"</span>, <span class="t-str">"structure"</span>]
+<span class="t-key">ignore</span> = [<span class="t-str">"return-count"</span>]
+<span class="t-key">profile</span> = <span class="t-str">"fastapi"</span>        <span class="t-com"># exempts route endpoints from signature rules</span>
+
+<span class="t-com">[tool.nette.thresholds]</span>
+<span class="t-key">function_length</span> = <span class="t-num">60</span>
+<span class="t-key">nesting_depth</span> = <span class="t-num">4</span></pre>
+      <p><code>select</code> takes rule families. The full list is on the
+      <a href="rules.html">rules reference</a>.</p>
+    </section>
+
+    <section id="ci">
+      <h2>In CI, and before every commit</h2>
+      <p>The most reliable integration does not depend on the agent remembering.</p>
+      <pre class="code"><span class="t-com"># .github/workflows/nette.yml</span>
+- <span class="t-key">run</span>: pip install nette
+- <span class="t-key">run</span>: nette check <span class="t-flag">--diff</span> origin/main <span class="t-flag">--format</span> concise</pre>
+      <pre class="code"><span class="t-com"># .pre-commit-config.yaml</span>
+<span class="t-key">repos</span>:
+  - <span class="t-key">repo</span>: https://github.com/gausoft/nette
+    <span class="t-key">rev</span>: v0.2.0
+    <span class="t-key">hooks</span>:
+      - <span class="t-key">id</span>: nette</pre>
+      <p>An agent whose commit is rejected learns to run the check itself. That is how black
+      and ruff became habits.</p>
+    </section>
+
+    <section id="scope">
+      <h2>Not in scope, and known gaps</h2>
+      <ul>
+        <li>Security (<a href="https://github.com/PyCQA/bandit">bandit</a> exists), types
+        (<a href="https://github.com/python/mypy">mypy</a> exists), surface style
+        (<a href="https://github.com/astral-sh/ruff">ruff</a> exists).</li>
+        <li>Multi-language support. Python only, done deeply. TypeScript comes later as a
+        sibling product.</li>
+        <li>LLM review. Deterministic or nothing.</li>
+        <li>FastAPI is the only framework profile so far. Django and SQLAlchemy signatures are
+        judged by the generic rules.</li>
+        <li>The YAML pattern tier, external Python plugins and SARIF output are designed but
+        not shipped. An MCP server is not planned: it would expose nothing the shell does not
+        already expose, and every agent has a shell.</li>
+      </ul>
+      <a class="more" href="rules.html">Next: the rules reference</a>
+    </section>
+  </main>
+</div>
+
+<footer class="site">
+  <div class="foot-in">
+    <div>
+      <a class="brand" href="index.html" style="margin-bottom:12px">
+        <svg width="20" height="20" viewBox="0 0 88 88" aria-hidden="true">
+          <rect x="10" y="20" width="38" height="7" rx="3.5" fill="#fb923c"/>
+          <rect x="20" y="38" width="30" height="7" rx="3.5" fill="#fb923c" opacity=".7"/>
+          <rect x="20" y="56" width="20" height="7" rx="3.5" fill="#fb923c" opacity=".45"/>
+          <path d="M56 46 l9 10 l18 -24" fill="none" stroke="#f97316" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        nette
+      </a>
+      <p style="font-size:14px;color:var(--faint);line-height:1.6;max-width:260px">
+        A readability check for the AI-agent era. Pure Python, zero dependencies, MIT.
+      </p>
+    </div>
+    <div>
+      <h4>Docs</h4>
+      <a href="#install">Install</a>
+      <a href="#commands">Commands</a>
+      <a href="#config">Configuration</a>
+      <a href="rules.html">Rules reference</a>
+    </div>
+    <div>
+      <h4>Deep dives</h4>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/design.md">Design</a>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/benchmark.md">Benchmark</a>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/vision.md">Vision</a>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/extensibility.md">Extensibility</a>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <a href="https://github.com/gausoft/nette">GitHub</a>
+      <a href="https://github.com/gausoft/nette/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://pypi.org/project/nette/">PyPI</a>
+      <a href="https://github.com/gausoft/nette/blob/main/LICENSE">MIT License</a>
+    </div>
+  </div>
+  <div class="foot-bottom">nette · deterministic, diff-aware, calibrated on your repo</div>
+</footer>
+
+</body>
+</html>
