@@ -89,3 +89,18 @@ def test_similarity_threshold_is_configurable(write_file):
 
     assert check(file, {"duplication_similarity": 100}) != []
     assert check(file, {"duplication_min_lines": 40}) == []
+
+
+def test_test_modules_are_exempt(write_file):
+    twins = (
+        "def test_one():\n"
+        + "".join(f"    step_{index} = {index}\n" for index in range(22))
+        + "    assert step_0 == 0\n"
+        "\n"
+        "def test_two():\n"
+        + "".join(f"    step_{index} = {index}\n" for index in range(22))
+        + "    assert step_1 == 1\n"
+    )
+
+    for name in ("test_thing.py", "thing_test.py", "conftest.py", "tests.py"):
+        assert check(write_file(twins, name)) == []

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed
+
+- `duplicated-sibling` no longer fires inside test modules, and the
+  definition of a test module now covers `tests.py` and anything under a
+  `test`, `tests` or `testing` directory. Measured on five public
+  repositories: 1188 of the rule's 1201 findings sat in test files, on
+  groups of up to 255 sibling test methods. Parallel tests are near-copies
+  by design, and a controlled experiment on code regularity shows that
+  repeating one structure helps comprehension rather than hurting it. On
+  source code the rule speaks 13 times across the same five repositories,
+  and those findings are unchanged.
+
 ### Added
 
 - `--format sarif`, the format GitHub code scanning reads. Findings show up

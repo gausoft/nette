@@ -150,10 +150,17 @@ def _nearest_profile(directory: Path, root: Path, location: Path) -> Path | None
     return None
 
 
+TEST_DIRECTORIES: Final = frozenset({"test", "tests", "testing"})
+TEST_FILES: Final = frozenset({"conftest.py", "tests.py"})
+
+
 def is_test_module(path: Path) -> bool:
     name = path.name
 
-    return name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py"
+    if name.startswith("test_") or name.endswith("_test.py") or name in TEST_FILES:
+        return True
+
+    return bool(TEST_DIRECTORIES & set(path.parts))
 
 
 def is_annotated(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:

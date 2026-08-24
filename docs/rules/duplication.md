@@ -37,6 +37,17 @@ Comparison stops at the module boundary. Cross-module clone detection
 needs an index of the whole tree, which the single-file engine does not
 have, and the copy-paste-the-neighbour pattern happens inside one file.
 
+**Test modules are exempt** (`test_*.py`, `*_test.py`, `tests.py`,
+`conftest.py`, anything under a `test`, `tests` or `testing` directory).
+Parallel test methods are near-copies by design: the same arrange, act and
+assert skeleton with different data. Measured on five public repositories,
+99% of this rule's findings landed in test files, 1188 out of 1201, on
+groups of up to 255 sibling test methods. A controlled experiment on code
+regularity shows that repeating one structure improves comprehension, and
+can even compensate for length and complexity, so those were not findings,
+they were the rule reading a virtue as a defect. On source code the rule
+speaks 13 times across the same five repositories.
+
 **Threshold kind: convention, never calibrated.** This is a convention
 rule. Learning the repo's own duplication level would silence the rule on
 exactly the repositories that need it most.

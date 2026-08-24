@@ -4,6 +4,7 @@ import ast
 import difflib
 from typing import Iterator, Sequence
 
+from nette.calibration import is_test_module
 from nette.rules.base import Context, Rule
 from nette.rules.shape import body_statements, code_line_count
 
@@ -16,6 +17,9 @@ class DuplicatedSibling(Rule):
     scope = "function"
 
     def visit_module(self, node: ast.Module, ctx: Context) -> None:
+        if is_test_module(ctx.source.path):
+            return
+
         similarity = ctx.threshold("duplication_similarity") / 100
         min_lines = ctx.threshold("duplication_min_lines")
 
