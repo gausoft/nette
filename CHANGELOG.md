@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `exempt_decorated_by`, a list of decorators whose functions are exempt
+  from the signature rules. A Celery task, a click command or a Django
+  receiver has a parameter list dictated by its framework, and until now
+  only FastAPI routes were recognised. A bare name matches the tail of a
+  dotted path, so `task` covers `@celery.task` and `@app.task`. Same escape
+  hatch as Checkstyle's `ignoreAnnotatedBy`, and it covers every framework
+  without shipping a profile for each.
+
 ## 0.2.1
 
 The diff mode now keeps the promise it was written for, and a crash found

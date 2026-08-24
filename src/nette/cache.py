@@ -48,6 +48,7 @@ def config_key(
     rule_codes: list[str],
     profile: Profile | None = None,
     framework: str | None = None,
+    exempt_decorated_by: tuple[str, ...] = (),
 ) -> str:
     material = json.dumps(
         {
@@ -55,6 +56,7 @@ def config_key(
             "rules": sorted(rule_codes),
             "profile": profile.metrics if profile else None,
             "framework": framework,
+            "exempt_decorated_by": sorted(exempt_decorated_by),
         },
         sort_keys=True,
     )

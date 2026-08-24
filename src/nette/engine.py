@@ -21,9 +21,16 @@ def check_files(
     cache: Cache | None = None,
     framework: str | None = None,
     silenced: frozenset[str] = frozenset(),
+    exempt_decorated_by: tuple[str, ...] = (),
 ) -> list[Finding]:
     key = (
-        config_key(thresholds, [rule.code for rule in rules], profile, framework)
+        config_key(
+            thresholds,
+            [rule.code for rule in rules],
+            profile,
+            framework,
+            exempt_decorated_by,
+        )
         if cache
         else ""
     )
@@ -35,7 +42,7 @@ def check_files(
             findings.extend(cached)
             continue
 
-        fresh = _check_one(file, rules, thresholds, profile, framework)
+        fresh = _check_one(file, rules, thresholds, profile, framework, exempt_decorated_by)
         if cache:
             cache.put(file, key, fresh)
         findings.extend(fresh)
@@ -49,6 +56,7 @@ def _check_one(
     thresholds: dict[str, int] | None,
     profile: Profile | None,
     framework: str | None = None,
+    exempt_decorated_by: tuple[str, ...] = (),
 ) -> list[Finding]:
     source = parse_source(file)
     if source.tree is None:
@@ -56,7 +64,12 @@ def _check_one(
 
     active_codes = frozenset(rule.code for rule in rules)
     contexts = [
-        (rule, Context(source, rule, thresholds, profile, framework, active_codes))
+        (
+            rule,
+            Context(
+                source, rule, thresholds, profile, framework, active_codes, exempt_decorated_by
+            ),
+        )
         for rule in rules
     ]
 

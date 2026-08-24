@@ -65,5 +65,23 @@ how black and ruff became habits.
 
 `profile = "fastapi"` exempts route endpoints from the signature rules: a
 FastAPI handler declares its dependencies as parameters, so `argument-count`
-would fire on correct code. FastAPI is the only framework profile so far.
-Django and SQLAlchemy signatures are judged by the generic rules.
+would fire on correct code.
+
+For every other framework, name the decorators yourself instead of waiting
+for a profile:
+
+```toml
+[tool.nette]
+exempt_decorated_by = ["celery.task", "shared_task", "click.command"]
+```
+
+A function wearing one of those decorators is exempt from the signature
+rules, on the same grounds: its parameter list is dictated by the
+framework, not by its author. A bare name matches the tail of a dotted
+path, so `task` covers `@celery.task` and `@app.task`, while
+`click.command` matches only that one. Decorators written with or without
+a call are both matched.
+
+This is the same escape hatch Checkstyle offers with `ignoreAnnotatedBy`,
+and it covers Django, SQLAlchemy, Celery and click without shipping a
+profile for each.

@@ -9,7 +9,9 @@ from typing import Final, Sequence
 from nette.rules import KNOWN_RULE_CODES
 from nette.rules.base import DEFAULT_THRESHOLDS
 
-KNOWN_KEYS: Final = frozenset({"select", "ignore", "thresholds", "output", "profile"})
+KNOWN_KEYS: Final = frozenset(
+    {"select", "ignore", "thresholds", "output", "profile", "exempt_decorated_by"}
+)
 ROOT_MARKERS: Final = ("nette.toml", "pyproject.toml", ".nette", ".git")
 KNOWN_FAMILIES: Final = frozenset(
     {"shape", "naming", "defensiveness", "annotations", "structure", "duplication", "engine"}
@@ -27,6 +29,7 @@ class Config:
     thresholds: dict[str, int] = field(default_factory=dict)
     output_format: str = "full"
     framework: str | None = None
+    exempt_decorated_by: tuple[str, ...] = ()
 
     def rule_enabled(self, code: str, family: str) -> bool:
         return {code, family}.isdisjoint(self.ignore) and not {code, family}.isdisjoint(
@@ -80,6 +83,9 @@ def load_config(root: Path) -> Config:
         thresholds=thresholds,
         output_format=output_format,
         framework=framework,
+        exempt_decorated_by=_string_tuple(
+            section.get("exempt_decorated_by", ()), "exempt_decorated_by"
+        ),
     )
 
 

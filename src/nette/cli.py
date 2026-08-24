@@ -225,6 +225,7 @@ def _judge(
             cache=cache,
             framework=config.framework,
             silenced=silenced,
+            exempt_decorated_by=config.exempt_decorated_by,
         )
     )
 

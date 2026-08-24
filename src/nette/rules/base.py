@@ -4,7 +4,7 @@ import ast
 
 from nette.calibration import Profile
 from nette.findings import Finding, Severity
-from nette.frameworks import SIGNATURE_EXEMPT_RULES, is_route_endpoint
+from nette.frameworks import SIGNATURE_EXEMPT_RULES, is_route_endpoint, wears_decorator
 from nette.parsing import SourceFile
 
 DEFAULT_THRESHOLDS: dict[str, int] = {
@@ -37,11 +37,13 @@ class Context:
         profile: Profile | None = None,
         framework: str | None = None,
         active_codes: frozenset[str] = frozenset(),
+        exempt_decorated_by: tuple[str, ...] = (),
     ) -> None:
         self.source = source
         self.profile = profile
         self.framework = framework
         self.active_codes = active_codes
+        self.exempt_decorated_by = exempt_decorated_by
         self._rule = rule
         self._thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
         self._findings: list[Finding] = []
@@ -56,11 +58,13 @@ class Context:
         return self.profile.metrics.get(self._rule.baseline)
 
     def signature_exempt(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
-        return (
-            self.framework == "fastapi"
-            and self._rule.code in SIGNATURE_EXEMPT_RULES
-            and is_route_endpoint(node)
-        )
+        if self._rule.code not in SIGNATURE_EXEMPT_RULES:
+            return False
+
+        if self.framework == "fastapi" and is_route_endpoint(node):
+            return True
+
+        return wears_decorator(node, self.exempt_decorated_by)
 
     def report(self, node: ast.AST, *, message: str, grounds: str, help: str) -> None:
         line = getattr(node, "lineno", 1)
