@@ -81,6 +81,23 @@ commits over 12 months, the best objective proxy for code that hurts.
   short helpers). Their churn comes from the product moving, not from
   their shape, and flagging them would have been noise.
 
+**What this does not prove.** In August 2026 the same method was run as a
+controlled ablation on five public repositories (scrapy, poetry, celery,
+sqlalchemy, django, 1755 files), against four other predictors. Ranking
+files by line count alone predicts correction churn better than nette
+does: AUC 0.94 against 0.83, and 0.61 against 0.41 on precision at 15.
+Within size bands the two are tied. So the number above says nette agrees
+with churn, and it does not say nette adds anything a line count would
+not. Correction churn measures defect proneness, which overlaps
+readability without being it, so this proxy cannot settle the question
+either way. The experiment that can is a blind human comparison, and it
+has not been run yet. Until it has, nette's claim is that it encodes
+measured properties of exemplary code and enforces local consistency, not
+that it predicts defects.
+
+One number does hold up: a file flagged by nette is 3.3 times more likely
+to sit in the most-corrected set than a file picked at random.
+
 ## Rule quietness
 
 A rule earns its default threshold by staying quiet on code that is
