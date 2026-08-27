@@ -10,6 +10,7 @@ from typing import Final
 from nette.findings import Severity
 from nette.frameworks import dotted_name
 from nette.paths import within_root
+from nette.rules import KNOWN_RULE_CODES
 from nette.rules.base import Context, Rule
 
 RULES_PATH: Final = Path(".nette/rules.toml")
@@ -88,17 +89,22 @@ class ImportBoundary(HouseRule):
         self.forbid = declaration["forbid"]
 
     def visit_import(self, node: ast.Import, ctx: Context) -> None:
-        for alias in node.names:
-            self._judge(node, ctx, alias.name)
+        self._judge(node, ctx, [alias.name for alias in node.names])
 
     def visit_importfrom(self, node: ast.ImportFrom, ctx: Context) -> None:
-        self._judge(node, ctx, node.module or "")
+        module = node.module or ""
+        reached = [module] + [
+            f"{module}.{alias.name}" if module else alias.name for alias in node.names
+        ]
+        self._judge(node, ctx, reached)
 
-    def _judge(self, node: ast.AST, ctx: Context, module: str) -> None:
-        if not self.concerns(ctx) or not _under(module, self.forbid):
+    def _judge(self, node: ast.AST, ctx: Context, modules: list[str]) -> None:
+        if not self.concerns(ctx):
             return
 
-        self.flag(node, ctx, f"this file imports `{module}`. {self.why}")
+        crossed = next((m for m in modules if _under(m, self.forbid)), "")
+        if crossed:
+            self.flag(node, ctx, f"this file imports `{crossed}`. {self.why}")
 
 
 KIND_CLASSES: Final = {
@@ -117,6 +123,8 @@ def load_house_rules(root: Path) -> list[HouseRule]:
         payload = tomllib.loads(source.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
         raise ValueError(f"{source}: {error}") from error
+    except OSError as error:
+        raise ValueError(f"{source}: cannot be read, {error}") from error
 
     declarations = payload.get("rule", [])
     if not isinstance(declarations, list):
@@ -128,7 +136,10 @@ def load_house_rules(root: Path) -> list[HouseRule]:
     return rules
 
 
-def _build(declaration: dict, source: Path) -> HouseRule:
+def _build(declaration: object, source: Path) -> HouseRule:
+    if not isinstance(declaration, dict):
+        raise ValueError(f"{source}: every rule must be a [[rule]] table, got {declaration!r}")
+
     where = f"{source}: rule {declaration.get('id', '<unnamed>')!r}"
     _require(declaration, REQUIRED, where)
 
@@ -138,6 +149,7 @@ def _build(declaration: dict, source: Path) -> HouseRule:
 
     rule_class, extra = KIND_CLASSES[kind]
     _require(declaration, extra, where)
+    _require_text(declaration, "files", where)
 
     if kind == "name-must-match" and declaration["target"] not in TARGETS:
         raise ValueError(f"{where}: target must be one of {sorted(TARGETS)}")
@@ -149,14 +161,21 @@ def _build(declaration: dict, source: Path) -> HouseRule:
 
 
 def _require(declaration: dict, keys: tuple[str, ...], where: str) -> None:
-    missing = [key for key in keys if not str(declaration.get(key, "")).strip()]
+    missing = [
+        key
+        for key in keys
+        if not isinstance(declaration.get(key), str) or not declaration[key].strip()
+    ]
     if missing:
-        raise ValueError(f"{where}: missing {', '.join(missing)}")
+        raise ValueError(f"{where}: missing or not text: {', '.join(missing)}")
+
+
+def _require_text(declaration: dict, key: str, where: str) -> None:
+    if key in declaration and not isinstance(declaration[key], str):
+        raise ValueError(f"{where}: {key} must be text, got {declaration[key]!r}")
 
 
 def _reject_duplicates(rules: list[HouseRule], source: Path) -> None:
-    from nette.rules import KNOWN_RULE_CODES
-
     seen: set[str] = set()
 
     for rule in rules:

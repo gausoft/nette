@@ -243,10 +243,12 @@ def _judge(
 def _run_hotspots(args: argparse.Namespace) -> int:
     paths = args.paths or [Path(".")]
     root = _single_root(paths)
-    config = load_config(root)
+    house = load_house_rules(root)
+    config = load_config(root, frozenset(rule.code for rule in house))
     files = discover(paths)
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
+    rules += [rule for rule in house if config.rule_enabled(rule.code, rule.family)]
     groups = _profile_groups(None, files, root)
     cache = None if args.no_cache else Cache(root / CACHE_PATH)
     findings = _judge(groups, rules, config, cache)

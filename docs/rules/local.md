@@ -114,3 +114,8 @@ paths, never lines of code. A rule that greps the source does not need
 nette.
 
 One syntax tree, the one the engine already parsed. Never a second parser.
+
+The one thing a rules file can still cost you is time: a pathological
+regular expression on a large tree is slow. `.nette/rules.toml` carries
+the same trust as `pyproject.toml`, it is written by the team that runs
+nette, and `--timings` shows what each rule costs.

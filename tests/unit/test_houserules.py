@@ -117,7 +117,7 @@ def test_a_missing_reason_is_rejected_by_name(tmp_path):
     broken = FORBID_CALL.replace('why = "internal objects have known attributes"\n', "")
     root = project(tmp_path, broken)
 
-    with pytest.raises(ValueError, match="missing why"):
+    with pytest.raises(ValueError, match="missing or not text: why"):
         load_house_rules(root)
 
 
@@ -157,3 +157,53 @@ def test_a_bad_pattern_is_rejected(tmp_path):
 
     with pytest.raises(ValueError, match="bad pattern"):
         load_house_rules(root)
+
+
+def test_a_rule_that_is_not_a_table_is_rejected(tmp_path):
+    root = project(tmp_path, "rule = [42]\n")
+
+    with pytest.raises(ValueError, match="must be a \\[\\[rule\\]\\] table"):
+        load_house_rules(root)
+
+
+def test_a_field_of_the_wrong_type_is_rejected(tmp_path):
+    broken = NAME_MUST_MATCH.replace('pattern = "^test_[a-z_]+_when_[a-z_]+$"', "pattern = []")
+    root = project(tmp_path, broken)
+
+    with pytest.raises(ValueError, match="not text"):
+        load_house_rules(root)
+
+
+def test_an_id_that_is_not_text_is_rejected(tmp_path):
+    broken = FORBID_CALL.replace('id = "no-raw-getattr"', "id = 42")
+    root = project(tmp_path, broken)
+
+    with pytest.raises(ValueError, match="not text"):
+        load_house_rules(root)
+
+
+def test_a_files_glob_of_the_wrong_type_is_rejected(tmp_path):
+    broken = FORBID_CALL + "files = 7\n"
+    root = project(tmp_path, broken)
+
+    with pytest.raises(ValueError, match="files must be text"):
+        load_house_rules(root)
+
+
+def test_an_unreadable_file_names_itself(tmp_path):
+    root = project(tmp_path, FORBID_CALL)
+    (root / ".nette" / "rules.toml").chmod(0o000)
+
+    try:
+        with pytest.raises(ValueError, match="cannot be read"):
+            load_house_rules(root)
+    finally:
+        (root / ".nette" / "rules.toml").chmod(0o644)
+
+
+def test_importing_the_package_then_the_module_is_caught(tmp_path):
+    findings = judge(
+        tmp_path, IMPORT_BOUNDARY, "from src import api\n", "services/billing.py"
+    )
+
+    assert [f.code for f in findings] == ["services-do-not-import-api"]
