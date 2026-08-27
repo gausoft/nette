@@ -246,6 +246,9 @@ Hotspots only rank, never change a severity, and always exit 0.
 
 ## Documentation
 
+**[The site](https://gausoft.github.io/nette/)** for the guided tour.
+The reference lives here:
+
 | | |
 |---|---|
 | [Agents](docs/agents.md) | The envelope, output formats, exit codes |
