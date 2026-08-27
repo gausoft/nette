@@ -243,10 +243,9 @@ Hotspots only rank, never change a severity, and always exit 0.
   same problem produces the same sentence every time, so your eye skips
   what it already knows.
   **→ [Why not an AI code reviewer](docs/faq.md#why-not-an-ai-code-reviewer)**
-- **Not shipped yet.** The YAML pattern tier and external Python plugins
-  are designed but not built. FastAPI is the only framework profile, and
-  every other framework is covered by naming its decorators in
-  `exempt_decorated_by`.
+- **Not shipped yet.** External Python plugins are designed but not
+  built. FastAPI is the only framework profile, and every other framework
+  is covered by naming its decorators in `exempt_decorated_by`.
 
 <br>
 
@@ -261,6 +260,7 @@ The reference lives here:
 | [Calibration](docs/calibration.md) | The profile, the ratchet, monorepos |
 | [Configuration](docs/configuration.md) | Config, suppression, CI, pre-commit |
 | [Rules reference](docs/rules/README.md) | Every rule, with its threshold kind |
+| [House rules](docs/rules/local.md) | Declare the conventions only your repo has |
 | [Design](docs/design.md) | How the engine works |
 | [Benchmark](docs/benchmark.md) | Speed, thresholds, field results |
 | [FAQ](docs/faq.md) | What nette does not do, and the experiments that say so |

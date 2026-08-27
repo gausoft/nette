@@ -26,7 +26,7 @@ def check_files(
     key = (
         config_key(
             thresholds,
-            [rule.code for rule in rules],
+            [getattr(rule, "fingerprint", rule.code) for rule in rules],
             profile,
             framework,
             exempt_decorated_by,

@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- House rules, the conventions a general tool cannot know about. Declare
+  them in `.nette/rules.toml` and nette picks them up: `forbid-call` for a
+  call nobody should write, `name-must-match` for a naming convention,
+  `import-boundary` for a layer that must not reach into another. They
+  belong to the `local` family, they suppress and time like any other rule,
+  and editing one invalidates the cache.
+  Every house rule must declare `message`, `why` and `fix`, or the file is
+  rejected at load time. A rule that reports a bare number would break the
+  promise the whole tool rests on.
+  TOML rather than the YAML the design doc promised in phase 0, because
+  YAML would cost a dependency and the standard library reads TOML.
+
 ### Changed
 
 - `duplicated-sibling` no longer fires inside test modules, where a file

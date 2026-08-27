@@ -17,6 +17,7 @@ def test_defaults_when_no_config_file(tmp_path):
         "defensiveness",
         "duplication",
         "engine",
+        "local",
         "naming",
         "shape",
         "structure",

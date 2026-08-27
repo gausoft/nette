@@ -17,6 +17,7 @@ config.
 | [annotations](annotations.md) | `under-annotated` | calibrated |
 | [structure](structure.md) | `file-naming`, `file-size`, `mixed-module` | mixed |
 | [duplication](duplication.md) | `duplicated-sibling` | convention |
+| [local](local.md) | the rules you declare in `.nette/rules.toml` | declared |
 
 Three threshold kinds:
 

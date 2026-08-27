@@ -26,6 +26,7 @@ from nette.discovery import discover
 from nette.engine import check_files
 from nette.findings import Finding, Severity
 from nette.gitdiff import change_counts, changed_files, changed_lines
+from nette.houserules import load_house_rules
 from nette.output import render
 from nette.rules import ALL_RULES, ENGINE_CODES, Rule
 from nette.rules.base import Rule
@@ -51,6 +52,7 @@ RULE_DOCS = {
     "file-size": "structure.md",
     "mixed-module": "structure.md",
     "duplicated-sibling": "duplication.md",
+    "local": "local.md",
 }
 
 
@@ -153,7 +155,8 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 def _run_check(args: argparse.Namespace) -> int:
     paths = args.paths or [Path(".")]
     root = _single_root(paths)
-    config = load_config(root)
+    house = load_house_rules(root)
+    config = load_config(root, frozenset(rule.code for rule in house))
 
     if args.diff is not None:
         files = changed_files(root, ref=args.diff)
@@ -163,6 +166,7 @@ def _run_check(args: argparse.Namespace) -> int:
         touched = None
 
     rules = [rule() for rule in ALL_RULES if config.rule_enabled(rule.code, rule.family)]
+    rules += [rule for rule in house if config.rule_enabled(rule.code, rule.family)]
     cache = None if args.no_cache or args.timings else Cache(root / CACHE_PATH)
     groups = _profile_groups(args.profile_path, files, root)
 
@@ -425,7 +429,13 @@ def _doc(name: str) -> str:
 
 def _extract_section(text: str, section: str) -> str:
     lines = text.splitlines()
-    start = next(i for i, l in enumerate(lines) if l.startswith(f"## `{section}`"))
+    start = next(
+        (i for i, l in enumerate(lines) if l.startswith(f"## `{section}`")),
+        None,
+    )
+    if start is None:
+        return text.strip()
+
     end = next(
         (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
         len(lines),

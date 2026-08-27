@@ -453,3 +453,10 @@ def test_calibrate_stays_quiet_when_the_profile_sits_with_the_files(tmp_path):
     result = run_nette("calibrate", ".", cwd=tmp_path)
 
     assert "is the project root here" not in result.stderr
+
+
+def test_explain_a_family_prints_the_whole_document(tmp_path):
+    result = run_nette("explain", "local", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert "forbid-call" in result.stdout and "import-boundary" in result.stdout

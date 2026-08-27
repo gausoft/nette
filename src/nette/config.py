@@ -14,7 +14,16 @@ KNOWN_KEYS: Final = frozenset(
     {"select", "ignore", "thresholds", "output", "profile", "exempt_decorated_by"}
 )
 KNOWN_FAMILIES: Final = frozenset(
-    {"shape", "naming", "defensiveness", "annotations", "structure", "duplication", "engine"}
+    {
+        "shape",
+        "naming",
+        "defensiveness",
+        "annotations",
+        "structure",
+        "duplication",
+        "local",
+        "engine",
+    }
 )
 KNOWN_OUTPUT_KEYS: Final = frozenset({"format"})
 KNOWN_FORMATS: Final = frozenset({"concise", "full", "summary", "agent", "json", "sarif"})
@@ -37,7 +46,7 @@ class Config:
         )
 
 
-def load_config(root: Path) -> Config:
+def load_config(root: Path, extra_codes: frozenset[str] = frozenset()) -> Config:
     section, where = _read_section(root)
     if not section:
         return Config()
@@ -67,8 +76,10 @@ def load_config(root: Path) -> Config:
             f"expected one of: {', '.join(sorted(KNOWN_PROFILES))}"
         )
     return Config(
-        select=_rule_names(section.get("select", tuple(sorted(KNOWN_FAMILIES))), "select"),
-        ignore=_rule_names(section.get("ignore", ()), "ignore"),
+        select=_rule_names(
+            section.get("select", tuple(sorted(KNOWN_FAMILIES))), "select", extra_codes
+        ),
+        ignore=_rule_names(section.get("ignore", ()), "ignore", extra_codes),
         thresholds=thresholds,
         output_format=output_format,
         framework=framework,
@@ -134,9 +145,9 @@ def _string_tuple(value, key: str) -> tuple[str, ...]:
     return tuple(value)
 
 
-def _rule_names(value, key: str) -> tuple[str, ...]:
+def _rule_names(value, key: str, extra_codes: frozenset[str] = frozenset()) -> tuple[str, ...]:
     names = _string_tuple(value, key)
-    known = KNOWN_FAMILIES | KNOWN_RULE_CODES
+    known = KNOWN_FAMILIES | KNOWN_RULE_CODES | extra_codes
 
     for name in names:
         if name in known:
