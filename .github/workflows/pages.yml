@@ -26,7 +26,7 @@ jobs:
       - name: every page the site links to exists
         run: |
           cd site
-          for page in index.html docs.html rules.html style.css nav.js; do
+          for page in index.html docs.html rules.html faq.html style.css nav.js; do
             test -f "$page" || { echo "missing $page"; exit 1; }
           done
       - uses: actions/configure-pages@v5

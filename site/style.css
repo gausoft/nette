@@ -280,3 +280,29 @@ table.doc td.slug { font-family:'Monaspace Neon',monospace; font-size:13px; colo
   padding:8px 20px; border-radius:99px;
 }
 .chip b { color:var(--orange); font-weight:400; }
+
+/* ============ FAQ ============ */
+.faq { margin-top:52px; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface); }
+.faq details { border-bottom:1px solid var(--border); }
+.faq details:last-child { border-bottom:none; }
+.faq summary {
+  list-style:none; cursor:pointer; padding:22px 26px;
+  font-size:16px; font-weight:600; color:#fafafa; letter-spacing:-.01em;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  transition:color .15s;
+}
+.faq summary::-webkit-details-marker { display:none; }
+.faq summary:hover { color:var(--orange-hi); }
+.faq summary::after {
+  content:"+"; font-family:'Monaspace Neon',monospace; font-size:18px;
+  color:var(--orange-hi); flex:none; transition:transform .2s;
+}
+.faq details[open] summary::after { transform:rotate(45deg); }
+.faq details[open] summary { color:var(--orange-hi); }
+.faq .answer { padding:0 26px 24px; color:var(--muted); font-size:15px; line-height:1.7; max-width:760px; }
+.faq .answer p { margin-top:12px; }
+.faq .answer p:first-child { margin-top:0; }
+.faq .answer table { border-collapse:collapse; margin-top:16px; font-size:13.5px; }
+.faq .answer th, .faq .answer td { border-bottom:1px solid var(--border); padding:8px 18px 8px 0; text-align:left; }
+.faq .answer th { font-family:'Monaspace Neon',monospace; font-weight:400; font-size:11.5px; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; }
+.faq .answer .win { color:var(--orange-hi); }

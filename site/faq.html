@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — nette</title>
+<meta name="description" content="What nette does not do, and the experiments that say so. Including the measurements that came back against the tool.">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html">
+      <svg width="22" height="22" viewBox="0 0 88 88" aria-hidden="true">
+        <rect x="10" y="20" width="38" height="7" rx="3.5" fill="#fb923c"/>
+        <rect x="20" y="38" width="30" height="7" rx="3.5" fill="#fb923c" opacity=".7"/>
+        <rect x="20" y="56" width="20" height="7" rx="3.5" fill="#fb923c" opacity=".45"/>
+        <path d="M56 46 l9 10 l18 -24" fill="none" stroke="#f97316" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      nette
+    </a>
+    <div class="nav-links">
+      <a href="index.html#why">Why</a>
+      <a href="index.html#compare">Compared</a>
+      <a href="docs.html">Docs</a>
+      <a href="rules.html">Rules</a>
+      <a href="faq.html" aria-current="page">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <a class="nav-gh" href="https://github.com/gausoft/nette">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38l-.01-1.49C3.8 14.17 3.33 12.9 3.33 12.9c-.36-.93-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.23 1.87.87 2.33.67.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 014 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8 8 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a class="nav-cta" href="docs.html#install">Install</a>
+    </div>
+    <details class="burger">
+      <summary><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
+      <div class="burger-panel">
+        <a href="index.html">Home</a>
+        <a href="docs.html">Docs</a>
+        <a href="rules.html">Rules</a>
+        <a href="index.html#compare">Compared</a>
+      </div>
+    </details>
+  </div>
+</nav>
+
+<section class="band band--raised">
+  <div class="wrap">
+
+    <div class="kicker">Questions</div>
+    <h2 class="title">The awkward ones, answered.</h2>
+    <p class="lead">Including the experiments that came back against the tool. Every number
+    below is reproducible from a script in the repository.</p>
+
+    <div class="faq">
+      <details open>
+        <summary>How is this different from ruff?</summary>
+        <div class="answer">
+          <p>ruff checks syntax and surface style, faster than anything else, and you should keep it.
+          It has no notion of what <em>your</em> repository decided about type annotations, guard density
+          or file size. nette has no notion of import sorting or unused variables.</p>
+          <p>They run together. nette's own CI runs both.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Does nette predict which files will have bugs?</summary>
+        <div class="answer">
+          <p>No, and we measured it rather than guessed. Five public repositories, 1755 source files,
+          ground truth being the files most touched by correction commits over 24 months.</p>
+          <table>
+            <tr><th>Predictor</th><th>Precision@15</th><th>AUC</th></tr>
+            <tr><td>nette, calibrated</td><td>0.41</td><td>0.83</td></tr>
+            <tr><td class="win">Counting lines</td><td class="win">0.61</td><td class="win">0.94</td></tr>
+            <tr><td>Cyclomatic complexity</td><td>0.55</td><td>0.90</td></tr>
+            <tr><td>Random</td><td>0.08</td><td>0.49</td></tr>
+          </table>
+          <p>A line count predicts correction churn better than nette does. If that is what you want,
+          count the lines. nette is measuring something else.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Comprehensibility gates usually mean cyclomatic complexity and line length. Why not those?</summary>
+        <div class="answer">
+          <p>Because both were tested, by others and by us. A study of 121 metrics against how well
+          developers actually understood code found that none of them correlated, cyclomatic complexity
+          and readability models included.</p>
+          <p>We ran nette against 119 real Python snippets rated by around 220 developers each. Measured
+          continuously, every dimension nette looks at sat in the noise: longest function +0.02, nesting
+          -0.02, arguments -0.13, branch density -0.05. The one dimension that did correlate is average
+          line length, at -0.26, and ruff already owns it with a universal threshold.</p>
+          <p>So the gate cannot be a complexity score. What is left, and what nette does, is consistency
+          with the repository the code lands in.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Does the calibrated profile actually catch anything?</summary>
+        <div class="answer">
+          <p>Yes, and the effect is uneven enough to be worth stating. Each of five repositories was
+          calibrated on 80% of its files and used to judge the held-out 20% plus the files of the other
+          four. A foreign file is flagged 26% of the time against 12% for a native one, and the gap is
+          carried by the annotation rate rather than by file size.</p>
+          <p>On repositories with a strict habit it is much wider: poetry flags 42% of foreign files and
+          0% of its own. On a repository with no habit to enforce it vanishes, because django annotates
+          none of its functions and a rule about annotation has nothing to say.</p>
+          <p>Calibration sees code looser than its surroundings, never code that is stricter.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Can an agent actually act on a finding?</summary>
+        <div class="answer">
+          <p>Twelve flagged files from five public repositories, handed to a model with nothing but the
+          agent output and an instruction to fix without changing behaviour. All twelve reached zero
+          findings, eleven of them in a single turn. No loop oscillated, no new kind of finding appeared,
+          and no public function or parameter was lost.</p>
+          <p>Published work on models refactoring for readability reports partial convergence and
+          oscillation, and names the missing piece as a principled stopping criterion. This is nette in
+          that role.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>When should I not use nette?</summary>
+        <div class="answer">
+          <p>When your repository has no consistent style yet. Calibration measures what exists, and on a
+          tree with no convention it records the absence of one.</p>
+          <p>When you want a risk score. There is none, deliberately, and the research says a single
+          number would be a lie with a decimal point.</p>
+          <p>When you need security, type or surface-style checks. bandit, mypy and ruff are better at
+          their jobs than any tool that tried to do all four.</p>
+          <p>When your code is not Python. There is no port, and multi-language tools are shallow in
+          every language.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Is there an MCP server? Does it call an LLM?</summary>
+        <div class="answer">
+          <p>No to both, on purpose. <span class="mono">nette agent-rules</span> prints the block you paste
+          into AGENTS.md, and <span class="mono">--format agent</span> emits deterministic JSON with a run
+          block naming how to rerun and what each exit code means. An MCP server would expose nothing the
+          shell does not, and it only reaches clients that speak MCP. Every agent has a shell.</p>
+          <p>No LLM runs at check time. A gate that returns a different verdict on the same bytes cannot
+          live in a fix loop and cannot be cached.</p>
+        </div>
+      </details>
+    </div>
+
+    <a class="more" href="https://github.com/gausoft/nette/blob/main/docs/faq.md">Full FAQ, with sources</a>
+    </div>
+</section>
+
+<footer class="site">
+  <div class="foot-in">
+    <div>
+      <a class="brand" href="index.html" style="margin-bottom:12px">
+        <svg width="20" height="20" viewBox="0 0 88 88" aria-hidden="true">
+          <rect x="10" y="20" width="38" height="7" rx="3.5" fill="#fb923c"/>
+          <rect x="20" y="38" width="30" height="7" rx="3.5" fill="#fb923c" opacity=".7"/>
+          <rect x="20" y="56" width="20" height="7" rx="3.5" fill="#fb923c" opacity=".45"/>
+          <path d="M56 46 l9 10 l18 -24" fill="none" stroke="#f97316" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        nette
+      </a>
+      <p style="font-size:14px;color:var(--faint);line-height:1.6;max-width:260px">
+        The comprehensibility gate for your agent's loop. Pure Python, zero dependencies, MIT.
+      </p>
+    </div>
+    <div>
+      <h4>Docs</h4>
+      <a href="docs.html#install">Install</a>
+      <a href="docs.html#commands">Commands</a>
+      <a href="docs.html#config">Configuration</a>
+      <a href="rules.html">Rules reference</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <div>
+      <h4>Deep dives</h4>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/design.md">Design</a>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/benchmark.md">Benchmark</a>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/vision.md">Vision</a>
+      <a href="https://github.com/gausoft/nette/blob/main/docs/extensibility.md">Extensibility</a>
+    </div>
+    <div>
+      <h4>Project</h4>
+      <a href="https://github.com/gausoft/nette">GitHub</a>
+      <a href="https://github.com/gausoft/nette/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://pypi.org/project/nette/">PyPI</a>
+      <a href="https://github.com/gausoft/nette/blob/main/LICENSE">MIT License</a>
+    </div>
+  </div>
+  <div class="foot-bottom">nette · deterministic, diff-aware, calibrated on your repo</div>
+</footer>
+
+<script src="nav.js"></script>
+</body>
+</html>
