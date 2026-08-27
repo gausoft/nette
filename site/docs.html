@@ -195,13 +195,23 @@
 
     <section id="agents">
       <h2>Any agent, no plugin</h2>
+      <p>Code review does not scale to the volume an agent produces. What replaces it is a set
+      of constraints the agent has to pass, and each one has a moment: <b>before</b> the work
+      starts, <b>during</b> the work, and at the <b>boundary</b> where a change tries to become
+      production. nette occupies one dimension of that set, comprehensibility, at all three.</p>
       <p>The integration surface is a shell command and an exit code, so every agent already
       supports it: Claude Code, Cursor, Copilot, Codex, Aider, your CI. There is nothing to
       install on their side.</p>
+      <h3>Before: give the agent the rule</h3>
       <pre class="code"><span class="t-prompt">$</span> <span class="t-cmd">nette</span> <span class="t-arg">agent-rules</span> <span class="t-flag">&gt;&gt;</span> <span class="t-path">AGENTS.md</span>   <span class="t-com"># or CLAUDE.md, or .cursorrules</span></pre>
       <p>That writes the loop your agent has to follow: run
       <code>nette check --diff --format agent</code> after editing Python, read the exit code,
-      fix, rerun.</p>
+      fix, rerun. The committed profile does the rest of the framing: it is the repository
+      telling the agent what normal looks like here, in numbers, before a line is written.</p>
+      <h3>During: the feedback the agent acts on</h3>
+      <p>Measured on twelve flagged files from five public repositories, handed to a model with
+      nothing but this output: all twelve reached zero findings, eleven of them in a single
+      turn, none of the loops oscillated, and no public function or parameter was lost.</p>
       <h3>The machine envelope carries its own contract</h3>
       <pre class="code"><span class="t-punc">{</span>
   <span class="t-key">"schema_version"</span><span class="t-punc">:</span> <span class="t-num">2</span><span class="t-punc">,</span>
@@ -232,6 +242,15 @@
         test showed it had to guess how to rerun the check and whether a warning was blocking.</p>
       </div>
       <p>Identical input produces identical bytes, so agent runs cache and diff cleanly.</p>
+      <h3>At the boundary: the gate that does not depend on memory</h3>
+      <p>An agent that forgets to run the check is the normal case. The constraint that holds is
+      the one it cannot skip: a pre-commit hook, and a CI step that puts the findings in the pull
+      request through SARIF rather than in a log nobody opens. Both are in
+      <a href="#config">Configuration</a>.</p>
+      <p>Every gate creates back-pressure, and a gate that fires on everything gets turned off.
+      Three levers, in the order to reach for them: <code>--diff</code> judges only the lines that
+      changed, <code>ignore</code> drops a rule or a family, and a suppression marker with a
+      written reason handles the single case.</p>
     </section>
 
     <section id="config">
