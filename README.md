@@ -236,7 +236,13 @@ Hotspots only rank, never change a severity, and always exit 0.
   already do those. Run them alongside.
 - **Other languages.** Python only, done deeply. TypeScript comes later as a
   sibling product.
-- **LLM review.** Deterministic or nothing.
+- **LLM review.** An AI reviewer reads intent and catches what no rule
+  anticipated. Keep it for that. nette takes the repetitive part, which a
+  model does slowly (10 to 30 minutes, by which time the author has moved
+  on) and expensively. Determinism is what makes the output skimmable: the
+  same problem produces the same sentence every time, so your eye skips
+  what it already knows.
+  **→ [Why not an AI code reviewer](docs/faq.md#why-not-an-ai-code-reviewer)**
 - **Not shipped yet.** The YAML pattern tier and external Python plugins
   are designed but not built. FastAPI is the only framework profile, and
   every other framework is covered by naming its decorators in

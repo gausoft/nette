@@ -39,6 +39,13 @@ system already guarantees, fallbacks for states that cannot occur. Each
 guard adds a branch the reader must consider and, worse, hides real bugs
 by converting them into silent fallbacks.
 
+It also arrives from the other direction. A principal engineer running an
+AI reviewer across 2900 pull requests a quarter reports that the tool
+"actively steers less experienced engineers to write more convoluted
+overly defensive code". So the guards come both from the agent that writes
+and from the agent that reviews, and neither of them counts how many are
+already there.
+
 The rule measures the fraction of functions in the file containing at
 least one `try` block, and compares it to the same fraction measured
 across the repository at calibration time. The 3x factor and the

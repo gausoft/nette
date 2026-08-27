@@ -99,6 +99,35 @@ Whether the first claim actually produces better code is the experiment we
 have not run yet. It is next, and its result will be published here
 whatever it says.
 
+## Why not an AI code reviewer?
+
+Run both, and expect different things from each.
+
+An AI reviewer reads intent. It catches the missing business requirement,
+the cross-team dependency, the thing no rule anticipated. Nothing
+deterministic will do that.
+
+What it does badly is the repetitive part, and the numbers are public. A
+principal engineer running Cursor's BugBot across 2900 pull requests in a
+quarter reports about $1000 a week, and $1000 in a single day when the same
+team moved their Claude review skills into GitHub Actions. Comments take 10
+to 30 minutes to arrive, by which time the author has moved on, so the
+review loop is broken before it starts. Their own linters finish a full
+sweep in 27 seconds. nette finishes in under one.
+
+The part that surprised us in that report: their AI reviewer "actively
+steers less experienced engineers to write more convoluted overly defensive
+code". That is the exact shape `over-guarded` measures, observed on a team
+with no connection to this project.
+
+There is a second reason to prefer a rule for the repetitive part.
+Determinism is usually sold as caching, and its real benefit is that you
+can skim. The same problem produces the same sentence every time, so your
+eye skips what it already knows. A model rewrites its comment on every run,
+so every comment has to be read again.
+
+Use the model where judgment is needed. Use a gate where a rule is enough.
+
 ## How is this different from ruff?
 
 ruff checks syntax and surface style, faster than anything else, and you
