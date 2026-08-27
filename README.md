@@ -7,11 +7,11 @@
 
 # nette
 
-**AI writes code. nette keeps it clean.**
+**AI writes code. nette keeps it comprehensible.**
 
-A code readability checker for the AI-agent era. Deterministic, diff-aware,
-calibrated on your repo's own style, fast enough to live inside the agent's
-write-check-fix loop.
+The comprehensibility gate for your agent's loop. Deterministic,
+diff-aware, calibrated on your repository's own style, and fast enough to
+run on every edit an agent makes.
 
 [![status](https://img.shields.io/badge/status-v0.2-f97316)](https://github.com/gausoft/nette/blob/main/CHANGELOG.md)
 [![python](https://img.shields.io/badge/python-%E2%89%A53.11-18181b)](https://github.com/gausoft/nette/blob/main/pyproject.toml)
@@ -38,14 +38,20 @@ write-check-fix loop.
 
 ## Why
 
-AI agents now write most of the code. It works, and it is often hard to
-read: too long, over-defensive, over-abstracted, inconsistent with the rest
-of the repo. Linters like ruff and pylint check syntax and surface style.
-They say nothing about readability or repo consistency, so debt accumulates
-at machine speed.
+AI agents now write most of the code, faster than anyone can read it. Code
+review does not scale to that volume, so the checks have to move into the
+loop itself, as gates the agent has to pass.
 
-nette lives in the agent loop. The agent writes code, runs nette, gets a
-compact verdict, fixes, re-checks. Like tests, but for readability.
+Most of those gates exist. Tests cover correctness, mypy covers types,
+bandit covers security, ruff covers syntax and surface style. The gate
+nobody ships is the one for comprehensibility: whether the code an agent
+just wrote can be picked up by the human who inherits it, and whether it
+looks like the rest of the repository it landed in.
+
+That is the gate nette is. The agent writes, runs nette, gets a compact
+verdict with the fix direction, corrects, re-checks. Measured on twelve
+real files: an agent silences nette in a single turn, eleven times out of
+twelve, without oscillating and without losing a public signature.
 
 ```
 $ nette check src/api.py
